@@ -1,11 +1,11 @@
 ---
-name: cc_code
-description: cc_code 极简开发工作流系统。当用户在含 .cc_code/ 的项目中工作，或提到"角色串行"、"文件路由"、"状态机循环"、"PM/Architect/Dev/QA"、"上下文最小化"时自动加载。强制按 active/Agent.md 的角色路由表约束 AI 行为。
+name: cc-code
+description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的项目中工作，或提到"角色串行"、"文件路由"、"状态机循环"、"PM/Architect/Dev/QA"、"上下文最小化"时自动加载。强制按 active/Agent.md 的角色路由表约束 AI 行为。
 ---
 
-# cc_code 极简开发工作流协议
+# cc-code 极简开发工作流协议
 
-> 本 skill 是工作流的**运行时协议**（持续约束），与 `/cc_code:init` 命令（一次性入场）配合。
+> 本 skill 是工作流的**运行时协议**（持续约束），与 `/cc-code:init` 命令（一次性入场）配合。
 > init 搭好 `.cc_code/` 场域后，本协议在每次会话自动接管 AI 行为。
 
 ## 三大铁律（贯穿全会话）

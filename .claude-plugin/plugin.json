@@ -1,13 +1,13 @@
 {
-  "name": "cc_code",
-  "version": "0.1.0",
-  "description": "极简开发工作流系统。基于角色串行(PM→Architect→Dev→QA)、文件路由表与冷热数据分离的状态机循环。/cc_code:init 一键初始化，10 命令 + 5 skill，纯脚本 Stop Hook 零 LLM 开销。",
+  "name": "cc-code",
+  "version": "0.2.0",
+  "description": "极简开发工作流系统。基于角色串行(PM→Architect→Dev→QA)、文件路由表与冷热数据分离的状态机循环。/cc-code:init 一键初始化，10 命令 + 5 skill，纯脚本 Stop Hook 零 LLM 开销。",
   "author": {
-    "name": "cc_code"
+    "name": "cc-code"
   },
   "license": "MIT",
-  "homepage": "https://github.com/cc-code/cc_code",
-  "repository": "https://github.com/cc-code/cc_code",
+  "homepage": "https://github.com/weiyi88/cc_code",
+  "repository": "https://github.com/weiyi88/cc_code",
   "keywords": [
     "workflow",
     "context-minimization",

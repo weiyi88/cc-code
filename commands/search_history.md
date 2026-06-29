@@ -1,5 +1,5 @@
 ---
-name: cc_code:search_history
+name: cc-code:search_history
 description: 浏览中国近代史重大事件选题列表，查看哪些已生成脚本、哪些待探索。当用户说"历史选题"、"历史事件列表"、"search_history"、"近代史"时触发。
 allowed-tools: Read, Glob, Grep, AskUserQuestion
 argument-hint: [--era <时期>] [--status <done|todo|all>] [--keyword <关键词>]
@@ -7,7 +7,7 @@ argument-hint: [--era <时期>] [--status <done|todo|all>] [--keyword <关键词
 
 $ARGUMENTS
 
-# /cc_code:search_history — 中国近代史选题浏览器
+# /cc-code:search_history — 中国近代史选题浏览器
 
 浏览可用的历史事件选题，查看进度，找回已生成的脚本。
 
@@ -68,7 +68,7 @@ $ARGUMENTS
   [✓] 甲午战争 (1894-1895)          视角: 北洋水师水兵  脚本: .cc_code/scripts/witness_jiawu-war_2026-04-16.md
   ...
 
-  已完成: 1/40 | 输入事件名即可生成脚本，如 /cc_code:witness 虎门销烟
+  已完成: 1/40 | 输入事件名即可生成脚本，如 /cc-code:witness 虎门销烟
 ```
 
 标注说明：

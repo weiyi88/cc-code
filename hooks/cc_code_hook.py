@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-cc_code Plugin - Stop Hook 静默结算引擎 (纯脚本, 零 LLM)
+cc-code Plugin - Stop Hook 静默结算引擎 (纯脚本, 零 LLM)
 =========================================================
 设计原则: 本脚本只做「机械活」, 绝不调用 LLM。
   - 需要理解力的写入(推进 status / 记录 errors 新坑)由 AI 在对话内顺手完成。

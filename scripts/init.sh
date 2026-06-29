@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cc_code Plugin - 项目场域脚手架
+# cc-code Plugin - 项目场域脚手架
 # 用法: bash init.sh <project_root>
 set -euo pipefail
 
@@ -10,8 +10,8 @@ TEMPLATES="$PLUGIN_ROOT/templates"
 TARGET="$PROJECT_ROOT/.cc_code"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
-log()  { echo -e "${GREEN}[cc_code]${NC} $1"; }
-warn() { echo -e "${YELLOW}[cc_code]${NC} $1"; }
+log()  { echo -e "${GREEN}[cc-code]${NC} $1"; }
+warn() { echo -e "${YELLOW}[cc-code]${NC} $1"; }
 
 # 幂等
 if [ -f "$TARGET/active/Agent.md" ]; then
@@ -43,14 +43,31 @@ chmod +x "$TARGET/scripts/cc_code_hook.py"
 # changelog + index
 cp "$TEMPLATES/changelog.md" "$TARGET/changelog.md"
 cat > "$TARGET/index.md" <<EOF
-# cc_code 对话索引
+# cc-code 对话索引
 
 > 由 Hook 静默维护。按日期倒序记录会话归档。
 EOF
 
+# 根目录 CLAUDE.md 入口引导（新/旧项目统一生成）
+#   - 旧项目：先备份 legacy → backup/YYYY-MM/CLAUDE.md.legacy，再覆盖
+#   - 新项目：直接生成
+#   注：旧 CLAUDE.md 的内容分拆（理解力活）由 AI 在 /cc-code:init 对话内完成，
+#       读取 backup 里的 legacy 按 init.md 的映射表归并到 active/ 各文件。
+LEGACY_CLAUDE="$PROJECT_ROOT/CLAUDE.md"
+YM="$(date +%Y-%m)"
+if [ -f "$LEGACY_CLAUDE" ]; then
+  mkdir -p "$TARGET/backup/$YM"
+  cp "$LEGACY_CLAUDE" "$TARGET/backup/$YM/CLAUDE.md.legacy"
+  warn "检测到旧 CLAUDE.md，已备份至 .cc_code/backup/$YM/CLAUDE.md.legacy"
+  warn "→ AI 须读取该 legacy，按 /cc-code:init 映射表分拆归并到 active/ 各文件。"
+fi
+cp "$TEMPLATES/CLAUDE.md" "$LEGACY_CLAUDE"
+log "已生成根目录 CLAUDE.md（入口引导，纯协议不含业务状态）。"
+
 log "脚手架完成："
 log "  active/   Agent status errors project flow front gates"
-log "  backup/   冷数据归档"
+log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy）"
 log "  scripts/cc_code_hook.py  Stop Hook (纯脚本)"
+log "  根目录 CLAUDE.md  工作流入口引导"
 warn "下一步：把 .cc_code/scripts/cc_code_hook.py 接入 settings.json 的 Stop Hook。"
-warn "然后让 AI Read .cc_code/active/Agent.md 进入状态机循环。"
+warn "然后让 AI Read 根目录 CLAUDE.md → 进入状态机循环。"

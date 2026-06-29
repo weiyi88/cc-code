@@ -1,5 +1,5 @@
 ---
-name: cc_code:cf_online
+name: cc-code:cf_online
 description: 将 Next.js 项目部署到 Cloudflare Pages（Edge Runtime）。当用户说"cf_online"、"上线cloudflare"、"部署cloudflare"、"CF部署"时触发。
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, Agent, AskUserQuestion
 argument-hint: [--skip-build] [--skip-domain] [--domain <自定义域名>]
@@ -7,7 +7,7 @@ argument-hint: [--skip-build] [--skip-domain] [--domain <自定义域名>]
 
 $ARGUMENTS
 
-# /cc_code:cf_online — Cloudflare Pages 上线部署
+# /cc-code:cf_online — Cloudflare Pages 上线部署
 
 将 Next.js (App Router) 项目部署到 Cloudflare Pages Edge Runtime。
 
@@ -16,10 +16,10 @@ $ARGUMENTS
 ## 调用方式
 
 ```
-/cc_code:cf_online                  完整部署流程（预检→构建→部署→域名）
-/cc_code:cf_online --skip-build     跳过构建，直接部署已有产物
-/cc_code:cf_online --skip-domain    跳过自定义域名配置
-/cc_code:cf_online --domain shopifypolicy.com  指定自定义域名
+/cc-code:cf_online                  完整部署流程（预检→构建→部署→域名）
+/cc-code:cf_online --skip-build     跳过构建，直接部署已有产物
+/cc-code:cf_online --skip-domain    跳过自定义域名配置
+/cc-code:cf_online --domain shopifypolicy.com  指定自定义域名
 ```
 
 ---

@@ -12,9 +12,9 @@ argument-hint: <事件名或关键词> [--role <视角角色>] [--output <输出
 ## 调用方式
 
 ```
-/cc_code:witness 鸦片战争              模糊匹配事件，生成脚本
-/cc_code:witness 五四运动 --role 学生   指定第一人称角色
-/cc_code:witness 辛亥革命 --output ./   指定输出目录
+/cc-code:witness 鸦片战争              模糊匹配事件，生成脚本
+/cc-code:witness 五四运动 --role 学生   指定第一人称角色
+/cc-code:witness 辛亥革命 --output ./   指定输出目录
 ```
 
 ## 执行流程

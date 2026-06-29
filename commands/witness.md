@@ -1,5 +1,5 @@
 ---
-name: cc_code:witness
+name: cc-code:witness
 description: 第一人称视角生成中国近代史短剧脚本。输入历史事件名，自动查证史实、生成沉浸式剧本，标注虚实。当用户说"写脚本"、"历史剧本"、"witness"、"第一人称历史"时触发。
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, Agent, WebSearch, mcp__exa__web_search_exa, mcp__exa__crawling_exa, AskUserQuestion
 argument-hint: <事件名或关键词> [--role <视角角色>] [--output <输出路径>]
@@ -7,7 +7,7 @@ argument-hint: <事件名或关键词> [--role <视角角色>] [--output <输出
 
 $ARGUMENTS
 
-# /cc_code:witness — 第一人称历史短剧脚本生成器
+# /cc-code:witness — 第一人称历史短剧脚本生成器
 
 将你放入历史现场，以亲历者的视角生成完整短剧脚本。
 
@@ -16,9 +16,9 @@ $ARGUMENTS
 ## 调用方式
 
 ```
-/cc_code:witness 鸦片战争              模糊匹配事件，生成脚本
-/cc_code:witness 五四运动 --role 学生   指定第一人称角色
-/cc_code:witness 辛亥革命 --output ./   指定输出目录
+/cc-code:witness 鸦片战争              模糊匹配事件，生成脚本
+/cc-code:witness 五四运动 --role 学生   指定第一人称角色
+/cc-code:witness 辛亥革命 --output ./   指定输出目录
 ```
 
 ---

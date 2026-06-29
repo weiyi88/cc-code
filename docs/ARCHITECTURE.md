@@ -1,4 +1,4 @@
-# cc_code 架构说明
+# cc-code 架构说明
 
 ## 双层清单（参考 claude-seo marketplace 模式）
 
@@ -10,9 +10,9 @@
 ## 资产分布
 
 ```
-commands/   10 个 .md  → /cc_code:<name>  (显式调用)
+commands/   10 个 .md  → /cc-code:<name>  (显式调用)
 skills/      5 个目录  → 自然语言自动触发
-hooks/       cc_code_hook.py + hooks.json  (Stop, 纯脚本)
+hooks/       cc-code_hook.py + hooks.json  (Stop, 纯脚本)
 scripts/     init.sh  (脚手架)
 templates/   7 个 .md 骨架 + changelog
 ```
@@ -24,4 +24,4 @@ templates/   7 个 .md 骨架 + changelog
 
 ## 状态机与冷热分离
 
-详见 `skills/cc_code/SKILL.md` 与 `hooks/cc_code_hook.py`。核心：AI 写热数据（需要理解力），Hook 做冷热切片（纯机械），互不越界。
+详见 `skills/cc-code/SKILL.md` 与 `hooks/cc-code_hook.py`。核心：AI 写热数据（需要理解力），Hook 做冷热切片（纯机械），互不越界。

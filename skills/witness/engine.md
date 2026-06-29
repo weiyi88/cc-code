@@ -1,6 +1,6 @@
 # 脚本生成引擎（Witness Engine）
 
-> 本文件是 /cc_code:witness 的核心引擎，控制从史实查证到脚本输出的全流程。
+> 本文件是 /cc-code:witness 的核心引擎，控制从史实查证到脚本输出的全流程。
 
 ---
 

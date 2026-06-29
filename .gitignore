@@ -2,3 +2,9 @@ node_modules/
 .DS_Store
 *.log
 __pycache__/
+
+# 防止插件仓库自身被误 init 生成黑匣子
+.cc_code/
+
+# serena MCP 工具配置,不入仓库
+.serena/
