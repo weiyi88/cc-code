@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PLUGIN_ROOT/hooks/cc_code_hook.py\"",
+            "description": "cc_code 静默结算: 冷热切片 + 归档骨架 + status/errors 维护 (纯脚本零 LLM)"
+          }
+        ]
+      }
+    ]
+  }
+}

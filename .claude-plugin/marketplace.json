@@ -1,0 +1,29 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cc-code-marketplace",
+  "owner": {
+    "name": "cc_code"
+  },
+  "metadata": {
+    "description": "cc_code 极简开发工作流系统 marketplace。基于角色串行(PM→Architect→Dev→QA)、文件路由表与冷热数据分离的状态机循环，解决 LLM 上下文污染、目标遗忘与幻觉发散。含 10 个命令与 5 个 skill，覆盖工作流初始化、项目文案、历史脚本、Cloudflare 部署、Taro 迁移等场景。"
+  },
+  "plugins": [
+    {
+      "name": "cc_code",
+      "source": "./",
+      "description": "极简开发工作流系统。/cc_code:init 一键初始化项目场域，10 命令 + 5 skill，纯脚本 Stop Hook 零 LLM 开销。",
+      "author": {
+        "name": "cc_code"
+      },
+      "category": "workflow",
+      "keywords": [
+        "workflow",
+        "context-minimization",
+        "state-machine",
+        "role-serialization",
+        "cold-hot-separation",
+        "videcoding"
+      ]
+    }
+  ]
+}
