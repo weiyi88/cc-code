@@ -8,3 +8,4 @@ __pycache__/
 
 # serena MCP 工具配置,不入仓库
 .serena/
+.agents/
