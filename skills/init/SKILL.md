@@ -1,6 +1,7 @@
 ---
 description: 初始化 cc-code 极简开发工作流场域。双轨判定(新项目/旧项目接管) → 生成 .cc_code/ 黑匣子目录树与模板骨架 → 进入角色串行状态机循环。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+disable-model-invocation: true
 ---
 
 # /cc-code:init — 项目场域初始化

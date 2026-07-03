@@ -1,6 +1,7 @@
 ---
 name: next2taro
 description: 将 Next.js (App Router + Tailwind + shadcn/ui) 的 UI 页面/组件转换为 Taro 小程序 (View/Text + SCSS + PNG)。当用户说"next2taro"、"转换页面"、"Next转Taro"、"页面迁移" 时触发。
+disable-model-invocation: true
 ---
 
 # Next.js → Taro UI 转换技能

@@ -2,7 +2,7 @@
 name: witness
 description: 第一人称视角生成中国近代史短剧脚本。输入历史事件名，自动查证史实、生成沉浸式剧本并标注虚实。当用户说"写脚本"、"历史剧本"、"witness"、"第一人称历史"时触发。
 allowed-tools: Read, Glob, Grep, Bash, Edit, Write, Agent, WebSearch, mcp__exa__web_search_exa, mcp__exa__crawling_exa, AskUserQuestion
-argument-hint: <事件名或关键词> [--role <视角角色>] [--output <输出路径>]
+disable-model-invocation: true
 ---
 
 # Witness — 第一人称历史短剧脚本生成器

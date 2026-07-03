@@ -1,8 +1,7 @@
 ---
-name: cc-code:search_history
 description: 浏览中国近代史重大事件选题列表，查看哪些已生成脚本、哪些待探索。当用户说"历史选题"、"历史事件列表"、"search_history"、"近代史"时触发。
 allowed-tools: Read, Glob, Grep, AskUserQuestion
-argument-hint: [--era <时期>] [--status <done|todo|all>] [--keyword <关键词>]
+disable-model-invocation: true
 ---
 
 $ARGUMENTS

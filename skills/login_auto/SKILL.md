@@ -1,3 +1,8 @@
+---
+description: 基于 Supabase Auth 实现通用登录系统，零新依赖，覆盖完整登录功能。当用户说"login_auto"、"登录实现"、"Supabase登录"、"通用登录"时触发。
+disable-model-invocation: true
+---
+
 # Supabase Auth 通用登录系统实现指南
 
 统一使用 Supabase Auth，零新依赖，覆盖完整登录功能。
