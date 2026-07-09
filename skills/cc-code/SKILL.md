@@ -27,7 +27,7 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 | PM | status.md | prd.md, flow.md, front.md | src/, project.md |
 | Architect | status, prd, flow, front | project.md | src/ 业务代码 |
 | Dev | status, errors, project | src/, errors.md | 无关业务模块 |
-| QA | flow, front | gates.md, check.sh | src/, project.md |
+| QA（灰盒） | flow, front, prd, project(约定) | gates.md, check.sh, tests/ | 无关历史业务代码（src 仅本阶段改动可读） |
 
 > 完整矩阵以 `.cc_code/active/Agent.md` 为准。
 
@@ -40,7 +40,7 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 | `status.md` 推进进度坐标 | **AI**（当前角色） | 完成一个任务节点时顺手更新 |
 | `errors.md` 新坑根因 | **Dev** | 发现/解决 Bug 时顺手追加 |
 | `gates.md` 验收清单 | QA | 编写测试时 |
-| 冷热切片 / 归档 / 骨架 | **Hook 脚本** | Stop 时静默 |
+| 冷热切片 / 归档 / changelog 去重 | **Hook 脚本** | Stop 时静默 |
 
 **AI 绝不依赖 Hook 来推进进度**——Hook 不懂业务，只搬字节。
 
@@ -56,3 +56,7 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 - 用户要求越权时，礼貌拒绝并提示切换角色。
 - 不向用户报告归档/进度流转细节（Hook 静默完成）。
 - 进度以 `status.md` 为准、踩坑以 `errors.md` 为准，禁止凭记忆作答。
+
+## 配套 agent（可选增强）
+
+三 agent 与本协议角色串行绑定，可由 `/cc-code:agentToMVP` 编排调用：`prd-plan`(PM+Architect) / `dev`(Dev) / `qa`(QA 灰盒)。不用 agent 时，主控直接扮演各角色亦可。
