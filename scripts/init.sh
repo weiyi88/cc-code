@@ -21,7 +21,7 @@ fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
 mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/plans" \
-         "$TARGET/scripts" "$TARGET/tests"
+         "$TARGET/tests"
 
 # 热区骨架
 cp "$TEMPLATES/Agent.md"      "$TARGET/active/Agent.md"
@@ -36,9 +36,7 @@ cp "$TEMPLATES/gates.md"      "$TARGET/active/gates.md"
 mkdir -p "$TARGET/backup/$(date +%Y-%m)"
 touch "$TARGET/backup/$(date +%Y-%m)/errors_archive.md"
 
-# Hook 本地副本
-cp "$PLUGIN_ROOT/hooks/cc_code_hook.py" "$TARGET/scripts/cc_code_hook.py"
-chmod +x "$TARGET/scripts/cc_code_hook.py"
+# Hook 由插件 hooks/hooks.json 自动注册（$CLAUDE_PLUGIN_ROOT），项目无需本地副本
 
 # changelog（唯一时间线，Hook 按 session 去重写入）
 cp "$TEMPLATES/changelog.md" "$TARGET/changelog.md"
@@ -63,7 +61,6 @@ log "脚手架完成："
 log "  active/   Agent status errors project flow front gates"
 log "  docs/plans/  阶段方案（prd-plan 产出，Dev 按 phase 读）"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy）"
-log "  scripts/cc_code_hook.py  Stop Hook (纯脚本)"
 log "  根目录 CLAUDE.md  工作流入口引导"
-warn "下一步：把 .cc_code/scripts/cc_code_hook.py 接入 settings.json 的 Stop Hook。"
-warn "然后让 AI Read 根目录 CLAUDE.md → 进入状态机循环。"
+warn "Hook 由 cc-code 插件自动注册（需已 /plugin install cc-code）。"
+warn "让 AI Read 根目录 CLAUDE.md → 进入状态机循环。"
