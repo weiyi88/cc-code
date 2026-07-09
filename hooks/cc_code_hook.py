@@ -9,6 +9,7 @@ cc-code Plugin - Stop Hook 静默结算引擎 (纯脚本, 零 LLM)
 每次 Stop 由 Claude Code 触发, 毫秒级, 静默, 异常吞掉绝不阻塞 AI 回合。
 """
 
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -76,31 +77,26 @@ def archive_status(active: Path, backup: Path) -> None:
     )
 
 
-def touch_session_doc(docs: Path) -> None:
-    today = datetime.now().strftime("%Y-%m-%d")
-    (docs / today / "images").mkdir(parents=True, exist_ok=True)
-    doc = docs / today / "session_skeleton.md"
-    if not doc.exists():
-        doc.write_text(
-            f"# 会话记录 {today}\n\n- 时间：{today}\n- 角色：[待填]\n\n"
-            "## 讨论内容\n\n## 完成任务\n\n## 代码变更\n\n## 遗留问题\n",
-            encoding="utf-8",
-        )
-
-
-def append_changelog(cc: Path) -> None:
+def append_changelog(cc: Path, session_id: str) -> None:
     cl = cc / "changelog.md"
     if not cl.exists():
+        return
+    sid = (session_id or "")[:8]
+    text = cl.read_text(encoding="utf-8")
+    if sid and sid in text:  # 同会话已结算, 不重复
         return
     today = datetime.now().strftime("%Y-%m-%d")
     stamp = datetime.now().strftime("%H:%M")
     with cl.open("a", encoding="utf-8") as f:
-        f.write(f"\n## [{today} {stamp}] 会话结算\n- Stop Hook 静默归档完成\n")
+        f.write(f"\n## [{today} {stamp}] 会话结算 `{sid}`\n- Stop Hook 静默归档完成\n")
 
 
 def main() -> int:
+    session_id = ""
     try:
-        sys.stdin.read()
+        raw = sys.stdin.read()
+        if raw.strip():
+            session_id = json.loads(raw).get("session_id", "") or ""
     except Exception:
         pass
 
@@ -108,12 +104,11 @@ def main() -> int:
     if cc is None:
         return 0  # 非 cc_code 项目, 静默退出
 
-    active, backup, docs = cc / "active", cc / "backup", cc / "docs"
+    active, backup = cc / "active", cc / "backup"
     try:
         slice_errors(active, backup)
         archive_status(active, backup)
-        touch_session_doc(docs)
-        append_changelog(cc)
+        append_changelog(cc, session_id)
     except Exception as e:
         try:
             (cc / "scripts" / "hook_error.log").open("a", encoding="utf-8").write(
