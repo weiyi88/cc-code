@@ -1,7 +1,7 @@
 {
   "name": "cc-code",
-  "version": "0.3.0",
-  "description": "极简开发工作流系统。基于角色串行(PM→Architect→Dev→QA)、文件路由表与冷热数据分离的状态机循环。/cc-code:init 一键初始化，10 命令 + 6 skill + 3 配套 agent，纯脚本 Stop Hook 零 LLM 开销。",
+  "version": "0.3.1",
+  "description": "极简开发工作流系统。基于角色串行(PM→Architect→Dev→QA)、文件路由表与冷热数据分离的状态机循环。/cc-code:init 一键初始化，10 命令 + 7 skill + 3 配套 agent，纯脚本 Stop Hook 零 LLM 开销。",
   "author": {
     "name": "cc-code"
   },

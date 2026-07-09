@@ -13,7 +13,7 @@
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、6 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、7 个 skill 与 3 个配套 agent。
 
 ## 快速开始
 
@@ -45,10 +45,11 @@ Skill 会：① 双轨判定（新项目 / 旧项目接管）→ ② 生成 `.cc
 | `/cc-code:vercel_supabase_deployment` | Vercel + Supabase 部署 |
 | `/cc-code:witness` | 第一人称历史短剧脚本生成 |
 
-## Skill（6 个）
+## Skill（7 个）
 
 - `cc-code` — 工作流运行时协议（角色路由 + 状态机，自然语言自动触发）
 - `agentToMVP` — **手动触发** `/cc-code:agentToMVP`：三 agent × cc-code 驱动 MVP 完整生命周期（PM→Architect→Dev→QA + qa→dev 循环，每阶段后 `/cc-code:cc-code` 校准）
+- `update-cc` — **手动触发** `/cc-code:update-cc`：把工作环境改进的 cc-code 机制（agent/hook/skill 等）同步回源仓库并 commit + push master
 - `project_resume` / `cf_online` / `next2taro` / `witness`
 
 ## Agent（3 个，cc-code 配套，通用零项目假设）
