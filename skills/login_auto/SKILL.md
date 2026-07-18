@@ -1,5 +1,5 @@
 ---
-description: 基于 Supabase Auth 实现通用登录系统，零新依赖。覆盖邮箱密码登录、OAuth(google/github)、邮箱验证码注册、邮箱验证码改密。当用户说"login_auto"、"登录实现"、"Supabase登录"、"通用登录"时触发。
+description: 基于 Supabase Auth + Resend SMTP 实现通用登录系统，零新依赖。覆盖邮箱密码登录、OAuth(google/github)、邮箱验证码注册、邮箱验证码改密。验证码邮件经 Supabase 自定义 SMTP 接入 Resend 投递。当用户说"login_auto"、"登录实现"、"Supabase登录"、"通用登录"时触发。
 disable-model-invocation: true
 ---
 
@@ -11,9 +11,36 @@ disable-model-invocation: true
 - **注册**：邮箱 + 验证码 + 密码 + 确认密码
 - **修改密码**（忘记密码/未登录）：邮箱 + 验证码 + 新密码
 
+**邮件通道**：验证码邮件由 Supabase Auth 触发，经 Supabase 自定义 SMTP 接入 **Resend** 投递（不在代码里调 Resend API，不自造验证码存储）。
+
 ---
 
-## 执行流程
+## Skill 启动流程（显式触发时按此走）
+
+```
+Step 1  整理项目当前登录逻辑
+        读项目 auth 相关代码(auth-modal/回调路由/profile/middleware)
+        → 画「项目现状登录逻辑」ASCII 图
+Step 2  对比 skill 标准逻辑 vs 项目现状
+        逐链路差异表: ✅一致 / ⚠️偏离 / ❌缺失
+        (标准逻辑见下方「三大场景」与 Phase 1-3)
+Step 3  环境盘点 + 询问 key
+        检查: 依赖 / Supabase(URL+anon key, service_role可选)
+              / Resend(API Key+发件域名) / OAuth(Client ID+Secret)
+              / Dashboard(Confirm email关闭? SMTP配Resend? Redirect URLs? Providers?)
+        缺什么列清单 → 询问主人提供
+Step 4  整理改动清单
+        输出表: 文件 | 现状 | 目标 | 动作
+Step 5  调用 /cc-code:cc-code 执行
+        按角色串行 PM→Architect→Dev→QA 落地
+        (本 skill 只整理方案, 执行交 cc-code 工作流)
+```
+
+> 本 skill 主体是「标准逻辑 + 实现指南」，供 Step 2 对比、Step 4 改动参考。Step 5 不在本 skill 内写代码，交由 /cc-code:cc-code。
+
+---
+
+## 实现指南流程
 
 ```
 Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
@@ -148,7 +175,35 @@ export async function updateSession(request: NextRequest) {
 
 > **注意**: 如果项目有 next-intl 等其他 middleware，Supabase 刷新应放在最后执行。
 
-### 1.4 三大场景 — Supabase API 映射
+### 1.4 Resend SMTP 配置（邮件通道）
+
+验证码邮件由 Supabase Auth 触发（`signInWithOtp`），经 **Supabase 自定义 SMTP** 转发到 **Resend** 投递。不在代码里调 Resend API，不自造验证码存储。
+
+**Supabase Dashboard → Authentication → SMTP Settings → Custom SMTP:**
+
+| 字段 | 值 |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465`（SSL）或 `587`（STARTTLS） |
+| Username | `resend` |
+| Password | `<Resend API Key>`（`re_` 开头） |
+| Sender email | `noreply@<Resend 已验证域名>` |
+| Minimum interval | 按需（默认即可） |
+
+**前置准备（Resend 侧）:**
+1. 注册 Resend → 拿 API Key（`re_...`）
+2. 添加并验证发件域名（Resend → Domains → 配置 DNS 记录）
+3. Sender 地址必须属于已验证域名
+
+**邮件模板（Supabase Dashboard → Auth → Email Templates → Magic Link）:**
+仅保留 6 位验证码，删除 magic link 链接（本方案前端直接 `verifyOtp` 输码，不走链接）：
+```
+Your verification code is: {{ .Token }}
+```
+
+> **为何用 Resend**: Supabase 免费版内置邮件 3 封/小时 + 易进垃圾箱，生产必须自定义 SMTP。Resend 提供 SMTP 接入，每月 3000 封免费额度，投递率高。
+
+### 1.5 三大场景 — Supabase API 映射
 
 ```
 ┌──────────────────┬──────────────────────────────────────────────┐
@@ -198,7 +253,7 @@ export async function updateSession(request: NextRequest) {
 
 > **关键**: 注册与改密都走「signInWithOtp → verifyOtp → updateUser」三步组合，**不使用** `signUp` 和 `resetPasswordForEmail`。区别仅在 `shouldCreateUser`：注册=true，改密=false。
 
-### 1.5 错误映射 (Supabase → 用户友好消息)
+### 1.6 错误映射 (Supabase → 用户友好消息)
 
 ```
 Supabase error.message              →  消息 key
@@ -216,7 +271,7 @@ Supabase error.message              →  消息 key
 其他                                  →  loginFailed / signupFailed / changePasswordFailed
 ```
 
-### 1.6 前端校验规范 (统一工具函数)
+### 1.7 前端校验规范 (统一工具函数)
 
 **`lib/auth-validation.ts`**:
 
@@ -708,3 +763,24 @@ codeSentTo / resend / resendInXs / passwordResetSuccess
 8. **零新依赖**: Supabase Auth 全部功能已包含在 `@supabase/supabase-js` + `@supabase/ssr` 中。
 9. **已有文件不覆盖**: Phase 0 检测到已有文件时跳过，只创建缺失的。
 10. **与项目解耦**: 本 skill 不绑定 i18n 框架、语言组合、UI 库。`msg(key)` 取文案的方式由项目自定。
+
+---
+
+## 附录: service_role 可选安全增强
+
+**默认方案（KISS，本 skill 主体）**: 注册走 `signInWithOtp(shouldCreateUser:true) → verifyOtp → updateUser(password)`，全程前端 anon key，**无需 service_role**。
+
+**理论漏洞**: 有人绕过前端，直接拿 anon key 调 Supabase Auth 接口。Supabase Auth 自身有频率限制与 RLS 兜底，风险可控。
+
+**若要后端强约束（可选增强）**:
+1. 新增服务端 endpoint `/api/auth/register`，仅用 `SUPABASE_SERVICE_ROLE_KEY`（服务端环境变量，**绝不暴露前端**）
+2. 前端 OTP 验证邮箱后，调该 endpoint
+3. 服务端用 admin API 建已确认用户:
+   ```typescript
+   supabase.auth.admin.createUser({
+     email, password, email_confirm: true,
+   })
+   ```
+4. 强制必须经 OTP 验证才能建号，后端也把关
+
+> **取舍**: 加 service_role = 多一个服务端 endpoint + 管理一把高权 key。除非有强合规需求，默认 KISS 方案够用。
