@@ -352,7 +352,7 @@ type AuthView = 'login' | 'register' | 'forgot-password'
   └──────┬──────┘          │   (password+     │
          │                 │    nickname)     │
          │ "忘记密码?"      │ 校验:邮箱+密码复杂 │
-         │                 │   +两次一致+6位码 │
+         │                 │   +6位码          │
          ▼                 └──────────────────┘
   ┌──────────────────┐
   │ view='forgot-    │
@@ -364,8 +364,8 @@ type AuthView = 'login' | 'register' | 'forgot-password'
   │ ② verifyOtp      │
   │ ③ updateUser     │
   │   (newPassword)  │
-  │ 校验:邮箱+新密码  │
-  │   复杂度+6位码    │
+  │ 校验:邮箱+新密码   │
+  │   复杂度+确认+6位码│
   └──────────────────┘
 ```
 
@@ -440,9 +440,6 @@ const handleRegister = async (e: React.FormEvent) => {
   if (!validateOtp(otp)) { setError(msg('enter6Digits')); return }
   const pwdErr = validatePassword(password)
   if (pwdErr) { setError(msg(pwdErr)); return }
-  if (!validateConfirmPassword(password, confirmPassword)) {
-    setError(msg('passwordMismatch')); return
-  }
 
   const supabase = createClient()
   // 1. 验证 OTP
@@ -491,6 +488,9 @@ const handleResetPassword = async (e: React.FormEvent) => {
   if (!validateOtp(otp)) { setError(msg('enter6Digits')); return }
   const pwdErr = validatePassword(newPassword)
   if (pwdErr) { setError(msg(pwdErr)); return }
+  if (!validateConfirmPassword(newPassword, confirmNewPassword)) {
+    setError(msg('passwordMismatch')); return
+  }
 
   const supabase = createClient()
   // 1. 验证 OTP
@@ -537,7 +537,7 @@ const handleResetPassword = async (e: React.FormEvent) => {
 └─────────────────────────────────────┘
 ```
 
-**注册视图 (含验证码+确认密码):**
+**注册视图 (含验证码):**
 ```
 ┌─────────────────────────────────────┐
 │  ✨ 创建账号                        │
@@ -547,7 +547,6 @@ const handleResetPassword = async (e: React.FormEvent) => {
 │                                     │
 │  🔢 [______]  6位验证码             │
 │  🔒 [Password__________👁]          │ ← ≥8位+字母+数字
-│  🔒 [Confirm__________👁]          │ ← 二次确认
 │                                     │
 │  [      Sign up        ]            │
 │                                     │
@@ -555,7 +554,7 @@ const handleResetPassword = async (e: React.FormEvent) => {
 └─────────────────────────────────────┘
 ```
 
-**忘记密码视图 (验证码改密):**
+**忘记密码视图 (验证码改密+确认密码):**
 ```
 ┌─────────────────────────────────────┐
 │  🔑 重置密码                        │
@@ -564,6 +563,7 @@ const handleResetPassword = async (e: React.FormEvent) => {
 │                                     │
 │  🔢 [______]  6位验证码             │
 │  🔒 [New Password_____👁]          │ ← ≥8位+字母+数字
+│  🔒 [Confirm__________👁]          │ ← 二次确认
 │                                     │
 │  [    Reset password    ]           │
 │                                     │
@@ -710,10 +710,10 @@ pnpm build
 - [ ] 构建通过，无 TypeScript 错误
 - [ ] 登录: 邮箱+密码 可登录
 - [ ] 登录: Google / GitHub OAuth 可跳转
-- [ ] 注册: 邮箱 → 收验证码 → 输入验证码+密码+确认密码 → 注册成功
-- [ ] 注册校验: 邮箱格式/密码≥8+复杂度/两次一致/6位验证码 均拦截
-- [ ] 忘记密码: 邮箱 → 收验证码 → 输入验证码+新密码 → 改密成功
-- [ ] 改密校验: 邮箱格式/新密码≥8+复杂度/6位验证码 均拦截
+- [ ] 注册: 邮箱 → 收验证码 → 输入验证码+密码 → 注册成功
+- [ ] 注册校验: 邮箱格式/密码≥8+复杂度/6位验证码 均拦截
+- [ ] 忘记密码: 邮箱 → 收验证码 → 输入验证码+新密码+确认密码 → 改密成功
+- [ ] 改密校验: 邮箱格式/新密码≥8+复杂度/两次一致/6位验证码 均拦截
 - [ ] 重发冷却: 50s 内按钮禁用
 - [ ] 回调路由: /auth/callback 和 /auth/confirm 存在且安全加固生效
 
@@ -754,7 +754,7 @@ codeSentTo / resend / resendInXs / passwordResetSuccess
 ## 实现注意事项
 
 1. **统一 OTP 方案**: 注册与改密均走「signInWithOtp → verifyOtp → updateUser」三步，不使用 `signUp` 和 `resetPasswordForEmail`。区别仅在 `shouldCreateUser`（注册=true / 改密=false）。
-2. **前端校验先行**: 邮箱格式、密码长度(≥8)、密码复杂度(字母+数字)、二次确认一致、验证码6位，全部前端拦截，减少无效请求。
+2. **前端校验先行**: 邮箱格式、密码长度(≥8)、密码复杂度(字母+数字)、验证码6位，全部前端拦截，减少无效请求。**二次确认归属**: 注册**不设**二次确认（仅密码+验证码），忘记密码**必设**二次确认（新密码+确认密码）。
 3. **Supabase Dashboard 配置**: OAuth Provider、邮件模板、确认策略都在 Dashboard 配置，不在代码中。
 4. **邮箱确认策略**: Dashboard → Authentication → Email → "Confirm email" 开关。本方案前端直接 verifyOtp，建议关闭"发送确认链接"或保留作兜底。
 5. **回调路由在 i18n 路由段外**: `app/auth/callback` 和 `app/auth/confirm` 不在 `[locale]/` 下。
