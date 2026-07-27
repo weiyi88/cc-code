@@ -24,12 +24,13 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 
 | 角色 | 必读 | 可写 | 禁读 |
 | --- | --- | --- | --- |
-| PM | status.md | prd.md, flow.md, front.md | src/, project.md |
-| Architect | status, prd, flow, front | project.md | src/ 业务代码 |
-| Dev | status, errors, project | src/, errors.md | 无关业务模块 |
-| QA（灰盒） | flow, front, prd, project(约定) | gates.md, check.sh, tests/ | 无关历史业务代码（src 仅本阶段改动可读） |
+| PM | status.md | prd.md, flow.md, front.md | src/, project.md, data.md |
+| Architect | status, prd, flow, front, data.md | project.md, data.md, docs/plans/ | src/ 业务代码 |
+| Dev | status, errors, project, data.md | src/, errors.md | gates.md；无关业务模块 |
+| QA（灰盒） | flow, front, prd, project(约定), data.md | gates.md, check.sh, tests/ | 无关历史业务代码（src 仅本阶段改动可读） |
 
 > 完整矩阵以 `.cc_code/active/Agent.md` 为准。
+> `data.md` 是数据契约（interface / 字段规则 / 原型↔真实切换 / DB 列对齐），Architect 维护，Dev/QA 必读，PM 禁读（避免接口细节污染需求纯粹性）。
 
 ## 热数据写入分工（关键：避免 Hook 调 LLM）
 

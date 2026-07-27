@@ -34,11 +34,15 @@ PM ──► Architect ──► Dev ──► QA
 | `.cc_code/active/status.md` | 当前坐标 + 下一步 | 当前角色 AI |
 | `.cc_code/active/errors.md` | 避坑清单 | Dev |
 | `.cc_code/active/project.md` | 技术宪法（架构 / 原则） | Architect |
+| `.cc_code/active/data.md` | 数据契约（interface / 字段规则 / 原型↔真实切换） | Architect |
 | `.cc_code/active/flow.md` | 交互状态矩阵 | PM |
 | `.cc_code/active/front.md` | 前端交接规格 | PM |
 | `.cc_code/active/gates.md` | QA 验收关卡（Dev 禁读） | QA |
+| `.cc_code/docs/` | 活跃文档（规格 / 指南 / API 样例） | Architect / PM |
+| `.cc_code/images/` | 截图（扁平存放） | init 迁移 |
+| `.cc_code/scripts/` | 散落脚本归档 | init 迁移 |
 | `.cc_code/changelog.md` | 里程碑（Hook 自动写） | Hook |
-| `.cc_code/backup/` | 冷数据归档（溯源才翻） | Hook |
+| `.cc_code/backup/` | 冷数据归档（溯源才翻，默认不入库） | Hook |
 
 ## ⚙️ 角色切换
 
@@ -53,5 +57,6 @@ PM ──► Architect ──► Dev ──► QA
 - 进度 → `.cc_code/active/status.md`
 - 踩坑 → `.cc_code/active/errors.md`
 - 宪法 → `.cc_code/active/Agent.md`
+- 数据契约 → `.cc_code/active/data.md`
 
 禁止凭记忆作答；禁止向用户报告归档 / 进度流转细节（Hook 静默完成）。

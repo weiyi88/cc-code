@@ -24,7 +24,8 @@ disable-model-invocation: true
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" "$(pwd)"
 ```
 
-脚本幂等：已存在 `.cc_code/` 则跳过。生成 `active/ backup/ docs/ images/ scripts/ tests/` + 7 个模板骨架 + 本地 Hook 副本 + **根目录 `CLAUDE.md` 入口引导**。
+脚本幂等：已存在 `.cc_code/` 则仅执行散落物迁移。生成 `active/ backup/ docs/ images/ scripts/ tests/` + **8 个 active 模板骨架**（含 `data.md` 数据契约）+ **根目录 `CLAUDE.md` 入口引导**。
+脚本同时把根目录散落的过程产物迁入 `.cc_code/`：规格/指南文档→`docs/`、过程报告→`backup/YYYY-MM/reports/`、截图→`images/`、散落脚本→`scripts/`，并生成 `backup/YYYY-MM/migration_manifest.md` 记录原路径→新路径映射；同时把 `.cc_code/backup/` 追加进根 `.gitignore`（冷归档不入库）。
 
 CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
@@ -41,6 +42,7 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 | --- | --- | --- |
 | 项目角色定义、权限规则、工作流约定、agent 路由 | `active/Agent.md` | 合并进「角色权限路由表」段落，保留模板原有结构 |
 | 技术栈、框架、语言、目录结构、编码原则（KISS/SOLID 等） | `active/project.md` | 填入「技术栈概览 / 目录规约 / 特殊约束」 |
+| 数据模型 interface、字段规则、API 契约、mock 样例 | `active/data.md` | 填入「Interface / 字段规则矩阵 / 原型↔真实切换 / DB 列对齐」 |
 | 当前进度、待办、卡点、正在做的模块 | `active/status.md` | 填入「当前坐标 / 下一步目标」 |
 | 历史变更、版本记录、里程碑 | `changelog.md` | 追加到现有 changelog |
 | 踩过的坑、注意事项、已知 bug、禁用做法 | `active/errors.md` | 按「现象 / 根因 / 预防」格式追加 |
@@ -50,6 +52,7 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 | 无法归类的杂项 / 项目背景 | `active/project.md` 的「特殊约束」 | 兜底，绝不丢弃 |
 
 铁律：分拆时每一段信息都要有着落，拿不准的归 `project.md` 兜底；归并完成后旧 `CLAUDE.md` 已被入口模板覆盖，无须保留原状。
+**路径联动**：若 legacy 内容引用了被迁移的旧文件名（如 `PRODUCT_SPEC_V2.md`），分拆时须按 `backup/YYYY-MM/migration_manifest.md` 的映射改写为新相对路径（如 `.cc_code/docs/PRODUCT_SPEC_V2.md`）。
 
 ## 第 3 步：进入状态机循环
 
@@ -60,4 +63,4 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
 ## 第 4 步：Hook 接入提示
 
-若用户尚未配置 Stop Hook，提示把 `.cc_code/scripts/cc-code_hook.py` 接入 `settings.json`（参考 README）。Hook 为纯 Python 脚本，零 LLM 调用，毫秒级结算。
+Stop Hook 由插件 `hooks/hooks.json` 自动注册（`$CLAUDE_PLUGIN_ROOT/hooks/cc_code_hook.py`），装了 cc-code 插件即生效，**项目无需改 `settings.json`**。若用户尚未安装插件，提示先 `/plugin install cc-code`。Hook 为纯 Python 脚本，零 LLM 调用，毫秒级结算。

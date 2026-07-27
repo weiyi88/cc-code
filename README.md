@@ -13,7 +13,7 @@
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、6 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、5 个 skill 与 3 个配套 agent。
 
 ## 快速开始
 
@@ -30,11 +30,11 @@ Skill 会：① 双轨判定（新项目 / 旧项目接管）→ ② 生成 `.cc
 > - **新项目**：直接生成 `CLAUDE.md` 入口模板。
 > - **旧项目**：先把旧 `CLAUDE.md` 备份至 `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，AI 按 `/cc-code:init` 映射表把旧内容分拆归并到 `active/` 各文件，再用入口模板覆盖根目录 `CLAUDE.md`。
 
-## 命令（8 个，命名空间 `/cc-code:`）
+## 命令（7 个，命名空间 `/cc-code:`）
 
 | 命令 | 用途 |
 | --- | --- |
-| `/cc-code:init` | **核心** 初始化工作流场域 |
+| `/cc-code:init` | **核心** 初始化工作流场域（含散落物迁移：根目录 md/png/脚本迁入 `.cc_code/`） |
 | `/cc-code:project_resume` | 读取真实技术栈生成标准化项目介绍文案 |
 | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
 | `/cc-code:cf_online` | Next.js 部署到 Cloudflare Pages (Edge) |
@@ -43,11 +43,10 @@ Skill 会：① 双轨判定（新项目 / 旧项目接管）→ ② 生成 `.cc
 | `/cc-code:team` | 多 agent 团队编排 |
 | `/cc-code:vercel_supabase_deployment` | Vercel + Supabase 部署 |
 
-## Skill（6 个）
+## Skill（5 个）
 
 - `cc-code` — 工作流运行时协议（角色路由 + 状态机，自然语言自动触发）
 - `agentToMVP` — **手动触发** `/cc-code:agentToMVP`：三 agent × cc-code 驱动 MVP 完整生命周期（PM→Architect→Dev→QA + qa→dev 循环，每阶段后 `/cc-code:cc-code` 校准）
-- `update-cc` — **手动触发** `/cc-code:update-cc`：把工作环境改进的 cc-code 机制（agent/hook/skill 等）同步回源仓库并 commit + push master
 - `project_resume` / `cf_online` / `next2taro`
 
 ## Agent（3 个，cc-code 配套，通用零项目假设）
@@ -73,11 +72,14 @@ Skill 会：① 双轨判定（新项目 / 旧项目接管）→ ② 生成 `.cc
     │   ├── status.md       当前坐标 (AI 顺手写)
     │   ├── errors.md       避坑指南 (Dev 顺手写)
     │   ├── project.md      技术宪法 (Architect)
+    │   ├── data.md         数据契约 interface/字段/原型↔真实 (Architect)
     │   ├── flow.md         交互状态矩阵 (PM)
     │   ├── front.md        前端交接规格 (PM)
     │   └── gates.md        QA 验收关卡 (QA 灰盒维护)
     ├── docs/plans/      🔵 阶段方案 (prd-plan 产出，Dev 按 phase 读)
-    ├── backup/          🧊 冷数据 (Hook 超阈值切片归档；旧项目含 CLAUDE.md.legacy)
+    ├── images/          🔵 截图 (init 迁移，扁平存放)
+    ├── scripts/         🔵 散落脚本 (init 迁移)
+    ├── backup/          🧊 冷数据 (Hook 超阈值切片归档；旧项目含 CLAUDE.md.legacy + migration_manifest.md；默认不入库)
     └── changelog.md     里程碑（唯一时间线，Hook 按 session 去重写入）
 ```
 

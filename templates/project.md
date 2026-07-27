@@ -1,6 +1,7 @@
 # 🏗️ 项目技术架构与开发宪法 (project.md)
 
 > 本文件由 [Architect] 角色维护。Dev 工程师必须将此文件作为唯一的编码准则。
+> **数据结构细节不在本文件**——interface / 字段规则 / DB 列对齐统一由 `active/data.md` 承载，本文件只在第四节引用。
 
 ## 一、 技术栈概览 (Tech Stack)
 *   **核心框架：** [待填写]
@@ -24,5 +25,10 @@
 ## 三、 目录结构规约 (Directory Rules)
 *   [待填写]
 
-## 四、 特殊约束 (Constraints)
+## 四、 数据契约 (Data Contract)
+> 数据层唯一真相源：`.cc_code/active/data.md`（Architect 维护，Dev/QA 必读）。
+> 本文件不重复 interface 字段定义。涉及数据结构时，统一 `@active/data.md` 引用。
+> Architect 须保证：DB schema 列名 ↔ `data.md` interface 字段一一对齐；跨 ORM 栈时在 `data.md` 第五节记录差异。
+
+## 五、 特殊约束 (Constraints)
 *   [待填写]
