@@ -35,6 +35,7 @@ PM ──► Architect ──► Dev ──► QA
 | `.cc_code/active/errors.md` | 避坑清单 | Dev |
 | `.cc_code/active/project.md` | 技术宪法（架构 / 原则） | Architect |
 | `.cc_code/active/data.md` | 数据契约（interface / 字段规则 / 原型↔真实切换） | Architect |
+| `.cc_code/prd.md` | 产品需求文档（功能清单 + 验收标准） | PM / plan-prd-mvp |
 | `.cc_code/active/flow.md` | 交互状态矩阵 | PM |
 | `.cc_code/active/front.md` | 前端交接规格 | PM |
 | `.cc_code/active/gates.md` | QA 验收关卡（Dev 禁读） | QA |
@@ -43,6 +44,16 @@ PM ──► Architect ──► Dev ──► QA
 | `.cc_code/scripts/` | 散落脚本归档 | init 迁移 |
 | `.cc_code/changelog.md` | 里程碑（Hook 自动写） | Hook |
 | `.cc_code/backup/` | 冷数据归档（溯源才翻，默认不入库） | Hook |
+
+### PM 三产物边界（防重合）
+
+| 文件 | 定位 | 不写 |
+| --- | --- | --- |
+| `prd.md` | 功能清单 + 验收标准（做什么） | 交互细节、UI 规格 |
+| `flow.md` | 交互状态流转（用户怎么走） | 功能清单、组件规格 |
+| `front.md` | 组件规格 + 响应式（界面长啥样） | 功能清单、状态流转 |
+
+上游关系：`prd.md` 先行 → `flow.md` / `front.md` 基于 prd 细化，不反向。`prd.md` 由 `/cc-code:plan-prd-mvp` 或 PM 维护，单文件动态更新，重大变更归档 `backup/` + changelog 记里程碑。
 
 ## ⚙️ 角色切换
 

@@ -19,6 +19,12 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
     *   `[必读]` .cc_code/active/status.md
     *   `[可写]` .cc_code/prd.md, .cc_code/active/flow.md, .cc_code/active/front.md
     *   `[禁读]` src/ 目录, .cc_code/active/project.md, .cc_code/active/data.md
+*   **三产物边界（防重合）：**
+    *   `prd.md` = 功能清单 + 验收标准（做什么）；不写交互细节、UI 规格
+    *   `flow.md` = 交互状态流转（用户怎么走）；不写功能清单、组件规格
+    *   `front.md` = 组件规格 + 响应式（界面长啥样）；不写功能清单、状态流转
+    *   上游关系：`prd.md` 先行 → `flow.md` / `front.md` 基于 prd 细化，不反向
+    *   `prd.md` 也可由 `/cc-code:plan-prd-mvp` 支线命令产出（独立 agent，内部 Architect→PM 串行切角色）
 
 ### 2. 架构师 (Architect)
 *   **核心目标：** 基于 PM 规格，进行技术选型、数据库设计、API 定义、目录规划。维护数据契约（interface ↔ DB 列对齐）。
