@@ -13,7 +13,7 @@
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、5 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、4 个 skill 与 3 个配套 agent。
 
 ## 快速开始
 
@@ -40,10 +40,9 @@ Skill 会：① 双轨判定（新项目 / 旧项目接管）→ ② 生成 `.cc
 | `/cc-code:cf_online` | Next.js 部署到 Cloudflare Pages (Edge) |
 | `/cc-code:next2taro` | Next.js UI → Taro 小程序转换 |
 | `/cc-code:login_auto` | 登录流自动化 |
-| `/cc-code:team` | 多 agent 团队编排 |
 | `/cc-code:vercel_supabase_deployment` | Vercel + Supabase 部署 |
 
-## Skill（5 个）
+## Skill（4 个）
 
 - `cc-code` — 工作流运行时协议（角色路由 + 状态机，自然语言自动触发）
 - `agentToMVP` — **手动触发** `/cc-code:agentToMVP`：三 agent × cc-code 驱动 MVP 完整生命周期（PM→Architect→Dev→QA + qa→dev 循环，每阶段后 `/cc-code:cc-code` 校准）
