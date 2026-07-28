@@ -1,10 +1,10 @@
 ---
-description: 显式触发的 PRD 生成器。在 cc-code 框架内，独立 agent 内部串行切角色（Architect→PM）：先动态探测项目整理架构全景+MVP 差异点/疑问点，再按模块与用户一问一答，产出完备 MVP 逻辑的 .cc_code/prd.md。不找 bug（QA 职责）、不写代码（Dev 职责）。
+description: 显式触发的 PRD 生成器。在 cc-code 框架内，独立 agent 内部串行切角色（Architect→PM）：先动态探测项目整理架构全景+MVP 差异点/疑问点，再以结构化决策清单（类 Claude Code plan 模式）一次性抛给用户批量确认，产出完备 MVP 逻辑的 .cc_code/prd.md。不找 bug（QA 职责）、不写代码（Dev 职责）。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 disable-model-invocation: true
 ---
 
-# /cc-code:plan-prd-mvp — PRD 生成器（探讨式）
+# /cc-code:plan-prd-mvp — PRD 生成器（结构化提问式）
 
 > cc-code 框架内的支线命令。目的：了解项目 → 找 MVP 差异点/逻辑缺陷 → 产出完备 MVP 逻辑的 `prd.md`。
 > **不负责**：找 bug（QA → gates.md）、写代码（Dev）、改 active/ 其他 md。
@@ -53,15 +53,22 @@ Step4 疑问点翻译成需求语言 → 写进 prd.md 草案
 
 切换角色前：重读 `.cc_code/active/Agent.md` 加载 PM 权限表；切换前严禁预读下一角色禁读文件。
 
-### 阶段二：持 PM 角色（探讨 + 产出 PRD）
+### 阶段二：持 PM 角色（结构化提问 + 产出 PRD）
+
+> 采用 **Claude Code plan 模式**：先把全部疑问点/决策点整理成一份带编号的结构化清单一次性抛给主人，主人批量确认或逐项修订，**不**做逐模块阻塞式一问一答。
 
 ```
-Step5 按模块逐个问主人
-  模块按项目实际划分（如 认证/风格/生图/结果/回收站）
-  每模块抛疑问点 → 主人答 → 确认才进下一模块
-  探讨模式：不直接产出，一问一答
+Step5 生成「PRD 决策清单」（一次性批量抛出）
+  ├─ 汇总阶段一所有模块的疑问点/决策点 → 一份带编号清单
+  ├─ 每项结构：编号 | 模块 | 决策点 | 浮浮酱建议默认值 | 备选项
+  ├─ 用 checkbox（- [ ]）或表格呈现，按模块分组
+  ├─ 每项都给「建议默认值」：主人不反对即采纳，避免空白等待
+  └─ 清单末尾提示：可全量接受 / 逐项改 / 否决某项
 
-Step6 收齐答案 → 收口汇总
+Step6 主人批量确认 → 收敛
+  ├─ 全量接受 → 直接进 Step7
+  ├─ 逐项修订 → 仅对改动项做二次收口（不重走全流程）
+  └─ 否决某项 → 该项回到 Step5 补充备选项再确认
 
 Step7 产出完整 prd.md（见第四节结构）
 
@@ -86,7 +93,7 @@ Step8 提示: 可走 /cc-code:cc-code 执行
 | --- | --- |
 | 串行切角色 | Architect → PM，每时刻只持一个角色，切换重读 Agent.md |
 | 产物隔离 | Architect 草案不直接喂 PM，以 prd.md 需求语言重述（PM 禁读 project.md） |
-| 探讨模式 | 阶段二一问一答，主人确认才进，不直接产出 |
+| 结构化提问 | 阶段二一次性抛结构化决策清单（plan 模式），主人批量确认才产出，不做逐模块一问一答 |
 | 动态读取 | 不固定文件清单，按项目结构探测，守上下文最小化 |
 | 不越界 | 只写 `.cc_code/prd.md`，不碰 active/ 其他 md，不改代码 |
 | 不找 bug | bug 是 QA 职责，prd 只管完备 MVP 逻辑 |
@@ -99,7 +106,7 @@ plan-prd-mvp（支线）              cc-code 主线（串行）
 ──────────────────              ──────────────────
 Architect 整理                    PM（读 prd）
    ↓ 切角色                          ↓
-PM 问 + 产 prd.md ──► prd.md ──► Architect（产 project.md）
+PM 结构化提问 + 产 prd.md ──► prd.md ──► Architect（产 project.md）
                                     ↓
                                  Dev（编码）
                                     ↓
