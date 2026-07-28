@@ -1,12 +1,13 @@
 ---
-description: 显式触发的 PRD 生成器。在 cc-code 框架内，独立 agent 内部串行切角色（Architect→PM）：先动态探测项目整理架构全景+MVP 差异点/疑问点，再以结构化决策清单（类 Claude Code plan 模式）一次性抛给用户批量确认，产出完备 MVP 逻辑的 .cc_code/prd.md。不找 bug（QA 职责）、不写代码（Dev 职责）。
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+description: 显式触发的 PRD 生成器。在 cc-code 框架内，独立 agent 内部串行切角色（Architect→PM）：先动态探测项目整理架构全景+原型图+MVP 差异点表单，写入 plan 文件后调用 ExitPlanMode 进入 plan 模式与主人交谈收敛，逻辑全部通顺后落地完备 MVP 逻辑的 .cc_code/prd.md。不找 bug（QA 职责）、不写代码（Dev 职责）。
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, ExitPlanMode
 disable-model-invocation: true
 ---
 
-# /cc-code:plan-prd-mvp — PRD 生成器（结构化提问式）
+# /cc-code:plan-prd-mvp — PRD 生成器（ExitPlanMode 交谈式）
 
-> cc-code 框架内的支线命令。目的：了解项目 → 找 MVP 差异点/逻辑缺陷 → 产出完备 MVP 逻辑的 `prd.md`。
+> cc-code 框架内的支线命令。定位：项目距 MVP 的「最后一公里整理器」。
+> 目的：整理清楚整个项目逻辑、原型、差异点，校验是否符合主人思路 → 产出完备 MVP 逻辑的 `prd.md`。
 > **不负责**：找 bug（QA → gates.md）、写代码（Dev）、改 active/ 其他 md。
 > **产出**：`.cc_code/prd.md`（单文件动态更新，重大变更归档 `backup/` + changelog 记里程碑）。
 
@@ -15,8 +16,9 @@ disable-model-invocation: true
 ```
 触发:    /cc-code:plan-prd-mvp（显式，disable-model-invocation）
 性质:    cc-code 框架内独立 agent，内部串行切角色
-目的:    产出完备 MVP 逻辑的 prd.md
-交接:    提示主人走 /cc-code:cc-code，不自动切角色
+目的:    整理项目逻辑/原型/差异点 → 交谈收敛 → 产完备 prd.md
+交谈:    ExitPlanMode 托管，harness 级 approve/reject 循环
+交接:    prd 定稿后提示主人走 /cc-code:cc-code，不自动切角色
 ```
 
 ## 二、PM 三产物边界（守这层约束）
@@ -31,7 +33,7 @@ disable-model-invocation: true
 
 ## 三、执行逻辑（两阶段串行切角色）
 
-### 阶段一：持 Architect 角色（了解项目 + 找差异）
+### 阶段一：持 Architect 角色（盘点项目 + 写 plan 文件）
 
 ```
 Step1 动态探测读取（不固定文件清单，按项目实际结构）
@@ -41,51 +43,58 @@ Step1 动态探测读取（不固定文件清单，按项目实际结构）
   └─ 业务入口: app/ src/ routes/ 等 → 按需读
   守上下文最小化：只读整理架构所需，不全量扫。
 
-Step2 输出「项目全景」
-  └─ 架构图 + 业务生命周期 + 数据流
-
-Step3 找「MVP 差异点 + 逻辑缺陷 + 疑问点」
-  └─ 现状 vs MVP 目标的 gap，按模块组织
+Step2 输出「项目全景」三件套
+  ├─ 完整项目逻辑：架构图 + 业务生命周期 + 数据流
+  ├─ 原型图：关键页面 / 核心流程的线框描述（文字版骨架）
+  └─ MVP 差异点表单：现状 vs MVP 目标的 gap，按模块组织
+     （字段：模块 / 现状 / 目标 / gap / 风险）
   └─ 不找 bug（bug 是 QA 职责）
 
-Step4 疑问点翻译成需求语言 → 写进 prd.md 草案
+Step3 整理「项目全景 + 差异点表单 + PRD 草案」写入 plan 文件
+  （PRD 草案结构见第四节）
+  └─ 此步只写 plan 文件，不落 prd.md（未确认不写盘）
 ```
 
 切换角色前：重读 `.cc_code/active/Agent.md` 加载 PM 权限表；切换前严禁预读下一角色禁读文件。
 
-### 阶段二：持 PM 角色（结构化提问 + 产出 PRD）
+### 阶段二：持 PM 角色（ExitPlanMode 交谈收敛 → 落地 PRD）
 
-> 采用 **Claude Code plan 模式**：先把全部疑问点/决策点整理成一份带编号的结构化清单一次性抛给主人，主人批量确认或逐项修订，**不**做逐模块阻塞式一问一答。
-
-```
-Step5 生成「PRD 决策清单」（一次性批量抛出）
-  ├─ 汇总阶段一所有模块的疑问点/决策点 → 一份带编号清单
-  ├─ 每项结构：编号 | 模块 | 决策点 | 浮浮酱建议默认值 | 备选项
-  ├─ 用 checkbox（- [ ]）或表格呈现，按模块分组
-  ├─ 每项都给「建议默认值」：主人不反对即采纳，避免空白等待
-  └─ 清单末尾提示：可全量接受 / 逐项改 / 否决某项
-
-Step6 主人批量确认 → 收敛
-  ├─ 全量接受 → 直接进 Step7
-  ├─ 逐项修订 → 仅对改动项做二次收口（不重走全流程）
-  └─ 否决某项 → 该项回到 Step5 补充备选项再确认
-
-Step7 产出完整 prd.md（见第四节结构）
-
-Step8 提示: 可走 /cc-code:cc-code 执行
-```
-
-## 四、prd.md 产出结构
+> 采用 **Claude Code plan 模式**：把全景+差异点+PRD 草案写入 plan 文件后，
+> 调用 `ExitPlanMode` 提交主人审批，由 harness 托管 approve/reject 循环。
+> **不**做逐模块阻塞式一问一答，也**不**用文字清单代替 plan 工具。
 
 ```
-1. MVP 范围（P0/P1/P2 模块清单）
-2. 模块逻辑（每个模块的功能 + 输入输出 + 闭环）
-3. 数据契约（interface + 关键字段）
-4. 状态机（任务/业务生命周期）
-5. 验收标准（每模块的验收点）
+Step4 调用 ExitPlanMode 提交 plan 文件 → 请求主人审批
+
+Step5 交谈循环（harness 托管）
+  ├─ 主人 reject / 提修改 → 浮浮酱修订 plan 文件
+  ├─ 仍有疑问 → 继续对话澄清 → 再更新 plan 文件
+  ├─ 重新调用 ExitPlanMode 提交
+  └─ 循环直至所有逻辑通顺、主人 approve
+
+Step6 approve → 把定稿 plan 落地为 .cc_code/prd.md
+  └─ 旧版归档 .cc_code/backup/YYYY-MM/ + changelog 记里程碑
+
+Step7 提示: 可走 /cc-code:cc-code 进入主线
+```
+
+## 四、plan 文件 / prd.md 产出结构
+
+```
+1. 项目全景
+   ├─ 架构图 + 业务生命周期 + 数据流
+   └─ 原型图（关键页面 / 流程线框）
+2. MVP 差异点表单（模块 / 现状 / 目标 / gap / 风险）
+3. PRD 草案
+   ├─ MVP 范围（P0/P1/P2 模块清单）
+   ├─ 模块逻辑（功能 + 输入输出 + 闭环）
+   ├─ 数据契约（interface + 关键字段）
+   ├─ 状态机（任务/业务生命周期）
+   └─ 验收标准（每模块的验收点）
 ```
 
 > 不含：bug 清单（→ QA gates.md）、UI 规格（→ front.md）、交互细节（→ flow.md）
+> 注：plan 文件是 ExitPlanMode 的审批载体；prd.md 是定稿落地，二者结构一致。
 
 ## 五、关键约束
 
@@ -93,7 +102,9 @@ Step8 提示: 可走 /cc-code:cc-code 执行
 | --- | --- |
 | 串行切角色 | Architect → PM，每时刻只持一个角色，切换重读 Agent.md |
 | 产物隔离 | Architect 草案不直接喂 PM，以 prd.md 需求语言重述（PM 禁读 project.md） |
-| 结构化提问 | 阶段二一次性抛结构化决策清单（plan 模式），主人批量确认才产出，不做逐模块一问一答 |
+| ExitPlanMode 托管 | 阶段二必须调用 ExitPlanMode 交谈收敛，不用文字清单代替 |
+| 先写后审 | Step3 先写 plan 文件，Step4 才调 ExitPlanMode（工具从 plan 文件读内容） |
+| 审后才落 | 主人 approve 后才写 prd.md，未确认不写盘 |
 | 动态读取 | 不固定文件清单，按项目结构探测，守上下文最小化 |
 | 不越界 | 只写 `.cc_code/prd.md`，不碰 active/ 其他 md，不改代码 |
 | 不找 bug | bug 是 QA 职责，prd 只管完备 MVP 逻辑 |
@@ -104,11 +115,11 @@ Step8 提示: 可走 /cc-code:cc-code 执行
 ```
 plan-prd-mvp（支线）              cc-code 主线（串行）
 ──────────────────              ──────────────────
-Architect 整理                    PM（读 prd）
+Architect 盘点项目                 PM（读 prd）
    ↓ 切角色                          ↓
-PM 结构化提问 + 产 prd.md ──► prd.md ──► Architect（产 project.md）
-                                    ↓
-                                 Dev（编码）
+PM 写 plan → ExitPlanMode          Architect（产 project.md）
+   ↓ 主人 approve 落 prd.md           ↓
+prd.md ──────────────────────► Dev（编码）
                                     ↓
                                  QA（验收，找 bug → gates.md）
 ```
@@ -120,4 +131,5 @@ plan-prd-mvp 是主线上游的「PRD 生成器」，产出后主线消费。
 1. Read `.cc_code/active/Agent.md` → 确认当前角色，先切 Architect。
 2. Read `.cc_code/active/status.md` + `errors.md` → 同步坐标与避坑。
 3. 动态探测项目结构（按 Step1 规则）。
-4. 进入阶段一 Step2 输出项目全景。
+4. 进入阶段一 Step2 输出项目全景（逻辑+原型+差异点表单）。
+5. Step3 写 plan 文件 → Step4 调用 ExitPlanMode 进入交谈收敛。
