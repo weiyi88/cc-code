@@ -36,10 +36,10 @@ Skill 会：① 双轨判定（新项目 / 旧项目接管）→ ② 生成 `.cc
 
 | skill | 触发 | 用途 |
 | --- | --- | --- |
-| `init` | `/cc-code:init` | **入场** 初始化工作流场域（判定链迁移散落物 + 注册项目级 hook） |
+| `init` | `/cc-code:init` | **入场** 初始化工作流场域（判定链迁移散落物） |
 | `cc-code` | 自动 | **运行时协议** 角色路由 + 文件分层 + 状态机约束 |
 | `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | PRD 生成器（plan 模式交谈至逻辑通顺才落地 `active/prd.md`） |
-| `agentToMVP` | `/cc-code:agentToMVP` | MVP 生命周期编排（PM→Architect→Dev→QA + qa→dev 循环） |
+| `agent-to-mvp` | `/cc-code:agent-to-mvp` | MVP 生命周期编排（PM→Architect→Dev→QA + qa→dev 循环） |
 | `whole-qa` | `/cc-code:whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口穷尽测试，分模块 fan-out，FAIL 自动回环 ≤3 轮） |
 | `short` | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
 

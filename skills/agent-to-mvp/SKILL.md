@@ -1,11 +1,11 @@
 ---
-name: agentToMVP
-description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整生命周期编排器。用户显式调用 /cc-code:agentToMVP 触发；按 PM→Architect→Dev→QA 串行 + qa→dev 循环推进至 MVP，每阶段完成后强制 /cc-code:cc-code 校准状态。手动触发，不自动加载。
+name: agent-to-mvp
+description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整生命周期编排器。用户显式调用 /cc-code:agent-to-mvp 触发；按 PM→Architect→Dev→QA 串行 + qa→dev 循环推进至 MVP，每阶段完成后强制 /cc-code:cc-code 校准状态。手动触发，不自动加载。
 ---
 
-# agentToMVP — 三 agent × cc-code 驱动 MVP 生命周期编排器
+# agent-to-mvp — 三 agent × cc-code 驱动 MVP 生命周期编排器
 
-> **手动触发**：仅由用户显式输入 `/cc-code:agentToMVP` 调用，不在会话中自动加载。
+> **手动触发**：仅由用户显式输入 `/cc-code:agent-to-mvp` 调用，不在会话中自动加载。
 > **校准铁律**：每一个阶段完成后，**必须**先执行 `/cc-code:cc-code` 校准当前状态（重读 `Agent.md`/`status.md`，重锁角色与坐标），确认无误后再进入下一阶段。未校准禁止推进。
 > **串行铁律**：严守 PM → Architect → Dev → QA 顺序，由 `.cc_code/active/Agent.md` 锁定当前角色，禁止跨角色思考与跳序。
 

@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 > **手动触发**：仅由用户显式输入 `/cc-code:whole-qa` 调用。
 > **与 `qa` agent 的关系**：`qa` 是「单模块测一次」的原子能力；本 skill 是「全模块 × 多轮 + 修复回环」的编排层，**复用 `qa`，不重写测试逻辑**。
-> **与 `agentToMVP` 的关系**：`agentToMVP` 每阶段用 `qa` 做增量验收；本 skill 用于 **MVP 收口前的一次性全量清算**。
+> **与 `agent-to-mvp` 的关系**：`agent-to-mvp` 每阶段用 `qa` 做增量验收；本 skill 用于 **MVP 收口前的一次性全量清算**。
 
 ## ⛔ 六条硬约束（违反任一即本次验收无效）
 

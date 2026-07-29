@@ -74,6 +74,6 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 
 ## 配套 agent（可选增强）
 
-三 agent 与本协议角色串行绑定，可由 `/cc-code:agentToMVP` 编排调用：`prd-plan`(PM+Architect) / `dev`(Dev) / `qa`(QA 灰盒)。不用 agent 时，主控直接扮演各角色亦可。
+三 agent 与本协议角色串行绑定，可由 `/cc-code:agent-to-mvp` 编排调用：`prd-plan`(PM+Architect) / `dev`(Dev) / `qa`(QA 灰盒)。不用 agent 时，主控直接扮演各角色亦可。
 
 阶段性增量验收用 `qa`；**MVP 收口前的全量验收 + 修复闭环用 `/cc-code:whole-qa`**（编排器：逐页逐按钮逐接口穷尽测试，分模块 fan-out，FAIL 自动回环给 dev，≤3 轮）。
