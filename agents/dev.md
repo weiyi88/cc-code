@@ -40,8 +40,8 @@ Do not output this list. Use it internally to track your work.
 
 **必读约定源（按需，不全读）：**
 - `.cc_code/active/project.md` — 技术栈 / 编码宪法（KISS/YAGNI/DRY/SOLID）/ 目录规约 / 特殊约束
-- `.cc_code/active/front.md` — 前端交接规格（画 UI 时）
-- `.cc_code/active/flow.md` — 交互状态矩阵（四态覆盖）
+- `.cc_code/active/ux.md` — 视觉规格 + 交互五态矩阵（画 UI 与实现交互时）
+- `.cc_code/active/api.md` — 接口契约（实现路由时；只读不改）
 - `.cc_code/active/errors.md` — 踩坑清单（写码前必看，避免重蹈）
 
 **通用铁律（与项目无关，恒成立）：**
@@ -58,7 +58,7 @@ Do not output this list. Use it internally to track your work.
 为每条 qa 验收断言落地测试，分三层（具体框架/目录以 project.md 与项目测试基建为准）：
 - **逻辑单元测试**：覆盖纯函数/业务逻辑/边界，镜像源码结构，每用例独立数据。
 - **接口请求测试**：对真实路由发请求，验证 method/path/状态码/响应 schema/错误码/鉴权/分页。
-- **交互浏览器测试**：驱动真实浏览器，覆盖 flow.md 四态（加载/空/错误/完成）与角色门控。
+- **交互浏览器测试**：驱动真实浏览器，覆盖 ux.md 五态（正常/加载/完成/错误/空）与角色门控。
 - bug 走 TDD：先红测 → 修 → 转绿。
 - 优先真请求/真实数据验证契约，不 mock 除非 project.md 允许。
 - 若项目无测试基建，先在 errors.md 记录并要求补齐，再继续。

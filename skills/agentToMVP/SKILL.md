@@ -37,16 +37,16 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 | 项 | 内容 |
 | --- | --- |
 | 读 | status.md, errors.md, 用户需求（禁读 src/、project.md） |
-| 做 | 模糊需求→精确规范；定义 P0/P1；拆交互场景；覆盖四态（加载/空/错误/完成） |
+| 做 | 模糊需求→精确规范；定义 P0/P1；拆交互场景；覆盖五态（正常/加载/完成/错误/空） |
 | 跑 | Agent 工具 `subagent_type=prd-plan` |
 | 输出 | PRD + 交互矩阵 + 前端规格 |
-| 写 | `prd.md`, `flow.md`, `front.md` |
+| 写 | `prd.md`, `ux.md` |
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准 |
 
 ### ② Architect 段（agent: prd-plan，Architect 视角）
 | 项 | 内容 |
 | --- | --- |
-| 读 | status, prd, flow, front（禁读 src 业务码） |
+| 读 | status, prd, ux（禁读 src 业务码） |
 | 做 | 技术选型/DB设计/API定义/目录；列每阶段验收断言清单；标 `⚠️ Needs Decision` |
 | 跑 | Agent 工具 `subagent_type=prd-plan`（切 Architect 视角） |
 | 输出 | 实现计划文档（Summary/Scope/Design/边缘案例/风险/Rollout） |
@@ -56,7 +56,7 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 ### ③ Dev 段（agent: dev）
 | 项 | 内容 |
 | --- | --- |
-| 读 | status, errors, project, front, flow, `docs/plans/phaseN-plan.md` |
+| 读 | status, errors, project, ux, `docs/plans/phaseN-plan.md` |
 | 做 | 按规格实现 src + 三层测试；遵循 project.md 约定；踩坑即记 errors.md |
 | 跑 | Agent(dev) → 内部 Read/Edit/Write；自检：`pnpm lint` → `tsc --noEmit` → `pnpm test` → `pnpm test:e2e` |
 | 输出 | 业务代码 + `tests/` + 完成报告（文件清单 + pass/fail） |
@@ -66,7 +66,7 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 ### ④ QA 段（agent: qa，灰盒）
 | 项 | 内容 |
 | --- | --- |
-| 读 | prd, flow, front, project(仅约定), API 文档, `src/`（仅本阶段改动） |
+| 读 | prd, ux, api, data, project(仅约定), `src/`（仅本阶段改动） |
 | 做 | 建验收断言清单；为每条断言写三层测试；完整跑一遍（不抽样） |
 | 跑 | Agent(qa) → `pnpm test` + `pnpm test:e2e` + 浏览器 MCP（chrome-devtools/Playwright）驱动疑难交互 |
 | 输出 | QA 报告（Verdict + 断言追溯矩阵 + Critical Failures 清单） |
@@ -79,7 +79,7 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 | --- | --- | --- | --- |
 | 逻辑 | 纯函数/规则/边界 | vitest | `pnpm test` |
 | 接口 | method/path/状态码/schema/错误码/鉴权/分页 | vitest+fetch | `pnpm test:api`（需 `TEST_BASE_URL`） |
-| 交互 | flow 四态 + 角色门控 | Playwright | `pnpm test:e2e` |
+| 交互 | ux 五态 + 角色门控 | Playwright | `pnpm test:e2e` |
 
 ## qa → dev 循环（QA 段内）
 
@@ -100,17 +100,18 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 
 ## 阶段结算
 
-- QA PASS 后，Hook 静默归档 `status.md`/`changelog.md`/`backup/`。
+- QA PASS 后，**AI** 更新 `status.md` 的「最近完成里程碑」（只留最近 10 条）；Hook 只静默切片 `errors.md`。
 - AI 顺手更新 `status.md`「当前坐标 + 下一步」。
 - 执行 `/cc-code:cc-code` 校准，确认进入下一阶段。
 
 ## MVP 收口（全部阶段 PASS）
 
 1. 执行 `/cc-code:cc-code` 校准，确认 N/N 阶段 PASS、`gates.md` 全关卡通过。
-2. 全量回归：`pnpm build` + `pnpm test` + `pnpm test:e2e` + `scripts/smoke-test.sh`。
-3. 产出 `SETUP.md` / 部署清单。
-4. `changelog.md` 记 MVP 里程碑。
-5. 报告：可部署 MVP。
+2. **执行 `/cc-code:whole-qa` 做一次全量清算** —— 阶段验收只覆盖各阶段增量，收口前必须逐页逐按钮逐接口穷尽一遍，并跑完修复回环。未过不得收口。
+3. 全量回归：`pnpm build` + `pnpm test` + `pnpm test:e2e` + `scripts/smoke-test.sh`。
+4. 产出 `SETUP.md` / 部署清单。
+5. `status.md` 记 MVP 里程碑。
+6. 报告：可部署 MVP。
 
 ## 编排器行为准则
 

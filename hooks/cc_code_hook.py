@@ -1,34 +1,37 @@
 #!/usr/bin/env python3
 """
-cc-code Plugin - Stop Hook 静默结算引擎 (纯脚本, 零 LLM)
-=========================================================
+cc-code - Stop Hook 静默结算引擎 (纯脚本, 零 LLM)
+=================================================
 设计原则: 本脚本只做「机械活」, 绝不调用 LLM。
   - 需要理解力的写入(推进 status / 记录 errors 新坑)由 AI 在对话内顺手完成。
-  - 本 Hook 只负责: 冷热切片 / 归档骨架 / status 过长归档 / changelog。
+  - 本 Hook 唯一职责: errors.md 超长时切片到 backup/。
 
-每次 Stop 由 Claude Code 触发, 毫秒级, 静默, 异常吞掉绝不阻塞 AI 回合。
+部署方式: **项目层级**。由 /cc-code:init 复制到 <项目>/.cc_code/scripts/,
+  并在 <项目>/.claude/settings.json 注册 Stop 事件。只作用于本项目,
+  不做全局注册, 因此不会误伤无关项目。
+
+每次 Stop 触发, 毫秒级, 静默, 异常吞掉绝不阻塞 AI 回合。
 """
 
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
 
 ERRORS_HOT_LIMIT = 100   # errors.md 超此行数触发切片
-ERRORS_KEEP_HEAD = 50    # 切片后热区保留尾部行数
-STATUS_MAX_LINES = 120   # status.md 超此行数归档
+ERRORS_KEEP_TAIL = 50    # 切片后热区保留的尾部行数
 
 
-def find_cc_code(start: Path):
-    p = start.resolve()
-    for cand in [p, *p.parents]:
-        cc = cand / ".cc_code"
-        if cc.is_dir():
-            return cc
+def locate_cc_code():
+    """本脚本部署在 <项目>/.cc_code/scripts/ 下, 由自身位置直接推导黑匣子根。
+    不看 cwd、不向上递归 —— 因此绝无跨项目误伤。"""
+    cc = Path(__file__).resolve().parent.parent
+    if cc.name == ".cc_code" and (cc / "active").is_dir():
+        return cc
     return None
 
 
 def slice_errors(active: Path, backup: Path) -> None:
+    """errors.md 超长时: 保留头部说明 + 最近条目, 中段陈年记录切到 backup/。"""
     errors = active / "errors.md"
     if not errors.exists():
         return
@@ -42,8 +45,8 @@ def slice_errors(active: Path, backup: Path) -> None:
             head_end = i
             break
     head = lines[:max(head_end, 6)]
-    tail = lines[-ERRORS_KEEP_HEAD:]
-    archived = lines[max(head_end, 6):-ERRORS_KEEP_HEAD]
+    tail = lines[-ERRORS_KEEP_TAIL:]
+    archived = lines[max(head_end, 6):-ERRORS_KEEP_TAIL]
     if not archived:
         return
 
@@ -58,57 +61,18 @@ def slice_errors(active: Path, backup: Path) -> None:
     errors.write_text(new, encoding="utf-8")
 
 
-def archive_status(active: Path, backup: Path) -> None:
-    status = active / "status.md"
-    if not status.exists():
-        return
-    lines = status.read_text(encoding="utf-8").splitlines()
-    if len(lines) <= STATUS_MAX_LINES:
-        return
-    ym = datetime.now().strftime("%Y-%m")
-    arc_dir = backup / ym
-    arc_dir.mkdir(parents=True, exist_ok=True)
-    (arc_dir / "status_archive.md").open("a", encoding="utf-8").write(
-        f"\n<!-- {datetime.now().strftime('%Y-%m-%d %H:%M')} -->\n" + "\n".join(lines) + "\n"
-    )
-    status.write_text(
-        "# ⏱️ 当前施工快照 (status.md)\n\n> 历史快照已归档至 backup/。\n\n## 📌 当前坐标\n* [待更新]\n",
-        encoding="utf-8",
-    )
-
-
-def append_changelog(cc: Path, session_id: str) -> None:
-    cl = cc / "changelog.md"
-    if not cl.exists():
-        return
-    sid = (session_id or "")[:8]
-    text = cl.read_text(encoding="utf-8")
-    if sid and sid in text:  # 同会话已结算, 不重复
-        return
-    today = datetime.now().strftime("%Y-%m-%d")
-    stamp = datetime.now().strftime("%H:%M")
-    with cl.open("a", encoding="utf-8") as f:
-        f.write(f"\n## [{today} {stamp}] 会话结算 `{sid}`\n- Stop Hook 静默归档完成\n")
-
-
 def main() -> int:
-    session_id = ""
     try:
-        raw = sys.stdin.read()
-        if raw.strip():
-            session_id = json.loads(raw).get("session_id", "") or ""
+        sys.stdin.read()   # 消费掉 hook 输入, 避免上游 EPIPE
     except Exception:
         pass
 
-    cc = find_cc_code(Path.cwd())
+    cc = locate_cc_code()
     if cc is None:
-        return 0  # 非 cc_code 项目, 静默退出
+        return 0  # 未部署在 .cc_code/scripts/ 下, 静默退出
 
-    active, backup = cc / "active", cc / "backup"
     try:
-        slice_errors(active, backup)
-        archive_status(active, backup)
-        append_changelog(cc, session_id)
+        slice_errors(cc / "active", cc / "backup")
     except Exception as e:
         try:
             (cc / "scripts" / "hook_error.log").open("a", encoding="utf-8").write(

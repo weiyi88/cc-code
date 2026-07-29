@@ -21,53 +21,65 @@
 
 ```
 PM ──► Architect ──► Dev ──► QA
-(需求)   (架构)      (编码)   (验收)
+(逻辑)   (契约)      (编码)   (验收)
 ```
 
 每个角色由 `.cc_code/active/Agent.md` 路由表锁定「必读/可写/禁读」，禁止越权。
 
-## 🗂️ 文件索引（按需读取，不要全读）
+## 🗂️ 文件索引（按层查，按需读，不要全读）
 
-| 文件 | 用途 | 维护者 |
-| --- | --- | --- |
-| `.cc_code/active/Agent.md` | 最高宪法：角色 + 权限路由表 | 人 / Hook |
-| `.cc_code/active/status.md` | 当前坐标 + 下一步 | 当前角色 AI |
-| `.cc_code/active/errors.md` | 避坑清单 | Dev |
-| `.cc_code/active/project.md` | 技术宪法（架构 / 原则） | Architect |
-| `.cc_code/active/data.md` | 数据契约（interface / 字段规则 / 原型↔真实切换） | Architect |
-| `.cc_code/prd.md` | 产品需求文档（功能清单 + 验收标准） | PM / plan-prd-mvp |
-| `.cc_code/active/flow.md` | 交互状态矩阵 | PM |
-| `.cc_code/active/front.md` | 前端交接规格 | PM |
-| `.cc_code/active/gates.md` | QA 验收关卡（Dev 禁读） | QA |
-| `.cc_code/docs/` | 活跃文档（规格 / 指南 / API 样例） | Architect / PM |
-| `.cc_code/images/` | 截图（扁平存放） | init 迁移 |
-| `.cc_code/scripts/` | 散落脚本归档 | init 迁移 |
-| `.cc_code/changelog.md` | 里程碑（Hook 自动写） | Hook |
-| `.cc_code/backup/` | 冷数据归档（溯源才翻，默认不入库） | Hook |
+| 层 | 文件 | 用途 | 维护者 |
+| :-- | :--- | :--- | :--- |
+| **L0** | `active/Agent.md` | 最高宪法：角色 + 权限路由表 | 人 |
+| | `active/status.md` | 当前坐标 + 下一步 + 里程碑 | 当前角色 AI |
+| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | PM / plan-prd-mvp |
+| **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM |
+| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录） | Architect |
+| | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
+| | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
+| **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
+| **L5** | `active/errors.md` | 避坑清单（不可重犯的规则） | Dev |
+| **L6** | `backup/` | 冷数据归档（溯源才翻，默认不入库） | Hook |
+| — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |
+| — | `docs/plans/` | 阶段实现方案 | Architect |
+| — | `images/` | 截图（扁平存放） | init 迁移 |
+| — | `scripts/` | Stop Hook 脚本 + 归档脚本 | init |
 
-### PM 三产物边界（防重合）
+### 信息流铁律
+
+```
+   L1 意图 ──► L2 表现 ──► L3 实现 ──► 代码
+    ▲                                   │
+    └───────── L4 验收 ◄────────────────┘
+
+  L4 只拿 L1 / L2 当尺子；codegraph 只准校准 L3，永不生成 L1 / L2 / L4
+```
+
+### PM 两产物边界（防重合）
 
 | 文件 | 定位 | 不写 |
-| --- | --- | --- |
-| `prd.md` | 功能清单 + 验收标准（做什么） | 交互细节、UI 规格 |
-| `flow.md` | 交互状态流转（用户怎么走） | 功能清单、组件规格 |
-| `front.md` | 组件规格 + 响应式（界面长啥样） | 功能清单、状态流转 |
+| :--- | :--- | :--- |
+| `prd.md` | 分模块业务逻辑 + 规则 + 验收断言（规则是什么） | UI 规格、接口参数 |
+| `ux.md` | 视觉规格 + 交互五态（长什么样、点了怎么变） | 业务规则、字段类型 |
 
-上游关系：`prd.md` 先行 → `flow.md` / `front.md` 基于 prd 细化，不反向。`prd.md` 由 `/cc-code:plan-prd-mvp` 或 PM 维护，单文件动态更新，重大变更归档 `backup/` + changelog 记里程碑。
+判据：**能脱离界面存在的 → `prd.md`；离开界面就没意义的 → `ux.md`**。
+`prd.md` 由 `/cc-code:plan-prd-mvp` 或 PM 维护，单文件动态更新，重大变更归档 `backup/`。
 
 ## ⚙️ 角色切换
 
 当当前阶段产物完成或用户明确要求切换：
 
-1. 人 / Hook 更新 `.cc_code/active/Agent.md` 的「当前激活角色」字段。
+1. 人更新 `.cc_code/active/Agent.md` 的「当前激活角色」字段。
 2. AI 重新 Read `Agent.md` 加载新权限表。
 3. 切换前严禁预读下一角色的禁读文件。
 
 ## 📌 唯一真相源
 
+- 规则 → `.cc_code/active/prd.md`
 - 进度 → `.cc_code/active/status.md`
 - 踩坑 → `.cc_code/active/errors.md`
+- 契约 → `.cc_code/active/data.md` / `.cc_code/active/api.md`
+- 实测 → `.cc_code/active/gates.md`
 - 宪法 → `.cc_code/active/Agent.md`
-- 数据契约 → `.cc_code/active/data.md`
 
-禁止凭记忆作答；禁止向用户报告归档 / 进度流转细节（Hook 静默完成）。
+禁止凭记忆作答；禁止向用户报告归档细节（Hook 静默完成）。

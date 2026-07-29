@@ -1,5 +1,5 @@
 ---
-description: 显式触发的 PRD 生成器。在 cc-code 框架内，独立 agent：先动态探测项目，输出完整项目逻辑图+原型图+距离 MVP 差异点表单，再调用 EnterPlanMode 进入 plan 模式与主人交谈逻辑模糊点，一直保持在 plan 模式直至整个 PRD 逻辑与 MVP 通顺，才 ExitPlanMode 放行落地 .cc_code/prd.md 并交接 cc-code 主线。不找 bug（QA 职责）、不写代码（Dev 职责）。
+description: 显式触发的 PRD 生成器。在 cc-code 框架内，独立 agent：先动态探测项目，输出完整项目逻辑图+原型图+距离 MVP 差异点表单，再调用 EnterPlanMode 进入 plan 模式与主人交谈逻辑模糊点，一直保持在 plan 模式直至整个 PRD 逻辑与 MVP 通顺，才 ExitPlanMode 放行落地 .cc_code/active/prd.md 并交接 cc-code 主线。不找 bug（QA 职责）、不写代码（Dev 职责）。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
 ---
@@ -9,7 +9,7 @@ disable-model-invocation: true
 > cc-code 框架内的支线命令。定位：项目距 MVP 的「最后一公里整理器」。
 > 目的：整理清楚整个项目逻辑、原型、差异点 → 进入 plan 模式与主人交谈 → PRD 与 MVP 完全通顺才放行。
 > **不负责**：找 bug（QA → gates.md）、写代码（Dev）、改 active/ 其他 md。
-> **产出**：`.cc_code/prd.md`（单文件动态更新，重大变更归档 `backup/` + changelog 记里程碑）。
+> **产出**：`.cc_code/active/prd.md`（单文件动态更新，重大变更归档 `backup/`）。
 
 ## 一、定位
 
@@ -26,10 +26,10 @@ disable-model-invocation: true
 | 文件 | 定位 | 不写 |
 | --- | --- | --- |
 | `prd.md` | 功能清单 + 验收标准（做什么） | 交互细节、UI 规格 |
-| `flow.md` | 交互状态流转（用户怎么走） | 功能清单、组件规格 |
-| `front.md` | 组件规格 + 响应式（界面长啥样） | 功能清单、状态流转 |
+| `ux.md` | 交互状态流转（用户怎么走） | 功能清单、组件规格 |
+| `ux.md` | 组件规格 + 响应式（界面长啥样） | 功能清单、状态流转 |
 
-上游关系：`prd.md` 先行 → `flow.md` / `front.md` 基于 prd 细化，不反向。
+上游关系：`prd.md` 先行 → `ux.md` 基于 prd 细化，不反向。
 
 ## 三、执行逻辑（三阶段）
 
@@ -37,7 +37,7 @@ disable-model-invocation: true
 
 ```
 Step1 动态探测读取（不固定文件清单，按项目实际结构）
-  ├─ cc_code 框架内: .cc_code/active/* + .cc_code/docs/* + changelog.md
+  ├─ cc_code 框架内: .cc_code/active/* + .cc_code/docs/*
   ├─ 项目结构: package.json / go.mod / pom.xml 等 → 定技术栈
   ├─ 数据层: 按栈定位 schema（prisma / drizzle / gorm / sequelize...）
   └─ 业务入口: app/ src/ routes/ 等 → 按需读
@@ -76,8 +76,8 @@ Step6 全部通顺 → 调用 ExitPlanMode 提交 plan 文件 → 请求主人�
 ### 阶段三：落地 PRD + 交接
 
 ```
-Step7 approve → 把定稿 plan 落地为 .cc_code/prd.md
-  └─ 旧版归档 .cc_code/backup/YYYY-MM/ + changelog 记里程碑
+Step7 approve → 把定稿 plan 落地为 .cc_code/active/prd.md
+  └─ 旧版归档 .cc_code/backup/YYYY-MM/
 
 Step8 提示: 可走 /cc-code:cc-code 进入主线
 ```
@@ -97,7 +97,7 @@ Step8 提示: 可走 /cc-code:cc-code 进入主线
    └─ 验收标准（每模块的验收点）
 ```
 
-> 不含：bug 清单（→ QA gates.md）、UI 规格（→ front.md）、交互细节（→ flow.md）
+> 不含：bug 清单（→ QA gates.md）、UI 规格（→ ux.md）、交互细节（→ ux.md）
 > 注：plan 文件是 plan 模式交谈的载体；prd.md 是定稿落地，二者结构一致。
 
 ## 五、关键约束
@@ -109,9 +109,9 @@ Step8 提示: 可走 /cc-code:cc-code 进入主线
 | 先探后入 | 阶段一在 plan 模式外完成探测与三件套输出，再 EnterPlanMode |
 | plan 模式内只写 plan | plan 模式内只写 plan 文件，prd.md 等 approve 后才落地 |
 | 动态读取 | 不固定文件清单，按项目结构探测，守上下文最小化 |
-| 不越界 | 只写 `.cc_code/prd.md`，不碰 active/ 其他 md，不改代码 |
+| 不越界 | 只写 `.cc_code/active/prd.md`，不碰 active/ 其他 md，不改代码 |
 | 不找 bug | bug 是 QA 职责，prd 只管完备 MVP 逻辑 |
-| 单文件 | prd.md 唯一真相源，旧版归档 `.cc_code/backup/YYYY-MM/` + changelog 记里程碑 |
+| 单文件 | prd.md 唯一真相源，旧版归档 `.cc_code/backup/YYYY-MM/` |
 
 ## 六、与 cc-code 主线的关系
 

@@ -29,9 +29,9 @@ Before planning, thoroughly understand what is being asked:
 | 真相源 | 内容 | 何时读 |
 |---|---|---|
 | `.cc_code/active/project.md` | 技术栈 / 编码宪法 / 目录规约 / 特殊约束 | 规划技术方案前必读 |
-| `.cc_code/prd.md` | 产品需求 | 拆解需求时必读 |
-| `.cc_code/active/flow.md` | 交互状态矩阵（加载/空/错误/完成四态） | 设计 UI/交互时必读 |
-| `.cc_code/active/front.md` | 前端交接规格 | 涉及 UI 时必读 |
+| `.cc_code/active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | 拆解需求时必读 |
+| `.cc_code/active/ux.md` | 视觉规格 + 交互五态矩阵（正常/加载/完成/错误/空） | 设计 UI/交互时必读 |
+| `.cc_code/active/ux.md` | 前端交接规格 | 涉及 UI 时必读 |
 | `.cc_code/active/errors.md` | 踩坑清单 | 规划前扫描，避免重蹈 |
 | `.cc_code/active/Agent.md` | 角色权限路由表 | 确认当前激活角色与禁读边界 |
 
@@ -171,7 +171,7 @@ Before finalizing, ask yourself:
 
 本 agent 与 cc-code 工作流绑定、跨项目通用。规划时一律以当前项目的 cc_code 真相源对齐（见上文「项目约定」），并额外确保：
 
-- **角色边界**：本 agent 跨 PM + Architect 两段。先按 PM 视角定义需求/交互（参考 prd.md / flow.md / front.md），再按 Architect 视角定技术方案（参考 project.md）。遵守 Agent.md 的当前激活角色与禁读边界，仅在「Explore the Codebase Context」阶段做最小必要读取。
+- **角色边界**：本 agent 跨 PM + Architect 两段。先按 PM 视角定义需求/交互（参考 prd.md / ux.md），再按 Architect 视角定技术方案（参考 project.md）。遵守 Agent.md 的当前激活角色与禁读边界，仅在「Explore the Codebase Context」阶段做最小必要读取。
 - **约定即真相**：数据层、组件库、i18n、导入规范、部署栈、测试基建等，全部 defer 到 project.md，不在计划里发明约定或套用其他项目习惯。
 - **测试对齐**：计划中的测试策略须与 qa agent 的三类测试（逻辑用例 / 接口请求 / 浏览器交互）对齐，每阶段列出验收断言清单供 qa 落地。
 - **未覆盖即提问**：project.md 未覆盖的约束列入「⚠️ Needs Decision」，不擅自假设。
