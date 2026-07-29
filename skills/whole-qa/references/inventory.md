@@ -144,7 +144,37 @@
 
 ---
 
-## 六、落盘格式
+## 六、冗余检测 `DEAD[] / ORPHAN[] / DUP[]`
+
+> 测「不该有的有没有」—— vibecoding 多次修改易留死代码/孤儿文件/重复实现。
+> whole-qa 本来就全量扫代码，顺带做，零额外负担。用 codegraph 查（亚毫秒，不读文件）。
+
+### 1. 死代码 `DEAD[]`
+codegraph 扫所有 export（函数/类/常量/组件），`callers` 为空且不在路由/入口被引用 → DEAD。
+排除：入口文件本身（`page`/`route`/`main`）、类型导出、barrel `index.ts` re-export。
+
+### 2. 孤儿文件 `ORPHAN[]`
+codegraph 扫所有源文件，无任何 import 引用它 → ORPHAN。
+排除：入口文件、配置文件、测试文件、`.d.ts`。
+
+### 3. 重复实现 `DUP[]`（半自动，人审）
+codegraph 按行为聚类：同名 / 签名相似 / 调用同一组依赖 → 列候选对，人工确认是否真重复。
+
+### 4. 过度抽象 `OVER_ABSTRACT[]`（人工）
+提示 Architect 审查：单层无调用方的 wrapper / facade；为「未来扩展」预留但当前无用的接口/参数；单实现却抽象出 interface（YAGNI）。
+
+### 判定
+| 类型 | verdict | 处理 |
+| --- | --- | --- |
+| DEAD / ORPHAN | ⚠️ 应清理 | 列清单交 Dev，不阻塞 Verdict |
+| DUP | ⚠️ 人审 | 候选对，人工决定合并 |
+| OVER_ABSTRACT | 💡 建议 | 提示 Architect，不强制 |
+
+> 冗余项**不算 FAIL**（功能没问题），但必须在报告列出 —— 否则项目越来越臃肿，违背防治「多次修改冗余」的初衷。
+
+---
+
+## 七、落盘格式
 
 `.cc_code/docs/qa/<YYYY-MM-DD>-inventory.md`
 
@@ -159,6 +189,7 @@ BASE_URL: <url>　　身份样本: <账号列表>
 | 可交互元素（唯一 + 同构组代表） | |
 | 接口 | |
 | 验收断言 | |
+| 冗余项（死代码/孤儿/重复） | |
 
 ## M1. <模块名>
 ### 页面

@@ -58,7 +58,21 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 | 1 | `POST /api/pay` | 副作用不可逆，无隔离环境 | 独立测试库 + mock 支付网关 |
 | 2 | `/user/[id]` | 缺样本数据 | seed 一个用户 |
 
-## 六、Critical Failures（回 dev 必修）
+## 六、冗余检测（该有的反面）
+
+> vibecoding 多次修改易留死代码/孤儿/重复。不算 FAIL，但必须列出交清理。
+> 详见 `docs/qa/<日期>-inventory.md` 的冗余检测段。
+
+| 类型 | 数量 | 清单 |
+| --- | --- | --- |
+| 死代码 DEAD | | `file:line` |
+| 孤儿文件 ORPHAN | | 文件列表 |
+| 重复实现 DUP | | 候选对（人审） |
+| 过度抽象 OVER_ABSTRACT | | 建议项 |
+
+---
+
+## 七、Critical Failures（回 dev 必修）
 
 ### 1. [A2] <一句话标题>
 *   **Required：** <`prd.md` 原文>
@@ -68,17 +82,17 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 *   **证据：** `<截图 / console 日志 / 网络记录>`
 *   **Fix direction：** <一句，指向需求而非设计意见>
 
-## 七、Minor Failures（应修，不阻塞 Verdict）
+## 八、Minor Failures（应修，不阻塞 Verdict）
 
 | # | 项 | 描述 |
 | --- | --- | --- |
 
-## 八、ESCALATE（dev 修不动，需人决策）
+## 九、ESCALATE（dev 修不动，需人决策）
 
 | # | 项 | 卡在哪 | 需要什么决策 |
 | --- | --- | --- | --- |
 
-## 九、轮次与收敛
+## 十、轮次与收敛
 
 | 轮次 | Critical | Minor | 新增 FAIL | 结论 |
 | --- | --- | --- | --- | --- |
@@ -94,6 +108,6 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
   > 3 轮                → 停止，标记升级
 ```
 
-## 十、Not in Scope
+## 十一、Not in Scope
 
 *   代码风格 / 架构 / 性能 / 命名 —— 除非 `prd.md` 或 `api.md` 明确要求。
