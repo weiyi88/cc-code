@@ -12,36 +12,29 @@
 ```
 skills/      11 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
 agents/       3 个 .md  → prd-plan / dev / qa
-hooks/       cc_code_hook.py  (Stop, 纯脚本；无 hooks.json —— 见下)
-scripts/     init.sh  (脚手架 + 项目级 hook 注册)
-templates/   10 个 .md 骨架  → init 时 cp 进 .cc_code/active/
+scripts/     init.sh  (脚手架 + 散落物迁移)
+templates/   8 个 .md 骨架  → init 时 cp 进 .cc_code/active/
 ```
 
-> 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`（skill 同时支持 `/cc-code:<name>` 显式调用与自动触发，无需两套资产）。
+> 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`。
+> 0.5.0 起删除 `hooks/`（Stop Hook 机制废除）与 `templates/errors.md` —— 所有 `.cc_code/` 文件由 AI 顺手写，无自动化机械活。
 
 ## 寻址约定
 
 - 插件内文件引用统一用 `$CLAUDE_PLUGIN_ROOT/...`。
 - skill 内部配套文件用相对路径（如 `whole-qa` 的 `references/*.md`）。
 
-## Hook 为何是项目层级（关键设计）
+## 状态机
+
+详见 `skills/cc-code/SKILL.md`。核心：所有 `.cc_code/` 文件都由 AI 在对话内顺手写（需理解力），无自动化机械活。`status.md` 长度由 AI 自管（里程碑保留最近 10 条）。
+
+## 散落物迁移（init.sh 的判定链）
 
 ```
-插件不注册全局 Stop hook（已删除 hooks/hooks.json）
-        │
-        │  /cc-code:init 执行时
-        ▼
-① cp hooks/cc_code_hook.py ──► <项目>/.cc_code/scripts/cc_code_hook.py
-② 安全合并 <项目>/.claude/settings.json 注册 Stop 事件
-        │
-        ▼
-脚本用 __file__ 自定位（parent.parent 即 .cc_code/）
-  ├─ 不看 cwd、不向上递归 ──► 绝无跨项目误伤
-  └─ 未部署在 .cc_code/scripts/ 下则静默退出
+项目根文件 ──► ① 保护白名单？ ──► ② git 已追踪？ ──► ③ 被引用？ ──► ④ 名字像临时物？
+                 (任一命中即 SKIP)                              (才搬)
+                                                                  ↓ 都不匹配
+                                                              原地保留 + 记 needs_review.md
 ```
 
-旧版靠 `find_cc_code(cwd)` 向上递归找 `.cc_code/`，会跨项目边界误伤祖先目录带黑匣子的无关子项目 —— 已废弃。
-
-## 状态机与冷热分离
-
-详见 `skills/cc-code/SKILL.md` 与 `hooks/cc_code_hook.py`。核心：AI 写热数据（需要理解力），Hook 只做 `errors.md` 冷切片（纯机械），互不越界。`status.md` 由 AI 自管，Hook 不碰。
+旧版「默认搬走 + 排除两个已知文件」会误杀 `setup.py`/`manage.py`/`AGENTS.md`/`build.sh` 等基建 —— 已反转为「默认不动」。

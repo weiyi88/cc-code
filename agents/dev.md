@@ -42,7 +42,6 @@ Do not output this list. Use it internally to track your work.
 - `.cc_code/active/project.md` — 技术栈 / 编码宪法（KISS/YAGNI/DRY/SOLID）/ 目录规约 / 特殊约束
 - `.cc_code/active/ux.md` — 视觉规格 + 交互五态矩阵（画 UI 与实现交互时）
 - `.cc_code/active/api.md` — 接口契约（实现路由时；只读不改）
-- `.cc_code/active/errors.md` — 踩坑清单（写码前必看，避免重蹈）
 
 **通用铁律（与项目无关，恒成立）：**
 - **导入规范以 project.md + 现有可运行文件为准**：开工前先读一个可运行文件确认导入惯例（扩展名、路径别名、type-only 导入等），不套用其他项目习惯。
@@ -61,7 +60,7 @@ Do not output this list. Use it internally to track your work.
 - **交互浏览器测试**：驱动真实浏览器，覆盖 ux.md 五态（正常/加载/完成/错误/空）与角色门控。
 - bug 走 TDD：先红测 → 修 → 转绿。
 - 优先真请求/真实数据验证契约，不 mock 除非 project.md 允许。
-- 若项目无测试基建，先在 errors.md 记录并要求补齐，再继续。
+- 若项目无测试基建，先在 status.md 记录并要求补齐，再继续。
 
 ### Step 4: Verify & Report
 

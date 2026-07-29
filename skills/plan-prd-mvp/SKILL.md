@@ -132,7 +132,7 @@ plan-prd-mvp 是主线上游的「PRD 生成器」，产出后主线消费。
 ## 七、触发后首步动作清单
 
 1. Read `.cc_code/active/Agent.md` → 确认角色（独立 agent，先按 Architect 视角盘点）。
-2. Read `.cc_code/active/status.md` + `errors.md` → 同步坐标与避坑。
+2. Read `.cc_code/active/status.md` → 同步坐标。
 3. 动态探测项目结构（按 Step1 规则）。
 4. 阶段一 Step2 输出三件套（项目逻辑图 + 原型图 + MVP 差异点表单）。
 5. Step3 调用 EnterPlanMode 进入 plan 模式 → Step4 写 plan 文件 → Step5 交谈至通顺。

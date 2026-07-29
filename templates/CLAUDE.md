@@ -8,8 +8,7 @@
 
 1. Read `.cc_code/active/Agent.md` → 锁定【当前激活角色】+【文件权限路由表】
 2. Read `.cc_code/active/status.md` → 获取当前坐标（现在在做什么、卡在哪）
-3. Read `.cc_code/active/errors.md` → 扫描避坑清单（写码前必看）
-4. 仅按当前角色权限读写对应文件，禁止越权
+3. 仅按当前角色权限读写对应文件，禁止越权
 
 ## ⚖️ 三大铁律（贯穿全会话）
 
@@ -38,12 +37,11 @@ PM ──► Architect ──► Dev ──► QA
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
-| **L5** | `active/errors.md` | 避坑清单（不可重犯的规则） | Dev |
-| **L6** | `backup/` | 冷数据归档（溯源才翻，默认不入库） | Hook |
+| — | `backup/` | 冷数据归档（溯源才翻，默认不入库） | — |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |
 | — | `docs/plans/` | 阶段实现方案 | Architect |
 | — | `images/` | 截图（扁平存放） | init 迁移 |
-| — | `scripts/` | Stop Hook 脚本 + 归档脚本 | init |
+| — | `scripts/` | 散落脚本归档 | init |
 
 ### 信息流铁律
 
@@ -77,9 +75,8 @@ PM ──► Architect ──► Dev ──► QA
 
 - 规则 → `.cc_code/active/prd.md`
 - 进度 → `.cc_code/active/status.md`
-- 踩坑 → `.cc_code/active/errors.md`
 - 契约 → `.cc_code/active/data.md` / `.cc_code/active/api.md`
 - 实测 → `.cc_code/active/gates.md`
 - 宪法 → `.cc_code/active/Agent.md`
 
-禁止凭记忆作答；禁止向用户报告归档细节（Hook 静默完成）。
+禁止凭记忆作答；禁止向用户报告归档细节。

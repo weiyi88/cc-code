@@ -32,7 +32,6 @@ Before planning, thoroughly understand what is being asked:
 | `.cc_code/active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | 拆解需求时必读 |
 | `.cc_code/active/ux.md` | 视觉规格 + 交互五态矩阵（正常/加载/完成/错误/空） | 设计 UI/交互时必读 |
 | `.cc_code/active/ux.md` | 前端交接规格 | 涉及 UI 时必读 |
-| `.cc_code/active/errors.md` | 踩坑清单 | 规划前扫描，避免重蹈 |
 | `.cc_code/active/Agent.md` | 角色权限路由表 | 确认当前激活角色与禁读边界 |
 
 **规划要点（每个方案都必须回答，答案来自 project.md 而非臆测）：**

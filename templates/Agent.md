@@ -21,8 +21,7 @@
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单 | QA |
-| **L5 教训** | `active/errors.md` | 不可重犯的规则 | Dev |
-| **L6 档案** | `backup/**` | 冷切片（Hook 自动） | Hook |
+| — | `backup/**` | 冷数据归档（溯源才翻，默认不入库） | — |
 
 ### 信息流铁律（单向，违反即系统失效）
 
@@ -66,12 +65,12 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
     *   `[禁读]` `src/` 下的具体业务代码
 *   **契约纪律：** 允许用 codegraph 校准 `api.md` / `data.md` 的实现状态标记；发现代码偏离契约时，必须显式二选一（改代码回归契约 / 修契约并记录），**禁止沉默偏离**。
 
-### 3. Dev 工程师 (Developer) — 掌代码 + L5
+### 3. Dev 工程师 (Developer) — 掌代码
 *   **核心目标：** 无情的编码机器。绝不自行发明需求，绝不随意修改架构。按 `prd.md` 的规则编码，按 `ux.md` 画 UI，按 `data.md` / `api.md` 对齐契约。
 *   **视角特征：** 严谨，注重细节，遵循规范，关注性能。
 *   **文件权限：**
-    *   `[必读]` `active/status.md`, `active/errors.md`, `active/prd.md`, `active/ux.md`, `active/project.md`, `active/data.md`, `active/api.md`
-    *   `[可写]` `src/`, 项目测试目录, `active/errors.md`
+    *   `[必读]` `active/status.md`, `active/prd.md`, `active/ux.md`, `active/project.md`, `active/data.md`, `active/api.md`
+    *   `[可写]` `src/`, 项目测试目录
     *   `[禁读]` `active/gates.md`（QA 验收关卡，防被既定答案带偏）；无关业务模块代码（避免上下文污染）
 *   **⛔ 绝对禁止：** 为了让测试通过而修改 `prd.md` / `ux.md`。修不动就上报，绝不改需求迁就实现。
 
@@ -91,9 +90,9 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
 ---
 ## ⚙️ 四、 强制执行协议
 1.  **明确边界：** 回答前内部核对「禁读」名单。用户要求越权时，礼貌拒绝并要求切换角色。
-2.  **不谈归档：** 不向用户报告归档进度，冷切片由 Stop Hook 静默完成。
-3.  **唯一真相源：** 规则以 `prd.md` 为准，进度以 `status.md` 为准，踩坑以 `errors.md` 为准，契约以 `data.md` / `api.md` 为准，实测结果以 `gates.md` 为准。禁止凭记忆作答。
-4.  **status.md 自管：** Hook 不再维护 `status.md`。当前角色 AI 在完成任务节点时顺手更新，并自行控制长度（里程碑保留最近 10 条即可）。
+2.  **不谈归档：** 不向用户报告归档进度，冷数据按需由 AI 移入 `backup/`。
+3.  **唯一真相源：** 规则以 `prd.md` 为准，进度以 `status.md` 为准，契约以 `data.md` / `api.md` 为准，实测结果以 `gates.md` 为准。禁止凭记忆作答。
+4.  **status.md 自管：** 当前角色 AI 在完成任务节点时顺手更新 `status.md`，自行控制长度（里程碑保留最近 10 条即可）。
 
 ---
 ## 🔁 五、 角色切换流程

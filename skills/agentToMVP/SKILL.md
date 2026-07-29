@@ -6,7 +6,7 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 # agentToMVP — 三 agent × cc-code 驱动 MVP 生命周期编排器
 
 > **手动触发**：仅由用户显式输入 `/cc-code:agentToMVP` 调用，不在会话中自动加载。
-> **校准铁律**：每一个阶段完成后，**必须**先执行 `/cc-code:cc-code` 校准当前状态（重读 `Agent.md`/`status.md`/`errors.md`，重锁角色与坐标），确认无误后再进入下一阶段。未校准禁止推进。
+> **校准铁律**：每一个阶段完成后，**必须**先执行 `/cc-code:cc-code` 校准当前状态（重读 `Agent.md`/`status.md`，重锁角色与坐标），确认无误后再进入下一阶段。未校准禁止推进。
 > **串行铁律**：严守 PM → Architect → Dev → QA 顺序，由 `.cc_code/active/Agent.md` 锁定当前角色，禁止跨角色思考与跳序。
 
 ## 前置检查（启动时一次性）
@@ -36,7 +36,7 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 ### ① PM 段（agent: prd-plan，PM 视角）
 | 项 | 内容 |
 | --- | --- |
-| 读 | status.md, errors.md, 用户需求（禁读 src/、project.md） |
+| 读 | status.md, 用户需求（禁读 src/、project.md） |
 | 做 | 模糊需求→精确规范；定义 P0/P1；拆交互场景；覆盖五态（正常/加载/完成/错误/空） |
 | 跑 | Agent 工具 `subagent_type=prd-plan` |
 | 输出 | PRD + 交互矩阵 + 前端规格 |
@@ -57,10 +57,10 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 | 项 | 内容 |
 | --- | --- |
 | 读 | status, errors, project, ux, `docs/plans/phaseN-plan.md` |
-| 做 | 按规格实现 src + 三层测试；遵循 project.md 约定；踩坑即记 errors.md |
+| 做 | 按规格实现 src + 三层测试；遵循 project.md 约定 |
 | 跑 | Agent(dev) → 内部 Read/Edit/Write；自检：`pnpm lint` → `tsc --noEmit` → `pnpm test` → `pnpm test:e2e` |
 | 输出 | 业务代码 + `tests/` + 完成报告（文件清单 + pass/fail） |
-| 写 | `src/`, `tests/`, `errors.md` |
+| 写 | `src/`, `tests/` |
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准 |
 
 ### ④ QA 段（agent: qa，灰盒）
@@ -100,7 +100,7 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 
 ## 阶段结算
 
-- QA PASS 后，**AI** 更新 `status.md` 的「最近完成里程碑」（只留最近 10 条）；Hook 只静默切片 `errors.md`。
+- QA PASS 后，**AI** 更新 `status.md` 的「最近完成里程碑」（只留最近 10 条）。
 - AI 顺手更新 `status.md`「当前坐标 + 下一步」。
 - 执行 `/cc-code:cc-code` 校准，确认进入下一阶段。
 
@@ -118,5 +118,5 @@ description: cc-code + 三 agent（prd-plan/dev/qa）驱动 MVP 开发的完整�
 - **你是编排器**：按当前阶段调对应 agent，不在主控里替角色思考。
 - **每次切阶段/切角色前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
-- 进度以 `status.md` 为准、踩坑以 `errors.md` 为准、验收以 `gates.md` 为准。
+- 进度以 `status.md` 为准、验收以 `gates.md` 为准。
 - 不向用户报告归档细节（Hook 静默）；只报阶段结果与决策点。

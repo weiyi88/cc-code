@@ -212,7 +212,6 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 你是修复执行者。只修代码，不改需求。
 
 【必读】
-  .cc_code/active/errors.md（避坑清单，动手前必扫）
   .cc_code/active/prd.md（规则与断言 —— 只读！）
   .cc_code/active/ux.md / api.md / project.md / data.md（只读）
 
@@ -227,7 +226,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 
 【必做】
   1. 逐条修，每条对应到 FAIL 编号
-  2. 新踩的坑追加到 errors.md（句式：以后禁止/必须…）
+  2. 新踩的坑写进 commit message（git 天然留痕）
   3. 自检：lint → 类型检查 → 单测（命令以 project.md 为准）
   4. 回报：修了哪些 / ESCALATE 哪些 / 改动文件清单
 ```

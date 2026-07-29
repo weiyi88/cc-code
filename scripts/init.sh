@@ -155,59 +155,7 @@ migrate_scattered() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
-# Stop Hook —— 项目层级注册（不做全局注册，不污染其他项目）
-# ══════════════════════════════════════════════════════════════════════════
-install_project_hook() {
-  mkdir -p "$PROJECT_ROOT/.claude" "$TARGET/scripts"
-  cp "$PLUGIN_ROOT/hooks/cc_code_hook.py" "$TARGET/scripts/cc_code_hook.py"
-  chmod +x "$TARGET/scripts/cc_code_hook.py"
-
-  python3 - "$PROJECT_ROOT/.claude/settings.json" <<'PY'
-import json, pathlib, sys
-
-p = pathlib.Path(sys.argv[1])
-CMD = 'python3 "$CLAUDE_PROJECT_DIR/.cc_code/scripts/cc_code_hook.py"'
-cfg = {}
-
-if p.exists():
-    raw = p.read_text(encoding="utf-8").strip()
-    if raw:
-        try:
-            cfg = json.loads(raw)
-        except json.JSONDecodeError as e:
-            print(f"[cc-code] settings.json 解析失败({e}) — 已跳过 hook 注册，未修改任何内容")
-            sys.exit(0)
-
-hooks = cfg.setdefault("hooks", {})
-stop = hooks.setdefault("Stop", [])
-if not isinstance(stop, list):
-    print("[cc-code] hooks.Stop 结构异常 — 已跳过 hook 注册，未修改任何内容")
-    sys.exit(0)
-
-already = any(
-    "cc_code_hook.py" in h.get("command", "")
-    for grp in stop if isinstance(grp, dict)
-    for h in grp.get("hooks", []) if isinstance(h, dict)
-)
-if already:
-    print("[cc-code] Stop hook 已注册，跳过")
-    sys.exit(0)
-
-stop.append({
-    "matcher": "*",
-    "hooks": [{
-        "type": "command",
-        "command": CMD,
-        "description": "cc-code 静默结算: errors.md 冷切片 (纯脚本零 LLM)",
-    }],
-})
-p.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-print("[cc-code] 已在 .claude/settings.json 注册项目级 Stop hook")
-PY
-}
-
-# ══════════════════════════════════════════════════════════════════════════
-# .gitignore 联动：冷归档与 hook 日志不入库
+# .gitignore 联动：冷归档不入库
 # ══════════════════════════════════════════════════════════════════════════
 update_gitignore() {
   local GI="$PROJECT_ROOT/.gitignore"
@@ -217,9 +165,8 @@ update_gitignore() {
   fi
   {
     echo ""
-    echo "# cc-code 冷归档（过程报告 / 历史快照）与 hook 日志不入库"
+    echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
     echo ".cc_code/backup/"
-    echo ".cc_code/scripts/hook_error.log"
   } >> "$GI"
   log "已追加 .cc_code/backup/ 到 .gitignore"
 }
@@ -228,10 +175,9 @@ update_gitignore() {
 # 主流程
 # ══════════════════════════════════════════════════════════════════════════
 
-# 幂等：已就绪则只做迁移 + 重装 hook（插件升级后重跑可刷新 hook 副本）
+# 幂等：已就绪则只做散落物迁移（不碰 active/，保护用户已填业务数据）
 if [ -f "$TARGET/active/Agent.md" ]; then
-  warn "检测到 .cc_code/ 已存在，跳过脚手架生成。"
-  install_project_hook
+  warn "检测到 .cc_code/ 已存在，跳过脚手架生成，仅执行散落物迁移。"
   migrate_scattered
   update_gitignore
   exit 0
@@ -241,7 +187,7 @@ log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
 mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/plans" "$TARGET/docs/qa" \
          "$TARGET/images" "$TARGET/scripts"
 
-# 热区骨架（9 个 active 文件，按 L0~L5 分层）
+# 热区骨架（8 个 active 文件，按 L0~L4 分层）
 cp "$TEMPLATES/Agent.md"      "$TARGET/active/Agent.md"      # L0 控制
 cp "$TEMPLATES/status.md"     "$TARGET/active/status.md"     # L0 控制
 cp "$TEMPLATES/prd.md"        "$TARGET/active/prd.md"        # L1 意图
@@ -250,14 +196,9 @@ cp "$TEMPLATES/project.md"    "$TARGET/active/project.md"    # L3 实现
 cp "$TEMPLATES/data.md"       "$TARGET/active/data.md"       # L3 实现
 cp "$TEMPLATES/api.md"        "$TARGET/active/api.md"        # L3 实现
 cp "$TEMPLATES/gates.md"      "$TARGET/active/gates.md"      # L4 验收
-cp "$TEMPLATES/errors.md"     "$TARGET/active/errors.md"     # L5 教训
 
 # 冷区占位
 mkdir -p "$TARGET/backup/$(date +%Y-%m)"
-touch "$TARGET/backup/$(date +%Y-%m)/errors_archive.md"
-
-# 项目级 Stop hook（脚本副本 + .claude/settings.json 注册）
-install_project_hook
 
 # 根目录 CLAUDE.md 入口引导（新/旧项目统一生成）
 #   - 旧项目：先备份 legacy → backup/YYYY-MM/CLAUDE.md.legacy，再覆盖
@@ -280,11 +221,10 @@ migrate_scattered
 update_gitignore
 
 log "脚手架完成："
-log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates │ L5 errors"
+log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
 log "  docs/plans/  阶段方案（Architect 产出，Dev 按 phase 读）"
 log "  docs/qa/     全量验收报告（whole-qa 产出）"
-log "  images/ scripts/  截图归档 + Stop hook 脚本"
+log "  images/ scripts/  截图归档 + 散落脚本"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"
 log "  根目录 CLAUDE.md  工作流入口引导"
-log "  .claude/settings.json  项目级 Stop hook 已注册（不做全局注册）"
 warn "让 AI Read 根目录 CLAUDE.md → 进入状态机循环。"
