@@ -31,17 +31,19 @@ PM ──► Architect ──► Dev ──► QA
 | :-- | :--- | :--- | :--- |
 | **L0** | `active/Agent.md` | 最高宪法：角色 + 权限路由表 | 人 |
 | | `active/status.md` | 当前坐标 + 下一步 + 里程碑 | 当前角色 AI |
-| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | PM / plan-prd-mvp |
-| **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM |
-| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录） | Architect |
-| | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
-| | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
+| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | PM / plan-prd-mvp / plan-prd-feature |
+| **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM / plan-prd-feature |
+| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录） | Architect / plan-prd-feature |
+| | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect / plan-prd-feature |
+| | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect / plan-prd-feature |
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
 | — | `backup/` | 冷数据归档（溯源才翻，默认不入库） | — |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |
 | — | `docs/plans/` | 阶段实现方案 | Architect |
 | — | `images/` | 截图（扁平存放） | init 迁移 |
 | — | `scripts/` | 散落脚本归档 | init |
+
+> ⭐ `plan-prd-feature` 是 MVP 交付后的**增量迭代支线**：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色追加增量章节到 L1 / L2 / L3（逐批请示，绝不碰 L4 与代码）。
 
 ### 信息流铁律
 

@@ -24,7 +24,7 @@
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、11 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、12 个 skill 与 3 个配套 agent。
 
 ## 完整生命周期
 
@@ -41,6 +41,14 @@
 /cc-code:whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
        ↓
 部署                   /cc-code:vercel_supabase 或 /cc-code:cf_online
+
+────────── MVP 交付后，功能迭代走这条支线 ──────────
+
+/cc-code:plan-prd-feature  ⭐第一动作 call EnterPlanMode → 规范体检+锁基线
+                           +codegraph 算爆炸半径 → 冲突逐条硬门控裁决
+                           +三件套交谈至通顺 → 按层分批切角色落 L1/L2/L3
+       ↓
+/cc-code:agent-to-mvp      编排实现（Dev→QA）
 ```
 
 **主线是 3 个 skill 串起来**：产需求 → 编排实现 → 全量验收。
@@ -59,7 +67,7 @@
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。
 
-## Skill（11 个）
+## Skill（12 个）
 
 **框架核心（管流程）**
 
@@ -68,6 +76,7 @@
 | `init` | `/cc-code:init` | **入场** 初始化场域（判定链迁移散落物） |
 | `cc-code` | 自动 | **运行时协议** 角色路由 + 文件分层 + 状态机约束 |
 | `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | PRD 生成器（第一动作 EnterPlanMode，plan 模式逐点交谈至逻辑通顺） |
+| `plan-prd-feature` | `/cc-code:plan-prd-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 按层分批切角色落 L1/L2/L3） |
 | `agent-to-mvp` | `/cc-code:agent-to-mvp` | MVP 生命周期编排（PM→Architect→Dev→QA + qa→dev 循环） |
 | `whole-qa` | `/cc-code:whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口 + 冗余检测，FAIL≤3轮回环） |
 | `short` | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
@@ -125,7 +134,7 @@
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           11 个 skill 目录
+├── skills/           12 个 skill 目录
 ├── agents/           3 个 agent（prd-plan / dev / qa）
 ├── scripts/          init.sh（脚手架 + 散落物迁移）
 ├── templates/        8 个 md 骨架（L0~L4）
