@@ -38,3 +38,36 @@ templates/   8 个 .md 骨架  → init 时 cp 进 .cc_code/active/
 ```
 
 旧版「默认搬走 + 排除两个已知文件」会误杀 `setup.py`/`manage.py`/`AGENTS.md`/`build.sh` 等基建 —— 已反转为「默认不动」。
+
+## 场域版本戳与三轨升级
+
+`.cc_code/.cc_code_version` 记录场域形态对应的插件版本，是 `init` 的分流判据：
+
+```
+active/Agent.md 存在？
+  ├─ 否 ────────────────► Track A/B 新建 + 盖戳
+  └─ 是 → 读版本戳
+        ├─ == 插件版本 ──► Track C 已最新，只搬散落物
+        └─ 缺失 / 更旧 ──► Track D 升级迁移
+```
+
+Track D 的顺序是 **归档 → 清点 → 迁移 → 校验 → 归位 → 盖戳**：
+
+```
+D1 cp 快照 → backup/YYYY-MM/pre-upgrade-<旧版>/   原位不动，中断不瘸
+D2 机械清点 → upgrade_audit.md（四类差异）
+D3 AI 按层判据迁移内容                            理解力活
+D4 AI 补齐 Agent.md 缺失规范段
+D5 ⛔校验门：未着落清单非空即停手
+D6 mv 归位 → backup/YYYY-MM/superseded/
+D7 盖戳（未过 D5 不许盖）
+```
+
+### 为何不裸删
+
+`init.sh` 中 `rm` 出现 0 次。删除会让「迁移有 bug」等价于「用户数据蒸发」，
+而 `mv` 让最坏情况退化为「文件位置不对，内容还在」。
+配合 D1 只读快照，同一份内容有两处副本，D5 校验门再挡一层。
+
+**戳未盖 = 迁移未完成。** 半成品不会被下次 `init` 误认为已完成 —— 这是幂等性与
+「进度必须可信」的交点。

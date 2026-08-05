@@ -1,13 +1,30 @@
 #!/usr/bin/env bash
 # cc-code Plugin - 项目场域脚手架
-# 用法: bash init.sh <project_root>
+# 用法: bash init.sh [<project_root>]
+#       bash init.sh --relocate <相对路径...>   冗余归位（mv 进 backup/superseded/，零删除）
+#       bash init.sh --stamp                    盖场域版本戳
 set -euo pipefail
 
-PROJECT_ROOT="${1:-$(pwd)}"
+# 参数解析：首参以 -- 开头即子命令（项目根取 cwd），否则视为项目根
+SUBCMD=""
+if [[ "${1:-}" == --* ]]; then
+  SUBCMD="$1"; shift
+  PROJECT_ROOT="$(pwd)"
+else
+  PROJECT_ROOT="${1:-$(pwd)}"
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TEMPLATES="$PLUGIN_ROOT/templates"
 TARGET="$PROJECT_ROOT/.cc_code"
+STAMP="$TARGET/.cc_code_version"
+PLUGIN_VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+                  "$PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)"
+PLUGIN_VERSION="${PLUGIN_VERSION:-unknown}"
+
+# 规范 8 文件（L0~L4），升级清点的分母
+CANON="Agent.md status.md prd.md ux.md project.md data.md api.md gates.md"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 log()  { echo -e "${GREEN}[cc-code]${NC} $1"; }
@@ -172,14 +189,190 @@ update_gitignore() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
+# 版本戳 —— 场域形态的版本坐标，决定是否需要升级迁移
+# ══════════════════════════════════════════════════════════════════════════
+stamp_version() {
+  printf '%s\n' "$PLUGIN_VERSION" > "$STAMP"
+  log "场域版本戳 → $PLUGIN_VERSION"
+}
+
+read_stamp() {
+  [ -f "$STAMP" ] && head -1 "$STAMP" | tr -d '[:space:]' || echo ""
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D1 —— 归档快照（只读后悔药）
+# ⛔ 全程零 rm：只 cp，原位一个字不动，active/ 全程可用
+# ══════════════════════════════════════════════════════════════════════════
+archive_legacy() {
+  local YM OLD SNAP
+  YM="$(date +%Y-%m)"
+  OLD="${1:-unstamped}"
+  SNAP="$TARGET/backup/$YM/pre-upgrade-$OLD"
+
+  if [ -d "$SNAP" ]; then
+    SNAP="$SNAP-$(date +%H%M%S)"
+  fi
+  mkdir -p "$SNAP"
+
+  # active/ 全量 + .cc_code 根层散落 md（规范外冗余的主要藏身处）
+  [ -d "$TARGET/active" ] && cp -R "$TARGET/active" "$SNAP/active"
+  shopt -s nullglob
+  for f in "$TARGET"/*.md; do cp "$f" "$SNAP/"; done
+  shopt -u nullglob
+
+  log "D1 归档快照 → backup/$YM/$(basename "$SNAP")/（原位未动）"
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D2 —— 清点（四类差异，落 upgrade_audit.md 交 AI 迁移）
+# ══════════════════════════════════════════════════════════════════════════
+audit_layout() {
+  local YM AUDIT rows_missing rows_stray rows_extra rows_ok f base
+  YM="$(date +%Y-%m)"
+  AUDIT="$TARGET/backup/$YM/upgrade_audit.md"
+  rows_missing=""; rows_stray=""; rows_extra=""; rows_ok=""
+  local _old; _old="$(read_stamp)"
+
+  # ① 规范位在否
+  for base in $CANON; do
+    if [ -f "$TARGET/active/$base" ]; then
+      rows_ok+="| \`active/$base\` | 规范位就位 | 校验内容是否缺规范段落 |"$'\n'
+    else
+      rows_missing+="| \`active/$base\` | **规范位缺失** | 找同层等价物迁入，无则用模板骨架 |"$'\n'
+    fi
+  done
+
+  # ② .cc_code 根层散落 md = 位置偏离
+  shopt -s nullglob
+  for f in "$TARGET"/*.md; do
+    base="$(basename "$f")"
+    if printf ' %s ' $CANON | grep -qF " $base "; then
+      rows_stray+="| \`$base\` | **位置偏离**（应在 active/） | 迁入 \`active/$base\` |"$'\n'
+    else
+      rows_extra+="| \`$base\` | **规范外** | 按层判据归并，兜底 project.md |"$'\n'
+    fi
+  done
+
+  # ③ active/ 里的规范外文件 = 拆分偏离或已废除
+  for f in "$TARGET"/active/*.md; do
+    base="$(basename "$f")"
+    printf ' %s ' $CANON | grep -qF " $base " && continue
+    rows_extra+="| \`active/$base\` | **规范外**（拆分偏离 / 已废除） | 按层判据归并到规范文件 |"$'\n'
+  done
+  shopt -u nullglob
+
+  {
+    echo "# 升级清点报告 ($(date +%Y-%m-%d))"
+    echo ""
+    echo "> 由 init.sh 自动生成（机械清点）。**内容迁移是理解力活，由 AI 按 /cc-code:init 第 2C 步执行。**"
+    echo "> ⛔ 本次升级全程零删除：迁移校验通过后，旧物 \`mv\` 进 \`backup/$YM/superseded/\`。"
+    echo ""
+    echo "旧形态：\`${_old:-无版本戳}\`  →  目标：\`$PLUGIN_VERSION\`"
+    echo ""
+    echo "## ① 规范位缺失"; echo ""
+    echo "| 规范文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
+    [ -n "$rows_missing" ] && printf '%s' "$rows_missing" || echo "| — | 无 | — |"
+    echo ""
+    echo "## ② 位置偏离"; echo ""
+    echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
+    [ -n "$rows_stray" ] && printf '%s' "$rows_stray" || echo "| — | 无 | — |"
+    echo ""
+    echo "## ③ 规范外多余（含拆分偏离 / 已废除）"; echo ""
+    echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
+    [ -n "$rows_extra" ] && printf '%s' "$rows_extra" || echo "| — | 无 | — |"
+    echo ""
+    echo "## ④ 规范位已就位（仍需 AI 校验缺失段落）"; echo ""
+    echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
+    [ -n "$rows_ok" ] && printf '%s' "$rows_ok" || echo "| — | 无 | — |"
+  } > "$AUDIT"
+
+  log "D2 清点完成 → backup/$YM/upgrade_audit.md"
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D5 —— 冗余归位（AI 校验门通过后才调用）
+# ⛔ 零 rm：mv 进 backup/YYYY-MM/superseded/，原位清空但内容永存
+# 用法: relocate_superseded <相对 .cc_code 的路径> [更多...]
+# ══════════════════════════════════════════════════════════════════════════
+relocate_superseded() {
+  local YM SUP rel src dest moved=0
+  YM="$(date +%Y-%m)"
+  SUP="$TARGET/backup/$YM/superseded"
+  mkdir -p "$SUP"
+
+  for rel in "$@"; do
+    src="$TARGET/$rel"
+    [ -e "$src" ] || { warn "  跳过（不存在）：$rel"; continue; }
+    # 规范 8 文件本体绝不归位
+    if printf ' %s ' $CANON | grep -qF " $(basename "$rel") " && [ "${rel#active/}" != "$rel" ]; then
+      warn "  ⛔ 拒绝：$rel 是规范位文件，绝不归位"; continue
+    fi
+    dest="$SUP/$(echo "$rel" | tr '/' '_')"
+    [ -e "$dest" ] && dest="$dest.$(date +%H%M%S)"
+    mv "$src" "$dest"
+    moved=$((moved + 1))
+    log "  归位 $rel → backup/$YM/superseded/$(basename "$dest")"
+  done
+  log "D5 冗余归位完成：$moved 个（零删除，内容全在 backup）"
+}
+
+# ══════════════════════════════════════════════════════════════════════════
 # 主流程
 # ══════════════════════════════════════════════════════════════════════════
 
-# 幂等：已就绪则只做散落物迁移（不碰 active/，保护用户已填业务数据）
+# ══════════════════════════════════════════════════════════════════════════
+# 子命令入口（供 AI 在升级 D6 / D7 阶段调用）
+#   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
+#   bash init.sh --stamp                    盖版本戳（迁移+校验全通过才盖）
+# ══════════════════════════════════════════════════════════════════════════
+case "$SUBCMD" in
+  --relocate)
+    [ -d "$TARGET" ] || { warn "无 .cc_code/，无处归位"; exit 1; }
+    [ "$#" -gt 0 ]   || { warn "用法: init.sh --relocate <相对路径...>"; exit 1; }
+    relocate_superseded "$@"
+    exit 0 ;;
+  --stamp)
+    [ -d "$TARGET" ] || { warn "无 .cc_code/，无处盖戳"; exit 1; }
+    stamp_version
+    exit 0 ;;
+esac
+
+# ══════════════════════════════════════════════════════════════════════════
+# 三轨闸门
+#   Track B 新建   —— 无 active/Agent.md
+#   Track C 已最新 —— 版本戳 == 插件版本，只搬散落物
+#   Track D 升级   —— 版本戳缺失/更旧，走 D1 归档 → D2 清点 → 交 AI 迁移
+# ══════════════════════════════════════════════════════════════════════════
 if [ -f "$TARGET/active/Agent.md" ]; then
-  warn "检测到 .cc_code/ 已存在，跳过脚手架生成，仅执行散落物迁移。"
+  OLD_STAMP="$(read_stamp)"
+
+  if [ "$OLD_STAMP" = "$PLUGIN_VERSION" ]; then
+    warn "Track C：场域已是 ${PLUGIN_VERSION}，跳过脚手架，仅执行散落物迁移。"
+    migrate_scattered
+    update_gitignore
+    exit 0
+  fi
+
+  # ── Track D 升级迁移 ────────────────────────────────────────────────
+  warn "Track D 升级：场域形态 [${OLD_STAMP:-无版本戳}] → 插件 [$PLUGIN_VERSION]"
+  warn "⛔ 全程零删除：只 cp 快照 + mv 归位，原位内容在校验通过前一个字不动。"
+
+  archive_legacy "${OLD_STAMP:-unstamped}"
+  audit_layout
   migrate_scattered
   update_gitignore
+
+  YM="$(date +%Y-%m)"
+  warn ""
+  warn "══════════ 脚手架侧完成，以下是 AI 的活 ══════════"
+  warn "AI 必须按 /cc-code:init 第 2C 步「升级迁移协议」继续："
+  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，把内容搬到规范位（一段不丢）"
+  warn "  D4 补层   按 templates/Agent.md 补齐缺失规范段，保留项目自定义权限"
+  warn "  D5 校验门 逐节核对，未全命中即停手报清单，禁止归位"
+  warn "  D6 归位   校验通过 → bash init.sh --relocate <路径...> 把旧物 mv 进 superseded/"
+  warn "  D7 盖戳   bash init.sh --stamp"
+  warn "⛔ 版本戳未盖前，下次 init 仍判为待升级 —— 迁移没做完不会被误认为完成。"
   exit 0
 fi
 
@@ -219,6 +412,7 @@ log "已生成根目录 CLAUDE.md（入口引导，纯协议不含业务状态�
 # 散落物迁移 + .gitignore 联动
 migrate_scattered
 update_gitignore
+stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
 log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"

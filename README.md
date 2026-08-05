@@ -29,7 +29,8 @@
 ## 完整生命周期
 
 ```
-/cc-code:init          搭场域（8模板 + 迁移散落物）
+/cc-code:init          搭场域（8模板 + 迁移散落物 + 盖版本戳）
+                       旧版场域自动走升级迁移（零删除）
        ↓
 会话开启(2步)          Read Agent.md(锁角色) → status.md(定坐标)
        ↓
@@ -62,8 +63,9 @@
 /cc-code:init
 ```
 
-- **新项目**：直接搭场域，切 PM 等需求。
-- **旧项目**：备份旧 `CLAUDE.md` → `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，AI 按映射表分拆归并到 `active/` 各文件，再用入口模板覆盖根目录 `CLAUDE.md`。
+- **新项目**：直接搭场域 + 盖版本戳，切 PM 等需求。
+- **旧项目（无 `.cc_code/`）**：备份旧 `CLAUDE.md` → `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，AI 按映射表分拆归并到 `active/` 各文件，再用入口模板覆盖根目录 `CLAUDE.md`。
+- **旧版场域（已有 `.cc_code/` 但版本戳缺失或更旧）**：自动走升级迁移 —— **归档 → 清点 → 迁移 → 校验 → 归位 → 盖戳**，`init.sh` 中 `rm` 出现 0 次，旧物只 `cp` 快照与 `mv` 归位，内容永远可回溯。校验门未过则停手，戳不盖，下次 `init` 仍判为待升级。
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。
 
@@ -73,7 +75,7 @@
 
 | skill | 触发 | 用途 |
 | --- | --- | --- |
-| `init` | `/cc-code:init` | **入场** 初始化场域（判定链迁移散落物） |
+| `init` | `/cc-code:init` | **入场 + 升级** 三轨初始化（新建/已最新/旧版升级迁移）；判定链迁移散落物；升级走「归档→清点→迁移→校验→归位」，**全程零删除** |
 | `cc-code` | 自动 | **运行时协议** 角色路由 + 文件分层 + 状态机约束 |
 | `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | PRD 生成器（第一动作 EnterPlanMode，plan 模式逐点交谈至逻辑通顺） |
 | `plan-prd-feature` | `/cc-code:plan-prd-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 按层分批切角色落 L1/L2/L3） |
@@ -136,7 +138,7 @@ cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
 ├── skills/           12 个 skill 目录
 ├── agents/           3 个 agent（prd-plan / dev / qa）
-├── scripts/          init.sh（脚手架 + 散落物迁移）
+├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        8 个 md 骨架（L0~L4）
 ├── docs/             ARCHITECTURE.md
 └── 无 hooks/         （0.5.0 砍除，无自动化机械活）
@@ -161,7 +163,9 @@ cc-code/
     ├── docs/qa/         🔵 全量验收报告 + 元素清单（whole-qa 产出）
     ├── images/          🔵 截图（init 迁移，扁平存放）
     ├── scripts/         🔵 散落脚本归档
-    └── backup/          🧊 冷数据（含 CLAUDE.md.legacy / migration_manifest / needs_review；默认不入库）
+    ├── backup/          🧊 冷数据（含 CLAUDE.md.legacy / migration_manifest / needs_review；默认不入库）
+    │   └── YYYY-MM/     升级时：pre-upgrade-<旧版>/ 只读快照 + upgrade_audit.md + superseded/ 归位物
+    └── .cc_code_version 🔖 场域版本戳（决定 init 是否走升级迁移）
 ```
 
 ## 角色串行
