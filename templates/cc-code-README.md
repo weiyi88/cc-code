@@ -122,7 +122,8 @@ AI：产出 prd.md（含验收断言 A1..A12），请你验收
 ```
 你：/cc-code:plan-prd-feature 加一个「429 限流自动退避重试」
 AI：codegraph 侦察现状 → 判定需求三态 → 有冲突逐条请你裁决
-AI：落盘增量章节（prd.md F-4 / project.md 第十章 / api.md F-4）
+AI：就地收敛落盘（prd.md 改写模块小节 + 断言进 §1.5 主表 / api.md 改写该 path 小节）
+    过程产物 → docs/plans/F-4-*.md　各文件文末变更台账 +1 行
 你：切 Dev 角色实现 → 切 QA 验收断言 A12.21~A12.24
 ```
 
