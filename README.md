@@ -24,12 +24,13 @@
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、12 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、13 个 skill 与 3 个配套 agent。
 
 ## 完整生命周期
 
 ```
-/cc-code:init          搭场域（8模板 + 迁移散落物 + 盖版本戳）
+/cc-code:init          搭场域（8模板 + 迁移散落物 + 盖版本戳
+                       + 刷新 .cc_code/README.md 使用手册）
                        旧版场域自动走升级迁移（零删除）
        ↓
 会话开启(2步)          Read Agent.md(锁角色) → status.md(定坐标)
@@ -50,6 +51,11 @@
                            +三件套交谈至通顺 → 按层分批切角色落 L1/L2/L3
        ↓
 /cc-code:agent-to-mvp      编排实现（Dev→QA）
+
+────────── 任意时刻 ──────────
+
+/cc-code:experience-summary  踩坑/复盘 → 提炼设计准则 → references/ 资料库
+/cc-code:init                插件升级后再跑一次：场域迁移 + 手册刷新到最新
 ```
 
 **主线是 3 个 skill 串起来**：产需求 → 编排实现 → 全量验收。
@@ -69,7 +75,7 @@
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。
 
-## Skill（12 个）
+## Skill（13 个）
 
 **框架核心（管流程）**
 
@@ -81,6 +87,7 @@
 | `plan-prd-feature` | `/cc-code:plan-prd-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 按层分批切角色落 L1/L2/L3） |
 | `agent-to-mvp` | `/cc-code:agent-to-mvp` | MVP 生命周期编排（PM→Architect→Dev→QA + qa→dev 循环） |
 | `whole-qa` | `/cc-code:whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口 + 冗余检测，FAIL≤3轮回环） |
+| `experience-summary` | `/cc-code:experience-summary` | **项目级经验沉淀器**（踩坑/复盘 → 提炼准则 → 主人过目 → 落 `references/[角色]-[事件域]-references.md` + INDEX 按需读取） |
 | `short` | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
 
 **工具外挂（干活的，与状态机无关）**
@@ -136,7 +143,7 @@
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           12 个 skill 目录
+├── skills/           13 个 skill 目录
 ├── agents/           3 个 agent（prd-plan / dev / qa）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        8 个 md 骨架（L0~L4）
@@ -150,6 +157,7 @@ cc-code/
 项目根/
 ├── CLAUDE.md              🧭 入口引导（Claude 原生自动加载，纯协议不含业务状态）
 └── .cc_code/
+    ├── README.md          🧭 使用手册（每次 init 刷新：项目逻辑 / Skill / 使用方案 / 示例）
     ├── active/          🔴 热数据（每次对话必读，按 L0~L4 分层）
     │   ├── Agent.md       L0 角色路由表 / 最高宪法
     │   ├── status.md      L0 当前坐标 + 里程碑（AI 自管长度）
@@ -163,6 +171,8 @@ cc-code/
     ├── docs/qa/         🔵 全量验收报告 + 元素清单（whole-qa 产出）
     ├── images/          🔵 截图（init 迁移，扁平存放）
     ├── scripts/         🔵 散落脚本归档
+    ├── references/      🟢 项目级经验资料库（experience-summary 产出，INDEX 索引 + 角色按需读）
+    ├── README.md        🧭 使用手册（init 每次刷新到最新版：逻辑/Skill/使用方案/示例，新手零门槛）
     ├── backup/          🧊 冷数据（含 CLAUDE.md.legacy / migration_manifest / needs_review；默认不入库）
     │   └── YYYY-MM/     升级时：pre-upgrade-<旧版>/ 只读快照 + upgrade_audit.md + superseded/ 归位物
     └── .cc_code_version 🔖 场域版本戳（决定 init 是否走升级迁移）
@@ -184,6 +194,25 @@ PM ──► Architect ──► Dev ──► QA
 | Dev | 代码 | src/, 测试目录 | gates |
 | QA | L4（灰盒） | gates, 测试目录 | 无关历史码 |
 
+## 经验沉淀（references）
+
+开发中踩坑/排障/方案复盘暴露的**设计经验**，用 `/cc-code:experience-summary` 沉淀为项目级 references：
+
+```
+/cc-code:experience-summary
+       ↓
+提炼「必答问题 + 设计准则」→ 主人过目 → 落盘
+       ↓
+.cc_code/references/[角色]-[事件域]-references.md
+  例：architect-bull-redis-queue-references.md
+       ↓
+INDEX.md 登记一行「何时读」→ 角色接到任务先扫索引，命中才读（按需，非全读）
+```
+
+- **项目级**：跟随项目走，不进插件、不进全局。
+- **精炼**：只写「设计/验收时怎么思考、怎么做」，≤30 行，禁溯源流水账。
+- **准出价值**：每条准则必须可执行 —— 能据此否决一个方案。
+
 ## 无 Hook 设计
 
 cc-code **不使用 Stop Hook**。所有 `.cc_code/` 文件都由 AI 在对话内顺手写，无自动化机械活。
@@ -202,6 +231,10 @@ cc-code **不使用 Stop Hook**。所有 `.cc_code/` 文件都由 AI 在对话�
 ```
 
 旧版「默认搬走」会误杀 `setup.py`/`manage.py`/`AGENTS.md`/`build.sh` 等基建 —— 已反转。
+
+## 新手入门（降低上手难度）
+
+每个项目 init 后，`.cc_code/README.md` 会生成一份**使用手册**（项目逻辑 / Skill 一览 / 使用方案 / 使用示例），并且**每次 `/cc-code:init` 自动刷新到最新版** —— 不熟悉 cc-code 的协作者直接读它即可，无需翻本仓库。
 
 ## License
 

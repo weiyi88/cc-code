@@ -38,6 +38,8 @@ PM ──► Architect ──► Dev ──► QA
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect / plan-prd-feature |
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
 | — | `backup/` | 冷数据归档（溯源才翻，默认不入库） | — |
+| — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读） | experience-summary |
+| — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） | init |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |
 | — | `docs/plans/` | 阶段实现方案 | Architect |
 | — | `images/` | 截图（扁平存放） | init 迁移 |

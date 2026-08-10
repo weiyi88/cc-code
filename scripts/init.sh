@@ -51,6 +51,26 @@ REPORT_RE='(REPORT|COMPLETED|COMPLETION|HANDOFF|NEXT_STEPS|MVP|FINAL|VERIFICATIO
 ALLCAPS_MD='^[A-Z0-9_]+\.md$'
 SHOT_RE='(screenshot|screen-shot|screen_shot|snap|capture|Snipaste|CleanShot|图片|截图)'
 
+# ══════════════════════════════════════════════════════════════════════════
+# 使用手册刷新（每次 init 无条件同步最新版，防旧手册误导新手）
+# ══════════════════════════════════════════════════════════════════════════
+refresh_handbook() {
+  [ -f "$TEMPLATES/cc-code-README.md" ] && \
+    cp "$TEMPLATES/cc-code-README.md" "$TARGET/README.md" && \
+    log "已刷新 .cc_code/README.md 使用手册（当前版本 $PLUGIN_VERSION）"
+  # references 目录就位（0.8.0 新增经验资料库）
+  if [ ! -d "$TARGET/references" ]; then
+    mkdir -p "$TARGET/references"
+    [ -f "$TEMPLATES/references-INDEX.md" ] && \
+      cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
+    log "已建 references/ + INDEX.md（0.8.0 新增）"
+  elif [ ! -f "$TARGET/references/INDEX.md" ]; then
+    [ -f "$TEMPLATES/references-INDEX.md" ] && \
+      cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
+    log "已补 references/INDEX.md（0.8.0 新增）"
+  fi
+}
+
 IS_GIT_REPO=0
 if git -C "$PROJECT_ROOT" rev-parse --git-dir >/dev/null 2>&1; then IS_GIT_REPO=1; fi
 
@@ -262,6 +282,9 @@ audit_layout() {
   done
   shopt -u nullglob
 
+  # ④ references 目录就位检查（0.8.0 新增经验资料库）→ 统一走 refresh_handbook
+  refresh_handbook
+
   {
     echo "# 升级清点报告 ($(date +%Y-%m-%d))"
     echo ""
@@ -348,9 +371,10 @@ if [ -f "$TARGET/active/Agent.md" ]; then
   OLD_STAMP="$(read_stamp)"
 
   if [ "$OLD_STAMP" = "$PLUGIN_VERSION" ]; then
-    warn "Track C：场域已是 ${PLUGIN_VERSION}，跳过脚手架，仅执行散落物迁移。"
+    warn "Track C：场域已是 ${PLUGIN_VERSION}，跳过脚手架，仅执行散落物迁移 + 手册刷新。"
     migrate_scattered
     update_gitignore
+    refresh_handbook
     exit 0
   fi
 
@@ -378,7 +402,7 @@ fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
 mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/plans" "$TARGET/docs/qa" \
-         "$TARGET/images" "$TARGET/scripts"
+         "$TARGET/images" "$TARGET/scripts" "$TARGET/references"
 
 # 热区骨架（8 个 active 文件，按 L0~L4 分层）
 cp "$TEMPLATES/Agent.md"      "$TARGET/active/Agent.md"      # L0 控制
@@ -389,6 +413,9 @@ cp "$TEMPLATES/project.md"    "$TARGET/active/project.md"    # L3 实现
 cp "$TEMPLATES/data.md"       "$TARGET/active/data.md"       # L3 实现
 cp "$TEMPLATES/api.md"        "$TARGET/active/api.md"        # L3 实现
 cp "$TEMPLATES/gates.md"      "$TARGET/active/gates.md"      # L4 验收
+
+# references 索引（经验资料库，按需读取）+ 使用手册
+refresh_handbook
 
 # 冷区占位
 mkdir -p "$TARGET/backup/$(date +%Y-%m)"

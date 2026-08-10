@@ -27,7 +27,7 @@ disable-model-invocation: true
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" "$(pwd)"
 ```
 
-脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ **根目录 `CLAUDE.md` 入口引导** + **版本戳**。Track C 仅搬散落物。Track D 见第 2C 步。
+脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/ references/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ `references/INDEX.md` 索引 + **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版）+ **版本戳**。Track C 仅搬散落物 + 刷新手册。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的 `references/`）。
 
 子命令（供 AI 在升级阶段调用）：
 
@@ -126,6 +126,7 @@ D7 盖戳       ⭐AI：init.sh --stamp（仅校验全过才允许）
 | 「信息流铁律」（含 codegraph 只准校准 L3） | codegraph 会反向污染需求层 |
 | PM「两产物边界」+ 断言编号永久稳定纪律 | `prd.md` 与 `ux.md` 内容互相渗透 |
 | Architect「契约纪律」（漂移禁沉默） | 代码偏离契约无人发现 |
+| Architect「按需读 `references/INDEX.md`」行（0.8.0 新增） | 经验资料库无人读，等于没沉淀 |
 | QA「灰盒定义」 | QA 退化为拿代码验代码 |
 
 ### D5 校验门（⛔ 未过禁止进 D6）
@@ -157,6 +158,7 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --relocate \
 | 规范外已废除 | `errors.md` | ✅ 归位（内容在 D1 快照 + superseded） |
 | 规范 8 文件本体 | `active/prd.md` 等 | ❌ 脚本会**拒绝**，绝不归位 |
 | `backup/` | 全部 | ❌ 绝不动，冷数据是最后防线 |
+| `references/` | 全部 | ❌ 经验资料库，绝不动（0.8.0 起脚本 D2 自动补建） |
 | `docs/` `images/` `scripts/` `tests/` | 全部 | ❌ 只在报告里清点，交主人处置 |
 | 项目源码 / 测试目录 | `src/` 等 | ❌ Dev 域，绝不碰 |
 

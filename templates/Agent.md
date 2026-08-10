@@ -22,6 +22,7 @@
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单 | QA |
 | — | `backup/**` | 冷数据归档（溯源才翻，默认不入库） | — |
+| — | `references/**` | 项目级经验资料库（`/cc-code:experience-summary` 产出，INDEX 按需读） | — |
 
 ### 信息流铁律（单向，违反即系统失效）
 
@@ -62,6 +63,7 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
 *   **视角特征：** 高瞻远瞩，高内聚低耦合，坚守 KISS / SOLID。
 *   **文件权限：**
     *   `[必读]` `active/status.md`, `active/prd.md`, `active/ux.md`
+    *   `[按需读]` `references/INDEX.md` — 先扫索引，命中主题才读对应经验文件
     *   `[可写]` `active/project.md`, `active/data.md`, `active/api.md`, `docs/plans/`
     *   `[禁读]` `src/` 下的具体业务代码
 *   **契约纪律：** 允许用 codegraph 校准 `api.md` / `data.md` 的实现状态标记；发现代码偏离契约时，必须显式二选一（改代码回归契约 / 修契约并记录），**禁止沉默偏离**。
