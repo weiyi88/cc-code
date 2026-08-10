@@ -57,7 +57,7 @@ SHOT_RE='(screenshot|screen-shot|screen_shot|snap|capture|Snipaste|CleanShot|图
 refresh_handbook() {
   [ -f "$TEMPLATES/cc-code-README.md" ] && \
     cp "$TEMPLATES/cc-code-README.md" "$TARGET/README.md" && \
-    log "已刷新 .cc_code/README.md 使用手册（当前版本 $PLUGIN_VERSION）"
+    log "已刷新 .cc_code/README.md 使用手册（当前版本 ${PLUGIN_VERSION}）"
   # references 目录就位（0.8.0 新增经验资料库）
   if [ ! -d "$TARGET/references" ]; then
     mkdir -p "$TARGET/references"
