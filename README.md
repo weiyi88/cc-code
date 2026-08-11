@@ -113,6 +113,47 @@
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。
 
+## 可选增强：codegraph（0.10.0 起深度集成）
+
+[codegraph](https://github.com/colbymchenry/codegraph) 是代码知识图谱索引。cc-code **不依赖它也能全流程跑通**，装了则四项能力升级：
+
+| 能力 | 装了 | 不装（降级形态） |
+| --- | --- | --- |
+| 增量规划爆炸半径 | `impact` 算传递闭包，改一处知道炸到哪 | Glob/Grep 表层猜测，半径估偏 |
+| 冗余检测 | 自动扫死代码 / 孤儿文件 / 重复实现 | `whole-qa` 冗余项基本瞎 |
+| 精准回归 | `affected` 沿 import 图算出只需跑的测试 | 全量跑，QA 时间成本高 |
+| 契约校准 | Architect 自动核对 `api.md` / `data.md` 实现状态 | 手工 Grep 核对，易漏 |
+
+### 全静默设计（人零心智负担）
+
+```
+装一次        /cc-code:init 检测到未装 → 弹选择框介绍收益 → 人点头后装
+              npm i -g @colbymchenry/codegraph   ⚠️包名带 scope
+建索引        init 静默后台建，绝不阻塞入场
+保持新鲜      codegraph 自带 watcher 自动追写 + daemon 复活时 catch-up 补账
+              ⛔ 人永不需要手动 sync / index
+异常          只报一行（库损坏 / 建议重建），健康时零输出
+```
+
+`init.sh` 只探测不安装（改全局环境是高风险操作，且脚本无法交互），装不装由人决定。
+
+### 铁律：codegraph 只答「是什么」，不答「应该是什么」
+
+| 角色 | 权限 | 说明 |
+| --- | --- | --- |
+| PM | ❌ 完全禁止 | 用现状反推意图 = L1/L2 被 L3 污染 = 系统失效 |
+| Architect | ✅ 完全开放 | 校准 L3 契约，`explore`/`node`/`files`/`callers`/`callees`/`impact` |
+| Dev | ⚠️ 只读定位 | 找现有实现避免重复造轮子，不推翻契约 |
+| QA | ⚠️ 双重限制 | 只用于找入口 / 算回归面，**永不当需求尺子** |
+
+### `affected` 精准回归的前提
+
+测试基建契约登记在 `active/project.md` §六。三条铁律：
+
+1. **测试代码必须入 git** —— codegraph 尊重 `.gitignore`，被 ignore 的测试不进索引 → `affected` 永久失效。该 ignore 的是测试**产物**（`coverage/` / `*.png`），不是测试**代码**。`init` 新建的 `.cc_code/test/` 默认不 ignore。
+2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
+3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
+
 ## Skill（13 个）
 
 **框架核心（管流程）**
@@ -277,6 +318,30 @@ cc-code **不使用 Stop Hook**。所有 `.cc_code/` 文件都由 AI 在对话�
 每个项目 init 后，`.cc_code/README.md` 会生成一份**使用手册**（项目逻辑 / Skill 一览 / 使用方案 / 使用示例），并且**每次 `/cc-code:init` 自动刷新到最新版** —— 不熟悉 cc-code 的协作者直接读它即可，无需翻本仓库。
 
 ## 版本变更
+
+### 0.10.0 — codegraph 全静默深度集成
+
+本版解决一个结构性缺陷：**codegraph 是「被引用的假设」**。0.9.0 的文档 4 处写着它的纪律（「只准校准 L3」），却零处告诉人怎么让它就位 —— 没有装载、没有体检、`whole-qa` 声明用它扫冗余但 `allowed-tools` 一个工具都没给。能力覆盖仅 4/15。
+
+| # | 改动 | 病根 |
+| --- | --- | --- |
+| 1 | `init.sh` 新增 `ensure_codegraph()`：探测 CLI → 探测库 → 后台建索引，静默五铁则，任何分支 `return 0` | 装载缺口：新项目跑完 init 索引库根本不存在，`plan-prd-feature` 一调就空 |
+| 2 | `whole-qa` `allowed-tools` 补 4 个 codegraph MCP 工具 | ⭐真 BUG：`inventory.md` §六 明写用它扫死代码，权限却没给，声明的能力调不动 |
+| 3 | `project.md` 新增 §六 **测试基建契约** + `init` 新建 `.cc_code/test/` | 模板全文零处提「测试」，`agent-to-mvp` 却要求 `tests/{unit,api,e2e}` → 约定悬空；测试被 gitignore 屏蔽则 `affected` 永久失效 |
+| 4 | `affected` 接入 4 处回归门（`agent-to-mvp` Dev→QA / qa→dev 循环 / `whole-qa` 第5条 + FIX轮） | 原「同模块已 PASS 项」是人凭直觉画的圈，跨模块隐式依赖抓不到 |
+| 5 | `plan-prd-feature` Step2 扩为四路侦察，补 `impact` / `files` / `affected` | `callers` 只有一层视野 → 半径估小 → 规划以为改一处、Dev 实际动五处 |
+| 6 | Step2 前置 **新鲜度保险**（`pendingChanges` 非 0 先 `sync`） | daemon 空闲 5min 自杀，期间改动无人追写，存在「第一次查询拿到旧索引」的竞态窗口 |
+| 7 | 索引体检门 ×2（`agent-to-mvp` 前置 + MVP 收口） | 冗余清单与回归范围都建立在索引之上，索引坏了这两项结论不可信 |
+| 8 | `Agent.md` / `CLAUDE.md` 新增 **codegraph 角色权限矩阵** | 原文只有「只准校准 L3」一句，未落到角色粒度 |
+| 9 | `gates.md` 新增 **回归范围来源**表 | 回归跑了「哪些」比跑了「多少」更重要，范围算错全绿也是假绿 |
+
+**能力覆盖 4/15 → 15/15**：查询 9（explore/query/node/callers/callees/impact/affected/files/status）+ 写入 3（init 静默建库 / sync 新鲜度保险 / index 只提示不执行）+ 运维 3（install 注册 MCP / unlock 清僵死锁 / daemon 自管）。
+
+**为什么不装 Hook 自动同步**：codegraph 自带 watcher + catch-up 已自愈，装 Hook 是重复劳动；且 cc-code 的卖点是「无 Hook，状态由 AI 顺手写」。
+
+**为什么脚本不自动 `npm i -g`**：改全局环境是高风险操作，且 shell 脚本无法交互。改由 AI 弹选择框介绍收益后由人决定 —— 一次性告知，不是持续负担。
+
+**升级方式**：旧项目跑 `/cc-code:init` 即判 Track D。装了 codegraph 则索引自动就位；未装则弹一次选择框。
 
 ### 0.9.0 — active 三判据 + U 编号 + 就地收敛
 
