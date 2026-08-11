@@ -204,8 +204,56 @@ update_gitignore() {
     echo ""
     echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
     echo ".cc_code/backup/"
+    echo ""
+    echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
+    echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
   } >> "$GI"
   log "已追加 .cc_code/backup/ 到 .gitignore"
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# codegraph 静默装载 —— cc-code 的可选增强（0.10.0 新增）
+# ══════════════════════════════════════════════════════════════════════════
+# 设计原则（静默五铁则）：
+#   ① 零新增用户命令   —— 人永不需要敲 codegraph 任何子命令
+#   ② 零阻塞           —— 建索引后台跑，绝不卡住 init
+#   ③ 零噪音           —— 已就绪时一个字都不打印
+#   ④ 只在异常说一行   —— 未装 / 库损坏 / 建议重建才提示
+#   ⑤ 永不自动全量重建 —— index 可能耗时数分钟，只提示不执行
+#
+# ⛔ 本函数只探测、只建索引，绝不执行 npm i -g（全局安装是高风险操作，
+#    且脚本无法交互）。CLI 缺失时输出探测结果，由 AI 在 /cc-code:init
+#    对话内用 AskUserQuestion 弹选择框，介绍收益后由人决定装不装。
+# ⛔ 任何分支都 return 0 —— init 永不因 codegraph 挂掉。
+# ══════════════════════════════════════════════════════════════════════════
+ensure_codegraph() {
+  local CG_DIR="$PROJECT_ROOT/.codegraph"
+
+  # ① CLI 探测 —— 未装则输出信号供 AI 接手（一次性告知，非持续负担）
+  if ! command -v codegraph >/dev/null 2>&1; then
+    warn "CODEGRAPH_MISSING —— codegraph 未安装（cc-code 可选增强，装了得 4 项能力）"
+    warn "  → AI 须按 /cc-code:init「codegraph 装载引导」弹选择框介绍收益，由人决定"
+    return 0
+  fi
+
+  # ② 索引库探测 —— 存在即校验，⛔ 永不因「怕不新」而重建
+  if [ -d "$CG_DIR" ]; then
+    if codegraph status "$PROJECT_ROOT" --json 2>/dev/null | grep -q '"initialized":true'; then
+      return 0   # ③ 零噪音：健康就闭嘴
+    fi
+    warn "codegraph 索引存在但未就绪（可能损坏）。建议人工核查：codegraph status"
+    return 0
+  fi
+
+  # ③ 后台建索引 —— 大仓全量解析可能数分钟，绝不同步等待
+  mkdir -p "$TARGET/backup"
+  local CG_LOG="$TARGET/backup/codegraph-init.log"
+  if nohup codegraph init "$PROJECT_ROOT" >"$CG_LOG" 2>&1 & then
+    log "codegraph 代码索引已在后台建立（日志 .cc_code/backup/codegraph-init.log）"
+  else
+    warn "codegraph 索引建立失败，增量半径 / 冗余检测 / 精准回归降级（不影响主流程）"
+  fi
+  return 0
 }
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -375,6 +423,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
     migrate_scattered
     update_gitignore
     refresh_handbook
+    ensure_codegraph
     exit 0
   fi
 
@@ -386,6 +435,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
   audit_layout
   migrate_scattered
   update_gitignore
+  ensure_codegraph
 
   YM="$(date +%Y-%m)"
   warn ""
@@ -402,7 +452,7 @@ fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
 mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/plans" "$TARGET/docs/qa" \
-         "$TARGET/images" "$TARGET/scripts" "$TARGET/references"
+         "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test"
 
 # 热区骨架（8 个 active 文件，按 L0~L4 分层）
 cp "$TEMPLATES/Agent.md"      "$TARGET/active/Agent.md"      # L0 控制
@@ -439,12 +489,14 @@ log "已生成根目录 CLAUDE.md（入口引导，纯协议不含业务状态�
 # 散落物迁移 + .gitignore 联动
 migrate_scattered
 update_gitignore
+ensure_codegraph   # ⭐0.10.0：codegraph 可选增强静默装载（任何分支都不阻塞）
 stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
 log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
 log "  docs/plans/  阶段方案（Architect 产出，Dev 按 phase 读）"
 log "  docs/qa/     全量验收报告（whole-qa 产出）"
+log "  test/     ⭐测试代码（源码，必须入库；affected 精准回归的索引基础）"
 log "  images/ scripts/  截图归档 + 散落脚本"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"
 log "  根目录 CLAUDE.md  工作流入口引导"

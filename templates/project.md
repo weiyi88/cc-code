@@ -42,6 +42,40 @@
 ## 五、 特殊约束 (Constraints)
 *   [待填写]
 
+## 六、 测试基建契约 (Test Infrastructure)
+
+> ⭐ 本节是 **`affected` 精准回归的前提契约**。Architect 在 MVP 前必须填实，
+> QA 与 `agent-to-mvp` / `whole-qa` 据此计算「改了 X 该跑哪些测试」。
+
+| 项 | 值 | 说明 |
+| :--- | :--- | :--- |
+| **测试根目录** | `.cc_code/test/` | ⛔ **必须入 git**，绝不可 `.gitignore` |
+| 单元测试 | `.cc_code/test/unit/**/*.spec.ts` | `affected` 默认 glob 直接命中 |
+| 接口测试 | `.cc_code/test/api/**/*.spec.ts` | 同上 |
+| E2E 测试 | `.cc_code/test/e2e/**/*.spec.ts` | 同上 |
+| 冒烟脚本 | `.cc_code/test/smoke/*.ts` | 非 `.spec` 命名，需 `affected --filter` |
+| 测试框架 | [待填写] | 如 vitest / jest / playwright |
+| 运行命令 | [待填写] | 如 `pnpm test` / `npx tsx <file>` |
+
+### ⛔ 三条铁律（违反即 `affected` 永久失效）
+
+```
+① 测试代码必须入 git
+   codegraph 尊重 .gitignore → 被 ignore 的测试不进索引
+   → affected 查不到 → 精准回归退化为全量瞎跑
+   ✅ 该 ignore 的是「测试产物」: coverage/ test-results/ *.png
+   ⛔ 绝不能 ignore 的是「测试代码」: *.spec.ts *.test.ts
+
+② 测试必须 import 被测源码
+   affected 沿 import 依赖图反向回溯算影响面
+   静态 import ✅  动态 await import() ✅  纯 HTTP 打接口 ⛔（无边可追）
+   → HTTP 型测试在本表「说明」列标注「affected 不覆盖」
+
+③ 非标准命名必须在本表登记 glob
+   affected 默认只认 *.spec.* / *.test.* / __tests__/
+   smoke-f5.ts 这类需显式 --filter，glob 不登记 = 无人知道怎么调
+```
+
 ---
 
 ## 附录、变更台账

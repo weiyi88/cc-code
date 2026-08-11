@@ -50,6 +50,50 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
 > 新生成的 `CLAUDE.md` 是**纯入口引导**（会话开启协议 + 三铁律 + 文件索引），不含任何业务状态。Claude Code 原生会自动加载它，从而被引导进 `.cc_code/` 状态机。
 
+## 第 2B 步：codegraph 装载引导（⭐0.10.0 新增，三轨通用）
+
+`init.sh` 的 `ensure_codegraph()` 已做完**探测与建索引**（静默，不阻塞）。AI 只需处理一种情况：脚本输出 `CODEGRAPH_MISSING`。
+
+### 静默五铁则（AI 必须遵守）
+
+```
+① 零新增用户命令   人永不需要敲 codegraph 任何子命令
+② 零阻塞           建索引后台跑，init 绝不等它
+③ 零噪音           已就绪时一个字都不提（⛔ 禁报「索引正常」这类废话）
+④ 只在异常说一行   未装 / 库损坏 / 建议重建
+⑤ 永不自动全量重建 index 可能耗时数分钟，只提示不执行
+```
+
+### 命中 `CODEGRAPH_MISSING` 时：用 `AskUserQuestion` 弹一次选择框
+
+⛔ 禁止静默跳过（人会永远不知道自己少了什么），⛔ 禁止脚本自动 `npm i -g`（改全局环境是高风险操作，必须人点头）。
+
+选择框必须讲清**装了得到什么**：
+
+| 能力 | 装了 | 不装（降级形态） |
+| :--- | :--- | :--- |
+| 增量规划爆炸半径 | `impact` 算传递闭包，改一处知道炸到哪 | Glob/Grep 表层猜测，半径估偏 |
+| 冗余检测 | 自动扫死代码 / 孤儿文件 / 重复实现 | `whole-qa` 冗余项基本瞎 |
+| 精准回归 | `affected` 算出只需跑的测试 | 全量跑，QA 时间成本高 |
+| 契约校准 | Architect 自动核对 `api.md` / `data.md` 实现状态 | 手工 Grep 核对，易漏 |
+
+- 选项 A「安装（推荐）」→ 执行 `npm i -g @colbymchenry/codegraph`（**注意包名带 scope**，裸 `codegraph` 是另一个包），装完依次跑 `codegraph install -y`（注册 MCP）→ `codegraph init`（建索引，后台）。
+- 选项 B「跳过」→ 记一行到 `status.md`「当前卡点」，本次会话不再问。
+
+> 安装是**一次性**动作。之后 watcher 自动追写 + daemon 复活时 catch-up 补账，人永不需要手动 sync。
+
+### 索引体检（库已存在时，AI 读 `codegraph status --json` 三字段）
+
+| 字段 | 命中 | 动作 |
+| :--- | :--- | :--- |
+| `initialized: false` | 库损坏 | 报一行，⛔ 不自动重建 |
+| `pendingChanges` 非 0 | 有未追写改动 | 静默跑一次 `codegraph sync`（新鲜度保险） |
+| `reindexRecommended: true` | 引擎版本升级过 | 报一行建议 `codegraph index -f`，⛔ 不自动执行 |
+
+### `.cc_code/test/` 是测试代码目录（⛔ 绝不 ignore）
+
+`init.sh` 新建 `.cc_code/test/`，且 `update_gitignore()` 只 ignore `backup/`，并写入注释警告。**测试代码是源码，被 ignore 就不进 codegraph 索引 → `affected` 永久失效**。该 ignore 的是测试产物（`coverage/` / `*.png`），不是测试代码。测试 glob 由 Architect 登记在 `project.md` §六。
+
 ## 第 2A 步：Track A 旧 CLAUDE.md 分拆协议（理解力活，由 AI 完成）
 
 仅 Track A 执行。读取 `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，按下表把旧内容**只搬运不丢失**地归并到对应文件：
