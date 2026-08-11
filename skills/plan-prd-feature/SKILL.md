@@ -1,6 +1,6 @@
 ---
 name: plan-prd-feature
-description: ⭐显式触发的【增量需求规划器】（MVP 已交付后做功能迭代用）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：规范体检 → 锁基线（status/gates/prd 历史）→ codegraph 侦察算爆炸半径 → 需求逐点三态判定（已实现/无冲突/有冲突）→ 冲突逐条硬门控裁决 → 输出三件套（逻辑图+原型双联+带落盘路由的差异表）→ 逐点循环至通顺 → 主人验收后 ExitPlanMode → 按层路由分批切角色落盘。⛔禁批量决策清单、禁塞单一文件、禁用 codegraph 生成 L1/L2/L4、禁碰 gates.md 与代码。不找 bug、不写代码。
+description: ⭐显式触发的【增量需求规划器】（MVP 已交付后做功能迭代用）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：规范体检 → 锁基线（status/gates/prd 历史）→ codegraph 四路侦察（explore 读现状 + impact 算传递闭包半径 + files 对账目录 + affected 算测试面，前置新鲜度保险）→ 需求逐点三态判定（已实现/无冲突/有冲突）→ 冲突逐条硬门控裁决 → 输出三件套（逻辑图+原型双联+带落盘路由的差异表）→ 逐点循环至通顺 → 主人验收后 ExitPlanMode → 按层路由分批切角色落盘。⛔禁批量决策清单、禁塞单一文件、禁用 codegraph 生成 L1/L2/L4、禁碰 gates.md 与代码。不找 bug、不写代码。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_callers
 disable-model-invocation: true
 ---
@@ -28,7 +28,7 @@ disable-model-invocation: true
 ```
 codegraph 的产出只许流向三处：
   ✅ 判定「已实现 / 未实现」            —— 纯事实陈述
-  ✅ 算改动爆炸半径（callers）          —— 纯事实陈述
+  ✅ 算改动爆炸半径（impact / callers）  —— 纯事实陈述
   ✅ 校准 L3 契约的实现状态标记          —— Architect 契约纪律授权
 
   ⛔ 绝不许反推「所以需求应该是 X」      —— L1 唯一来源 = 主人的话
@@ -78,7 +78,11 @@ Step1 基线锁定（只读，守上下文最小化）
   │   gates.md   → 已 PASS / FAIL / UNVERIFIABLE / ESCALATE
   │
 Step2 codegraph 侦察（受铁律 2 约束，只取事实）
-  │   explore(需求原话) → search(实体名) → callers(爆炸半径)
+  │   ⓪ 新鲜度保险 → status --json：pendingChanges 非 0 则先 sync
+  │   ① explore(需求原话) → query(实体名) → node(读符号)
+  │   ② impact(核心符号) → 传递闭包真半径（比 callers 一层准）
+  │   ③ files → 目录树现状 ⟷ project.md §三 目录规约 对账
+  │   ④ affected(涉及文件) → 测试影响面，写进差异表
   │   顺手撞契约漂移 → 触发铁律 3
   │
 Step3 需求逐点三态判定（禁悬空，每点必须落格）
@@ -130,6 +134,46 @@ Step9 顺手更新 status.md 坐标 → 提示走 /cc-code:agent-to-mvp
           否则增量章节会落错文件造成版本冲突。」
   → 仅当主人明示「就落 <实际文件>」才落，落完再提醒一次升级
 ```
+
+---
+
+## 二·五、Step2 codegraph 侦察规格（0.10.0 扩容）
+
+> 受铁律 2 约束：本步只取**事实**，一个字都不许流向 L1 / L2 / L4。
+> CLI 未装 → 全步降级为 Glob / Grep 表层扫描，并在三件套里标注「半径为估算」。
+
+### ⓪ 新鲜度保险（必做第一件事）
+
+```
+codegraph status --json
+  pendingChanges 非 0  → 先跑一次 codegraph sync 再侦察
+  为什么: daemon 空闲 5min 自杀, 期间的改动无人追写。
+          catch-up 只在 daemon 复活时跑, 存在「拿到旧数据」的竞态窗口。
+          规划阶段读到旧索引 → 半径算错 → 冲突漏判, 代价最大。
+  initialized:false → 报一行, 本次降级为表层扫描（⛔ 不自动重建）
+```
+
+### ①~④ 四路侦察（各有分工，不可互相替代）
+
+| 序 | 能力 | 回答什么 | 产出流向 |
+| :-- | :--- | :--- | :--- |
+| ① | `explore` → `query` → `node` | 「这块现在怎么实现的」 | Step3 三态判定的「已实现」判据 + 原型双联的「现状」那一半 |
+| ② | `impact <核心符号>` | 「改它会炸到哪」**传递闭包** | 差异表「爆炸半径」列 |
+| ③ | `files` | 「目录树现状」 | 与 `project.md` §三 目录规约对账，偏离即触发铁律 3 |
+| ④ | `affected <涉及文件>` | 「该补/该跑哪些测试」 | 差异表「测试影响」列，供 Dev 段落地 |
+
+**② 为什么必须用 `impact` 而非只用 `callers`**：
+
+```
+callers  只回答「谁直接调它」        —— 一层
+impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2，可调）
+
+  一层视野会把跨层级的连带改动漏掉 → 半径估小 → 规划时以为「改一处」
+  实际动到五处 → Dev 段爆炸 → 返工。两者并用: impact 定面, callers 定点。
+```
+
+**④ `affected` 返回空的处置**（报一行，不做前置检测）：
+① 测试代码是否被 `.gitignore` 屏蔽（被 ignore 则不进索引）② 测试是否 `import` 被测源码（纯 HTTP 型无 import 边）③ 命名是否需 `--filter "<project.md §六 登记的 glob>"`。
 
 ---
 
@@ -293,7 +337,7 @@ Step9 顺手更新 status.md 坐标 → 提示走 /cc-code:agent-to-mvp
 | --- | --- | --- |
 | 场景 | 0→1 定 MVP 全量 | MVP 已交付，功能迭代 |
 | 基线 | 粗探项目 | 硬锁 status + gates + prd 历史 + 断言最大号 |
-| 代码理解 | Glob / Grep 表层 | codegraph 算爆炸半径（受铁律 2 约束） |
+| 代码理解 | Glob / Grep 表层 | codegraph 四路侦察：explore/node 读现状 · impact 算传递闭包半径 · files 对账目录 · affected 算测试面（受铁律 2 约束） |
 | 冲突处理 | 无（首版无历史） | 八处冲突源 + 逐条硬门控裁决 |
 | 契约漂移 | 不涉及 | 撞出即停，逐条二选一 |
 | 产出 | 覆写 `prd.md`（旧版归档 `backup/`） | **就地收敛改写**命中层文件对应小节 + 台账 1 行 + 过程落 `docs/plans/` |

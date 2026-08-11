@@ -45,7 +45,7 @@
 | 角色 | 权限 | 可用能力 | ⛔ 绝对禁止 |
 | :--- | :--- | :--- | :--- |
 | **PM** | ❌ 完全禁止 | — | 任何调用。**用现状反推意图 = L1/L2 被 L3 污染 = 系统失效** |
-| **Architect** | ✅ 完全开放 | `explore` / `node` / `files` / `callers` / `impact` | 用它改写 `prd.md` / `ux.md` |
+| **Architect** | ✅ 完全开放 | `explore` / `node` / `files` / `callers`（谁调它）/ `callees`（它调谁）/ `impact`（传递闭包） | 用它改写 `prd.md` / `ux.md` |
 | **Dev** | ⚠️ 只读定位 | `node` / `explore`（找现有实现，避免重复造轮子） | 用它推翻 `api.md` / `data.md` 契约 |
 | **QA** | ⚠️ 双重限制 | `node`（找真实入口以写出能跑的测试）/ `callers`（判死代码）/ `affected`（算回归面） | **拿它当需求尺子**。需求只来自 `prd.md` / `ux.md` / `api.md` |
 
