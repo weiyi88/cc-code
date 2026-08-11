@@ -1,56 +1,108 @@
-# cc-code Plugin
+# cc-code
+
+> Version: **0.10.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
 
+---
+
+## 目录
+
+- [设计哲学](#设计哲学)
+- [核心逻辑](#核心逻辑)
+- [安装](#安装)
+- [完整生命周期](#完整生命周期)
+- [快速开始](#快速开始)
+- [可选增强：codegraph](#可选增强codegraph)
+- [Skill 一览（13 个）](#skill-一览13-个)
+- [Agent（3 个）](#agent3-个)
+- [文件分层（L0~L4）](#文件分层l0l4)
+- [目录架构](#目录架构)
+- [角色串行](#角色串行)
+- [经验沉淀（references）](#经验沉淀references)
+- [无 Hook 设计](#无-hook-设计)
+- [散落物迁移](#散落物迁移)
+- [新手入门](#新手入门)
+- [License](#license)
+
+---
+
 ## 设计哲学
+
+LLM 写代码有三病：**写着写着忘了目标、上下文越滚越脏、凭记忆瞎答**。
+cc-code 的处方：**把记忆、状态、规则全部外部寄存到 `.cc_code/` 静态文件**，AI 每次会话按协议读文件定位自己，而不是靠脑容量。
 
 ```
 ① 记忆/逻辑/状态全外部寄存 ── 不交给 agent，落 .cc_code/ 静态文件
 ② 责任垂直化 ── 每角色只掌一层，上下文干净，禁止越权
-③ active 三判据 ── 最新 + 最完整 + 最纯净（0.9.0 起为硬铁律）
+③ active 三判据 ── 最新 + 最完整 + 最纯净（硬铁律）
 ④ 防 vibecoding 三病：
    逻辑偏离 → 信息流单向 + codegraph 不生成意图层
    冗余堆积 → 就地收敛写入 + whole-qa 冗余检测
    自傲跳过 → 多角色 + 测修独立上下文
 ```
 
-## active 三判据（0.9.0 核心）
+## 核心逻辑
 
-`active/` 是唯一真相源，必须**永远**保持最新、最完整、最纯净 —— 三条都可判真假：
+### 角色串行（同一时刻只有一个角色被激活）
+
+```
+PM ──► Architect ──► Dev ──► QA
+(逻辑)   (契约)      (编码)   (验收)
+```
+
+每个角色由 `active/Agent.md` 路由表锁定「必读 / 可写 / 禁读」，禁止越权。
+
+| 角色 | 掌 | 可写 | 禁读 |
+| --- | --- | --- | --- |
+| PM | L1+L2 | prd, ux | src/, project, data, api |
+| Architect | L3 | project, data, api, docs/plans | src/ 业务码 |
+| Dev | 代码 | src/, 测试目录 | gates |
+| QA | L4（灰盒） | gates, 测试目录 | 无关历史码 |
+
+### 文件分层（先认层，再认角色）
+
+```
+┌ L0 控制 ─ Agent.md(宪法/权限表)  status.md(坐标+里程碑) ─ 人/AI ┐
+├ L1 意图 ─ prd.md(分模块逻辑+规则+验收断言 A1..An) ────── PM ───┤
+├ L2 表现 ─ ux.md(视觉规格+五态矩阵, U 编号发号处) ────── PM ───┤
+├ L3 实现 ─ project.md  data.md  api.md ───────────── Architect ┤
+├ L4 验收 ─ gates.md(A+U 追溯矩阵, 标准在 prd/ux) ─────── QA ───┤
+└ backup/ ─ 冷归档（AI 按需移入，默认不入库）─────────────────────┘
+```
+
+### 信息流铁律（单向，违反即失效）
+
+```
+   L1 意图 ──► L2 表现 ──► L3 实现 ──► 代码
+    ▲                                   │
+    └───────── L4 验收 ◄────────────────┘
+
+  ① L4 只拿 L1/L2 当尺子，绝不拿 L3/代码当尺子
+     否则 QA 退化为「拿代码验代码」，验收彻底失效
+  ② codegraph 只准校准 L3（事实层），永不生成 L1/L2/L4
+  ③ Dev/QA 禁改 prd/ux/api 让测试通过
+  ④ 标准与结果永不同文件：标准在 L1/L2（PM 写），结果在 L4（QA 写）
+     写标准的人 ≠ 判结果的人 → 制衡成立
+```
+
+### active 三判据
+
+`active/` 是唯一真相源，必须**永远**保持最新、最完整、最纯净：
 
 ```
    最新   ── 同一对象在 active 只有一处描述, 且是当前态
              ⛔ 禁新开「## 增量 F-n」章节 → 就地改写对应小节
-             治的病: 同一 interface/path/规则 散成 N 段补丁, 读者得脑内拼接
 
    最完整 ── 每个待验维度都有永久稳定编号, 分母算得出
              A 编号 (prd.md §1.5 主表) = 业务逻辑 / 链路 / 接口
-             U 编号 (ux.md  §2.3 矩阵) = UI 布局 / 交互五态   ⭐0.9.0 新增
-             治的病: 有维度没编号 → 覆盖率黑洞, 漏了查不出来
+             U 编号 (ux.md  §2.3 矩阵) = UI 布局 / 交互五态
 
    最纯净 ── 每一行都在答「现在是什么」, 不是「当时怎么决定的」
              过程产物 → docs/plans/  ·  逐轮验收详情 → docs/qa/
              历史版本靠 git (.cc_code 在版本控制内, 不另存快照)
-             治的病: 裁决记录/迁移清单/历史轮次堆在 active
 ```
-
-**写入前三问**（任一不通过即停手重判）：
-
-| # | 自查 | 不通过怎么办 |
-| --- | --- | --- |
-| 1 | active 里已有对应小节吗？ | 有 → **就地改写**，⛔ 禁新开章节 |
-| 2 | 这段在答「现在是什么」吗？ | 不是 → 落 `docs/plans/` 或 `docs/qa/` |
-| 3 | 别的层已经有了吗？ | 有 → 不写，只留指针（跨层唯一源） |
-
-**收敛时机 = 每次写 active 的动作本身**，不是事后清理，无需额外工具：
-
-| 时机 | 触发者 | 动作 |
-| --- | --- | --- |
-| 增量落盘（`plan-prd-feature` Step8） | PM / Architect | 就地改写对应小节 + 台账 1 行 + 过程落 `docs/plans/` |
-| 单轮验收收尾（`whole-qa` ❸❺ / QA） | QA | 更新 `gates.md` 矩阵**对应行**，详情落 `docs/qa/` |
-| 契约校准（发现漂移） | Architect | 就地改写 `data.md` / `api.md` 对应小节 + 台账 1 行 |
-| 场域升级（`init` D4） | init | 存量归位：旧格式 → 新骨架，历史迁 `docs/`（零删除） |
 
 ## 安装
 
@@ -113,7 +165,7 @@
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。
 
-## 可选增强：codegraph（0.10.0 起深度集成）
+## 可选增强：codegraph
 
 [codegraph](https://github.com/colbymchenry/codegraph) 是代码知识图谱索引。cc-code **不依赖它也能全流程跑通**，装了则四项能力升级：
 
@@ -154,7 +206,7 @@
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill（13 个）
+## Skill 一览（13 个）
 
 **框架核心（管流程）**
 
@@ -179,7 +231,7 @@
 | `cf_online` | Next.js 部署到 Cloudflare Pages (Edge) |
 | `next2taro` | Next.js UI → Taro 小程序转换 |
 
-## Agent（3 个，cc-code 配套）
+## Agent（3 个）
 
 三 agent 与 cc-code 角色串行绑定，**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`：
 
@@ -250,10 +302,10 @@ cc-code/
     │   └── gates.md       L4 A+U 验收追溯矩阵 + 未关闭 FAIL（QA，Dev 禁读）
     ├── docs/plans/      🔵 阶段方案（Architect 产出，Dev 按 phase 读）
     ├── docs/qa/         🔵 全量验收报告 + 元素清单（whole-qa 产出）
+    ├── test/           ⭐ 测试代码（源码，必须入库；affected 精准回归的索引基础）
     ├── images/          🔵 截图（init 迁移，扁平存放）
     ├── scripts/         🔵 散落脚本归档
     ├── references/      🟢 项目级经验资料库（experience-summary 产出，INDEX 索引 + 角色按需读）
-    ├── README.md        🧭 使用手册（init 每次刷新到最新版：逻辑/Skill/使用方案/示例，新手零门槛）
     ├── backup/          🧊 冷数据（含 CLAUDE.md.legacy / migration_manifest / needs_review；默认不入库）
     │   └── YYYY-MM/     升级时：pre-upgrade-<旧版>/ 只读快照 + upgrade_audit.md + superseded/ 归位物
     └── .cc_code_version 🔖 场域版本戳（决定 init 是否走升级迁移）
@@ -313,54 +365,9 @@ cc-code **不使用 Stop Hook**。所有 `.cc_code/` 文件都由 AI 在对话�
 
 旧版「默认搬走」会误杀 `setup.py`/`manage.py`/`AGENTS.md`/`build.sh` 等基建 —— 已反转。
 
-## 新手入门（降低上手难度）
+## 新手入门
 
 每个项目 init 后，`.cc_code/README.md` 会生成一份**使用手册**（项目逻辑 / Skill 一览 / 使用方案 / 使用示例），并且**每次 `/cc-code:init` 自动刷新到最新版** —— 不熟悉 cc-code 的协作者直接读它即可，无需翻本仓库。
-
-## 版本变更
-
-### 0.10.0 — codegraph 全静默深度集成
-
-本版解决一个结构性缺陷：**codegraph 是「被引用的假设」**。0.9.0 的文档 4 处写着它的纪律（「只准校准 L3」），却零处告诉人怎么让它就位 —— 没有装载、没有体检、`whole-qa` 声明用它扫冗余但 `allowed-tools` 一个工具都没给。能力覆盖仅 4/15。
-
-| # | 改动 | 病根 |
-| --- | --- | --- |
-| 1 | `init.sh` 新增 `ensure_codegraph()`：探测 CLI → 探测库 → 后台建索引，静默五铁则，任何分支 `return 0` | 装载缺口：新项目跑完 init 索引库根本不存在，`plan-prd-feature` 一调就空 |
-| 2 | `whole-qa` `allowed-tools` 补 4 个 codegraph MCP 工具 | ⭐真 BUG：`inventory.md` §六 明写用它扫死代码，权限却没给，声明的能力调不动 |
-| 3 | `project.md` 新增 §六 **测试基建契约** + `init` 新建 `.cc_code/test/` | 模板全文零处提「测试」，`agent-to-mvp` 却要求 `tests/{unit,api,e2e}` → 约定悬空；测试被 gitignore 屏蔽则 `affected` 永久失效 |
-| 4 | `affected` 接入 4 处回归门（`agent-to-mvp` Dev→QA / qa→dev 循环 / `whole-qa` 第5条 + FIX轮） | 原「同模块已 PASS 项」是人凭直觉画的圈，跨模块隐式依赖抓不到 |
-| 5 | `plan-prd-feature` Step2 扩为四路侦察，补 `impact` / `files` / `affected` | `callers` 只有一层视野 → 半径估小 → 规划以为改一处、Dev 实际动五处 |
-| 6 | Step2 前置 **新鲜度保险**（`pendingChanges` 非 0 先 `sync`） | daemon 空闲 5min 自杀，期间改动无人追写，存在「第一次查询拿到旧索引」的竞态窗口 |
-| 7 | 索引体检门 ×2（`agent-to-mvp` 前置 + MVP 收口） | 冗余清单与回归范围都建立在索引之上，索引坏了这两项结论不可信 |
-| 8 | `Agent.md` / `CLAUDE.md` 新增 **codegraph 角色权限矩阵** | 原文只有「只准校准 L3」一句，未落到角色粒度 |
-| 9 | `gates.md` 新增 **回归范围来源**表 | 回归跑了「哪些」比跑了「多少」更重要，范围算错全绿也是假绿 |
-
-**能力覆盖 4/15 → 15/15**：查询 9（explore/query/node/callers/callees/impact/affected/files/status）+ 写入 3（init 静默建库 / sync 新鲜度保险 / index 只提示不执行）+ 运维 3（install 注册 MCP / unlock 清僵死锁 / daemon 自管）。
-
-**为什么不装 Hook 自动同步**：codegraph 自带 watcher + catch-up 已自愈，装 Hook 是重复劳动；且 cc-code 的卖点是「无 Hook，状态由 AI 顺手写」。
-
-**为什么脚本不自动 `npm i -g`**：改全局环境是高风险操作，且 shell 脚本无法交互。改由 AI 弹选择框介绍收益后由人决定 —— 一次性告知，不是持续负担。
-
-**升级方式**：旧项目跑 `/cc-code:init` 即判 Track D。装了 codegraph 则索引自动就位；未装则弹一次选择框。
-
-### 0.9.0 — active 三判据 + U 编号 + 就地收敛
-
-本版解决一个结构性缺陷：**`active/` 被当成日志在写**。增量协议原本是「追加 `## 增量 F-n` 章节」，N 次迭代后同一个 interface / path / 规则散成 N 段补丁，`active` 行数线性膨胀且无收敛出口。
-
-| # | 改动 | 病根 |
-| --- | --- | --- |
-| 1 | `plan-prd-feature` 落盘协议：**追加章节 → 就地收敛改写** + 文末变更台账 1 行 + 过程产物落 `docs/plans/` | 旧协议明写「追加增量章节，不覆写」，无收敛出口 |
-| 2 | `ux.md` 新增 **`U` 编号**（`U<页>.<元素>.<态>`），与 `A` 编号同款铁律（永久稳定 / 禁重排 / 作废加删除线） | 旧版只有 `testid`（定位锚点，非判定项）→ 一元素 5 个态却只有 1 个锚点，「哪个态没过」无号可挂 |
-| 3 | `gates.md` 追溯矩阵扩为 **`A` 段 + `U` 段**；明禁新开「第 N 轮」章节，改为**就地更新对应行**；覆盖率四分母 | 旧实践把 gates 写成逐轮流水，「某断言现在什么状态」要跨 N 轮 grep |
-| 4 | `whole-qa` 元素分母改 **`ux.md` 声明 ∪ 运行时 DOM**，差集必报（声明未实现 / 实现未声明） | 分母纯来自运行时 → 每轮重扫，编号不稳定，跨轮无法机器对比 |
-| 5 | `init` **D4 由「只体检 `Agent.md`」扩为 8 文件骨架格式体检** + D4.1 存量归位表 | ⭐ 旧版 D3 判据是「文件在 active/ 里就算 OK」，内部格式无人过问 |
-| 6 | `init` **Track C 增加轻量骨架体检** | 旧版 Track C 零体检 → 盖戳后格式再也无人检查，旧格式永久留存 |
-| 7 | `init` **D5 校验门增加「骨架完备」硬门** | 旧版只查内容不丢，不查格式对不对 |
-| 8 | 5 个 L1~L3 模板加**写入纪律段 + 变更台账**；`Agent.md` / `CLAUDE.md` 加 **active 三判据铁律** | 纪律不进模板 = 不进每次会话的上下文 = 等于没有 |
-
-**升级方式**：旧项目跑 `/cc-code:init` 即判 Track D，D4 会逐文件体检并报归位清单（全程零删除，D1 快照是回滚点）。
-
-**为什么不做独立的 converge 清理工具**：收敛应该是**写入动作的一部分**（写完即收敛），而不是事后清理。若靠常设工具定期清，每次增量仍会先碎再清，无限循环且依赖人工触发。
 
 ## License
 
