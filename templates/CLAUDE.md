@@ -67,6 +67,8 @@ PM ──► Architect ──► Dev ──► QA
   L4 只拿 L1 / L2 当尺子；codegraph 只准校准 L3，永不生成 L1 / L2 / L4
 ```
 
+> **codegraph 角色权限**：PM 完全禁用 ｜ Architect 完全开放 ｜ Dev 只读定位 ｜ QA 双限（只找入口 / 算回归面，**永不当需求尺子**）。完整矩阵见 `active/Agent.md`。索引由 init 静默建立、watcher 自动维护，人无需手动 sync。
+
 ### PM 两产物边界（防重合）
 
 | 文件 | 定位 | 不写 |
