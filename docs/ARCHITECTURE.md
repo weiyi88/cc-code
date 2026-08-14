@@ -10,14 +10,17 @@
 ## 资产分布
 
 ```
-skills/      13 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
+skills/      14 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
 agents/       3 个 .md  → prd-plan / dev / qa
-scripts/     init.sh  (脚手架 + 散落物迁移)
+scripts/     init.sh  (脚手架 + 散落物迁移 + dashboard 幂等拉起)
 templates/   8 个 .md 骨架 + references-INDEX.md → init 时 cp 进 .cc_code/
+dashboard/   parse.js / dispatch.js / server.js / public/index.html
+             （0.11.0 新增：只读镜子 + 串行派活控制台，见下方专章）
 ```
 
 > 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`。
 > 0.5.0 起删除 `hooks/`（Stop Hook 机制废除）与 `templates/errors.md` —— 所有 `.cc_code/` 文件由 AI 顺手写，无自动化机械活。
+> 0.11.0 起插件首次引入 Node 运行时（仅 `dashboard/`），是对「零运行时」架构的破坏性变更 —— 详见下方专章。CLI/纯 markdown 形态存档在 `cli` 分支。
 
 ## 寻址约定
 
@@ -71,3 +74,36 @@ D7 盖戳（未过 D5 不许盖）
 
 **戳未盖 = 迁移未完成。** 半成品不会被下次 `init` 误认为已完成 —— 这是幂等性与
 「进度必须可信」的交点。
+
+## Dashboard 只读镜子（0.11.0 新增）
+
+**目的只有两条**：减少用户心智负担、展示 cc-code 系统的运作过程。任何超出这两条
+的功能（趋势图、多项目聚合、指标堆砌）都不做。
+
+```
+        ┌──────────────── 唯一真相源 ────────────────┐
+        │        .cc_code/active/*.md  +  git        │
+        └───────────────────────────────────────────┘
+              ▲                          │
+              │ 写(agent 子进程)           │ 读(解析)
+              │                          ▼
+        ┌──────────┐              ┌─────────────┐
+        │ Dev/QA   │◄─────────────┤  Dashboard  │
+        │ agent    │  派活(拖拽)   └─────────────┘
+        └──────────┘
+```
+
+- **零回 TUI**：看板拖动卡片直接起一个真实的 `claude -p --agent dev/qa` 子进程去改
+  代码/测试，不是复制一句话让人回终端粘贴。
+- **串行唯一**：cc-code 本身不支持并行，看板"进行中"列硬性只容 1 张卡，其余排 FIFO
+  队列，只排不抢，不叫插队。
+- **人拖不出 PASS**：拖到"已过"列 = 派 QA 去复验，不是标记通过；卡片最终落位永远由
+  `active/*.md` 的内容决定，拖动只是扣扳机。
+- **会话续命机制**：dashboard 派出去的 agent 共用一个固定 session id（存
+  `.cc_code/.runtime/session`）。`claude --session-id` 只能用一次「出生」，
+  之后必须用 `--resume` 续命，否则报 `already in use`。
+- **生命周期与 `init` 解耦**：`init` 只搭场域，一次性动作；拉起/复用 dashboard 服务
+  是独立命令 `/cc-code:dashboard`，幂等（活着只回地址，死了才重起），每次进项目
+  都可以敲。`.cc_code/.runtime/`（pid/端口/session）是运行时产物，不入库、AI 禁读写。
+- **零 npm 依赖**：裸 Node.js + 原生 http/fs.watch + 单个 `index.html`（内联
+  CSS/JS）。Node 未装 → 静默降级，不阻塞主流程，不自动装 Node。

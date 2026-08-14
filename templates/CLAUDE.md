@@ -54,6 +54,7 @@ PM ──► Architect ──► Dev ──► QA
 | — | `images/` | 截图（扁平存放） | init 迁移 |
 | — | `scripts/` | 散落脚本归档 | init |
 | — | `.cc_code_version` | 场域版本戳（决定 init 是否升级迁移） | init |
+| — | `.runtime/` | dashboard 运行时产物（pid / 端口 / 固定 session id）。AI 禁读写，不算规范 8 文件 | `/cc-code:dashboard` |
 
 > ⭐ `plan-prd-feature` 是 MVP 交付后的**增量迭代支线**：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色**就地收敛改写** L1 / L2 / L3 对应小节（逐批请示，绝不碰 L4 与代码）。
 

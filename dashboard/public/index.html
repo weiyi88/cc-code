@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cc-code</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#161a22; --panel2:#1c2230; --border:#2a3142;
+  --txt:#e6e9ef; --dim:#8b93a7; --dim2:#5c6478;
+  --acc:#6ea8ff; --ok:#4ade80; --warn:#fbbf24; --err:#f87171; --doing:#a78bfa;
+  --fix:#f87171; --todo:#8b93a7; --done:#4ade80;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.6 -apple-system,"PingFang SC",system-ui,sans-serif;min-height:100vh}
+button{cursor:pointer;font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px 12px}
+button:hover{border-color:var(--acc)}
+.topbar{display:flex;align-items:center;gap:16px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:10}
+.brand{font-weight:700;letter-spacing:.5px}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{padding:6px 14px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--dim)}
+.tab.active{background:var(--panel2);color:var(--txt);border-color:var(--border)}
+.meta{color:var(--dim);font-size:12px;display:flex;gap:10px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.on{background:var(--ok)} .dot.off{background:var(--dim2)}
+.role-badge{padding:2px 8px;border-radius:4px;background:var(--doing);color:#1a1a2a;font-weight:600;font-size:12px}
+main{max-width:1400px;margin:0 auto;padding:20px}
+.view{display:none} .view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.card h3{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.kv{display:flex;gap:8px;margin:4px 0;align-items:baseline}
+.kv .k{color:var(--dim);min-width:64px}
+.kv .v{color:var(--txt)}
+.bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;display:flex;margin:6px 0}
+.bar span{height:100%}
+.bar .p{background:var(--ok)} .bar .f{background:var(--err)} .bar .t{background:var(--dim2)}
+.cov-row{margin:10px 0}
+.cov-row .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:2px}
+.err-note{color:var(--warn);font-size:12px;margin-top:4px}
+/* 看板 */
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:1100px){.board{grid-template-columns:repeat(2,1fr)}}
+.col{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:120px}
+.col.locked{opacity:.65}
+.col h4{font-size:12px;color:var(--dim);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.col h4 .cnt{background:var(--panel2);padding:1px 7px;border-radius:8px;color:var(--txt)}
+.col.fix h4 .cnt{color:var(--fix)} .col.done h4 .cnt{color:var(--done)}
+.task{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:6px;cursor:grab;font-size:13px}
+.task:active{cursor:grabbing;opacity:.8}
+.task .id{font-weight:700;font-size:12px}
+.task.fix .id{color:var(--fix)} .task.todo .id{color:var(--todo)} .task.doing .id{color:var(--doing)} .task.done .id{color:var(--done)}
+.task .tx{color:var(--dim);font-size:12px;margin-top:2px}
+.task.doing{border-color:var(--doing);box-shadow:0 0 0 1px var(--doing) inset}
+.task.dragging{opacity:.4}
+.col.drop-ok{border-color:var(--ok);border-style:dashed}
+.col.drop-deny{border-color:var(--err);border-style:dashed;background:rgba(248,113,113,.08)}
+.lock-tag{font-size:10px;color:var(--dim2)}
+/* 执行台 */
+.exec{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--border);z-index:20;transition:max-height .3s;max-height:42px;overflow:hidden}
+.exec.open{max-height:50vh}
+.exec-head{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer}
+.exec-head .pulse{width:8px;height:8px;border-radius:50%;background:var(--doing);animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.exec-body{padding:0 20px 16px;display:grid;grid-template-columns:240px 1fr;gap:16px;max-height:calc(50vh - 50px);overflow:hidden}
+.exec-body .files,.exec-body .think{overflow-y:auto;font-size:12px;max-height:calc(50vh - 80px)}
+.exec-body .files .f{padding:3px 0;color:var(--acc);font-family:ui-monospace,monospace}
+.exec-body .think{color:var(--dim);white-space:pre-wrap;background:var(--bg);border-radius:6px;padding:10px}
+.exec-body .think .t{color:var(--txt)}
+.exec-body .think .tool{color:var(--warn)}
+.exec-body .think .res{color:var(--dim2)}
+.queue{margin-top:8px}
+.queue .q{padding:4px 8px;background:var(--panel2);border-radius:4px;margin-bottom:4px;font-size:12px;display:flex;justify-content:space-between}
+.empty{color:var(--dim2);font-size:12px;padding:8px;text-align:center}
+/* 教学区 */
+.flow{font-family:ui-monospace,monospace;white-space:pre;color:var(--dim);background:var(--bg);padding:14px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+.role-card{background:var(--panel2);border-radius:8px;padding:14px;margin-top:10px}
+.role-card .rn{font-weight:700;color:var(--doing);margin-bottom:6px}
+.role-card .rl{display:grid;grid-template-columns:90px 1fr;gap:4px;font-size:13px}
+.role-card .rl .k{color:var(--dim)}
+.file-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+@media(max-width:800px){.file-grid{grid-template-columns:1fr}}
+.file-cell{background:var(--panel2);border-radius:6px;padding:10px;font-size:12px}
+.file-cell .fn{font-family:ui-monospace,monospace;color:var(--acc)}
+.file-cell .fw{color:var(--dim);margin-top:2px}
+.file-cell .fresh{color:var(--warn)}
+.drawer{position:fixed;top:0;right:0;width:480px;max-width:90vw;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:30;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:20px}
+.drawer.open{transform:translateX(0)}
+.drawer pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:6px;font-size:12px;overflow-x:auto}
+.drawer-close{position:absolute;top:12px;right:16px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:460px;width:90%}
+.modal h3{margin-bottom:12px}
+.modal .perm{font-size:12px;color:var(--dim);margin:10px 0;line-height:1.7}
+.modal .perm b{color:var(--txt)}
+.modal .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal .acts .danger{border-color:var(--err);color:var(--err)}
+.banner{background:rgba(248,113,113,.12);border:1px solid var(--err);color:var(--err);padding:8px 16px;border-radius:6px;margin-bottom:12px;font-size:13px;display:none}
+.banner.show{display:block}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">cc-code</span>
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">总览</button>
+    <button class="tab" data-tab="board">看板</button>
+    <button class="tab" data-tab="how">运转</button>
+  </div>
+  <div class="meta">
+    <span id="m-module"></span>
+    <span id="m-role"></span>
+    <span id="m-ver"></span>
+    <span class="dot off" id="m-dot"></span>
+  </div>
+</div>
+
+<div class="banner" id="busy-banner">⚠️ 执行台占用中 — 派活期间请勿在 TUI 同时让 AI 改文件, 会互相覆盖</div>
+
+<main>
+  <!-- Tab 1: 总览 -->
+  <section class="view active" id="v-overview">
+    <div class="card">
+      <h3>谁在干活</h3>
+      <div id="role-flow"></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>进度</h3>
+        <div id="coverage"></div>
+      </div>
+      <div class="card">
+        <h3>挡路的</h3>
+        <div id="blockers"></div>
+        <h3 style="margin-top:16px">待派队列</h3>
+        <div id="queue-list"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>最近发生</h3>
+      <div id="recent"></div>
+    </div>
+  </section>
+
+  <!-- Tab 2: 看板 -->
+  <section class="view" id="v-board">
+    <div class="card" style="padding:10px 16px">
+      <span style="color:var(--dim);font-size:12px">🔒 灰底两列由 QA 实测决定, 拖不进去 · 拖动 = 派活, 不改文件</span>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <!-- Tab 3: 运转 -->
+  <section class="view" id="v-how">
+    <div class="card">
+      <h3>四个角色轮流上工, 一次只有一个在动</h3>
+      <div class="flow" id="flow-roles"></div>
+      <div id="role-detail"></div>
+    </div>
+    <div class="card">
+      <h3>信息只能往一个方向流</h3>
+      <div class="flow">  想要什么      长什么样       怎么做         做出来
+    L1      ──►     L2     ──►    L3    ──►    代码
+    prd             ux           project        src/
+                                  data api
+     ▲                                        │
+     └──────────── L4 拿 L1/L2 当尺子量  ◄─────┘
+                         gates
+   ⛔ 反着流就失效: QA 拿代码当尺子 = 等于没验</div>
+    </div>
+    <div class="card">
+      <h3>8 个文件, 各有唯一写者 — 点开看原文(只读)</h3>
+      <div class="file-grid" id="file-grid"></div>
+    </div>
+    <div class="card">
+      <h3>看板拖一下, 到底发生了什么</h3>
+      <div class="flow">  人拖卡片          扣扳机, 不改文件
+     │
+     ▼
+  起一个真 agent    按拖动方向决定派 Dev 还是 QA
+     │
+     ▼
+  agent 守宪法      照样只能读写自己那层, 权限一分不多
+     │
+     ▼
+  文件被改          active/*.md 变了
+     │
+     ▼
+  卡片自己走位      看板永远只是文件的影子
+
+  ⛔ 人拖不出一个「已过」── PASS 只能由 QA 实测产出</div>
+    </div>
+  </section>
+</main>
+
+<!-- 执行台 -->
+<div class="exec" id="exec">
+  <div class="exec-head" onclick="toggleExec()">
+    <span class="pulse" id="exec-pulse" style="display:none"></span>
+    <span id="exec-title">执行台空闲</span>
+    <span style="margin-left:auto;color:var(--dim);font-size:12px" id="exec-time"></span>
+    <button onclick="event.stopPropagation();stopDispatch()">停</button>
+    <button onclick="event.stopPropagation();toggleExec()">展开 ▲</button>
+  </div>
+  <div class="exec-body">
+    <div>
+      <div style="color:var(--dim);font-size:12px;margin-bottom:6px">它改了什么</div>
+      <div class="files" id="exec-files"></div>
+    </div>
+    <div>
+      <div style="color:var(--dim);font-size:12px;margin-bottom:6px">它在想什么</div>
+      <div class="think" id="exec-think"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 抽屉 -->
+<div class="drawer" id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <pre id="drawer-pre"></pre>
+</div>
+
+<!-- 派活确认 -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <div class="perm" id="modal-body"></div>
+    <div class="acts">
+      <button onclick="closeModal()">取消</button>
+      <button id="modal-ok" onclick="confirmDispatch()">派活</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let snap={}, pendingDispatch=null, execOpen=false, seen=localStorage.getItem('cc-seen');
+const $=s=>document.querySelector(s);
+const ROLE_ORDER=['PM','Architect','Dev','QA'];
+const ROLE_DESC={
+  PM:{name:'PM · 想清楚',can:'prd.md, ux.md',cant:'⛔ src/, project/data/api.md',rule:'把模糊的人类语言变成精确规范; 不碰技术实现'},
+  Architect:{name:'Architect · 定契约',can:'project.md, data.md, api.md, docs/plans/',cant:'⛔ src/ 业务代码',rule:'技术选型/数据库/接口/目录; 守 KISS/SOLID'},
+  Dev:{name:'Dev · 写代码',can:'src/, 测试目录, status.md',cant:'⛔ gates.md (防照答案改代码)',rule:'照 prd 写规则, 照 ux 画界面; 绝不为测试过而改需求'},
+  QA:{name:'QA · 找茬',can:'gates.md, 测试目录, check.sh',cant:'⛔ 无关历史代码',rule:'灰盒: 读代码只为找入口写测试; 需求只来自 prd/ux/api'},
+};
+
+function render(){
+  $('#m-module').textContent=snap.status?.module||'';
+  const r=snap.agent?.role||snap.status?.role||'';
+  $('#m-role').innerHTML=r?`<span class="role-badge">${r}</span>`:'';
+  $('#m-ver').textContent=snap.version||'';
+  $('#m-dot').className='dot '+(snap.ok?'on':'off');
+  renderOverview(); renderBoard(); renderHow();
+}
+
+function renderOverview(){
+  const r=snap.agent?.role||'';
+  const flow=$('#role-flow');
+  let html='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+  ROLE_ORDER.forEach((role,i)=>{
+    const active=r===role;
+    const done=snap.status?.phase&&i<ROLE_ORDER.indexOf(r);
+    html+=`<div style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:${active?'var(--panel2)':'var(--panel)'};border-color:${active?'var(--doing)':'var(--border)'}">
+      <div style="font-weight:700;color:${active?'var(--doing)':'var(--dim)'}">${role}</div>
+      <div style="font-size:11px;color:var(--dim2)">${active?'◉ 在岗':(done?'✓ 完成':'○ 待上')}</div>
+    </div>`;
+    if(i<3) html+=`<span style="color:var(--dim2)">──►</span>`;
+  });
+  html+='</div>';
+  if(snap.status?.issue) html+=`<div style="margin-top:10px;color:var(--dim);font-size:13px">正在跑 <b style="color:var(--txt)">${snap.status.issue}</b></div>`;
+  flow.innerHTML=html;
+
+  // coverage
+  const c=snap.coverage||{};
+  const bar=(t,title)=>{
+    if(!t)return'';
+    const pct=Math.round(t.pass/(t.total||1)*100);
+    return `<div class="cov-row"><div class="lbl"><span>${title}</span><span>${t.pass}/${t.total||0} · ${t.fail}挂 · ${t.todo}待</span></div>
+      <div class="bar"><span class="p" style="width:${t.pass/(t.total||1)*100}%"></span><span class="f" style="width:${t.fail/(t.total||1)*100}%"></span><span class="t" style="width:${t.todo/(t.total||1)*100}%"></span></div></div>`;
+  };
+  let cov=bar(c.A,'A 逻辑/接口')+bar(c.U,'U UI/五态');
+  if(snap.errors?.length) cov+=`<div class="err-note">⚠️ ${snap.errors.length} 项解析失败, 数字仅供参考</div>`;
+  $('#coverage').innerHTML=cov||'<div class="empty">无数据</div>';
+
+  // blockers
+  const bl=snap.status?.blockers||[];
+  $('#blockers').innerHTML=bl.length?bl.map(b=>`<div style="color:var(--err);font-size:13px;margin:4px 0">🚧 ${b}</div>`).join(''):'<div class="empty">无卡点</div>';
+
+  // queue
+  const q=snap.dispatch?.queue||0;
+  $('#queue-list').innerHTML=q?`<div class="empty">${q} 个任务排队中</div>`:'<div class="empty">队列空</div>';
+
+  // recent (简化: 用 milestones)
+  const ms=snap.status?.milestones||[];
+  $('#recent').innerHTML=ms.length?ms.slice(0,5).map(m=>`<div style="font-size:13px;color:var(--dim);margin:4px 0">📅 ${m}</div>`).join(''):'<div class="empty">暂无</div>';
+}
+
+function renderBoard(){
+  const tasks=snap.tasks||[];
+  const cols={fix:[],todo:[],doing:[],done:[]};
+  tasks.forEach(t=>{ if(cols[t.status]) cols[t.status].push(t); });
+  const colDef=[
+    {k:'fix',t:'要修',locked:true,deny:'FAIL 只能由 QA 实测判定'},
+    {k:'todo',t:'待做',locked:false},
+    {k:'doing',t:'进行中',locked:false,max1:true},
+    {k:'done',t:'已过',locked:true,deny:'PASS 只能由 QA 实测产出'},
+  ];
+  $('#board').innerHTML=colDef.map(c=>{
+    const list=cols[c.k]||[];
+    return `<div class="col ${c.k} ${c.locked?'locked':''}" data-col="${c.k}">
+      <h4>${c.t} <span class="cnt">${list.length}${c.max1?'/1':''}</span></h4>
+      ${list.map(t=>taskCard(t,c.k)).join('')||'<div class="empty">—</div>'}
+      ${c.deny?`<div class="lock-tag">🔒 ${c.deny}</div>`:''}
+    </div>`;
+  }).join('');
+  bindDnD();
+}
+
+function taskCard(t,col){
+  return `<div class="task ${t.status}" draggable="${t.status!=='doing'||true}" data-id="${t.id}" data-text="${escapeAttr(t.text)}">
+    <div class="id">${t.id} ${t.kind==='U'?'<span style="color:var(--dim2)">UI</span>':''}</div>
+    <div class="tx">${escapeHtml(t.text)}</div>
+    ${t.status==='doing'?'<div style="font-size:11px;color:var(--doing);margin-top:4px">◉ Dev 干着</div>':''}
+  </div>`;
+}
+
+function bindDnD(){
+  document.querySelectorAll('.task').forEach(el=>{
+    el.ondragstart=e=>{ e.dataTransfer.setData('id',el.dataset.id); el.classList.add('dragging'); };
+    el.ondragend=()=>el.classList.remove('dragging');
+    el.onclick=()=>openDrawer(el.dataset.id);
+  });
+  document.querySelectorAll('.col').forEach(col=>{
+    col.ondragover=e=>{
+      e.preventDefault();
+      const to=col.dataset.col;
+      if(to==='fix'){col.classList.add('drop-deny');col.classList.remove('drop-ok');return;}
+      if(to==='done'){col.classList.add('drop-ok');col.classList.remove('drop-deny');return;}
+      // doing: 若已有1张, 仍允许(排队)
+      col.classList.add('drop-ok');col.classList.remove('drop-deny');
+    };
+    col.ondragleave=()=>{col.classList.remove('drop-ok','drop-deny');};
+    col.ondrop=e=>{
+      e.preventDefault();
+      col.classList.remove('drop-ok','drop-deny');
+      const id=e.dataTransfer.getData('id');
+      const to=col.dataset.col;
+      const t=(snap.tasks||[]).find(x=>x.id===id);
+      if(!t)return;
+      if(to==='fix')return; // 禁止拖入要修
+      if(to==='done'){ openDispatchModal(t,'verify'); return; }
+      if(to==='doing'){ openDispatchModal(t,'doing'); return; }
+      if(to==='todo'){ openDispatchModal(t,'todo'); return; }
+    };
+  });
+}
+
+function openDispatchModal(t,to){
+  pendingDispatch={task:t,to};
+  const agent=to==='verify'?'QA':'Dev';
+  const verb=to==='verify'?'复验':(t.status==='fix'?'修复':'实现');
+  $('#modal-title').textContent=`${t.id} ${verb} → 派给 ${agent}`;
+  $('#modal-body').innerHTML=`<b>${t.id}</b> ${escapeHtml(t.text)}<br><br>
+    派给 <b>${agent}</b><br>
+    它会 ${to==='verify'?'照 prd/ux 写测试取证, 更新 gates.md':'照 prd/api/data 改代码, 更新 status.md'}<br>
+    能碰 <b>${to==='verify'?'gates.md, 测试目录':'src/, 测试目录, status.md'}</b><br>
+    碰不到 <b>${to==='verify'?'⛔ prd.md, ux.md':'⛔ prd.md, ux.md, gates.md'}</b><br><br>
+    ${snap.dispatch?.current?'⚠️ 执行台正忙, 将排入队列':''}`;
+  $('#modal-ok').textContent=to==='todo'?'撤回(不派活)':'派活';
+  $('#modal').classList.add('open');
+}
+function closeModal(){$('#modal').classList.remove('open');pendingDispatch=null;}
+function confirmDispatch(){
+  if(!pendingDispatch)return;
+  fetch('/api/dispatch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pendingDispatch)});
+  closeModal();
+}
+
+function renderHow(){
+  const r=snap.agent?.role||'';
+  let f='  ';
+  ROLE_ORDER.forEach((role,i)=>{
+    f+=role+(r===role?' ◉':(snap.status?.phase&&i<ROLE_ORDER.indexOf(r)?' ✓':' ○'));
+    if(i<3)f+='  ──►  ';
+  });
+  f+='\n  ◉ = 在岗   ✓ = 完成   ○ = 待上';
+  $('#flow-roles').textContent=f;
+  const rd=ROLE_DESC[r]||ROLE_DESC.Dev;
+  $('#role-detail').innerHTML=`<div class="role-card"><div class="rn">${rd.name}</div>
+    <div class="rl"><span class="k">它干什么</span><span>${rd.rule}</span>
+    <span class="k">它能看/写</span><span>${rd.can}</span>
+    <span class="k">它看不到</span><span>${rd.cant}</span></div></div>`;
+  const files=[
+    ['L0','active/Agent.md','人'],['L0','active/status.md','当前AI'],
+    ['L1','active/prd.md','PM'],['L2','active/ux.md','PM'],
+    ['L3','active/project.md','Architect'],['L3','active/data.md','Architect'],['L3','active/api.md','Architect'],
+    ['L4','active/gates.md','QA'],
+  ];
+  $('#file-grid').innerHTML=files.map(f=>`<div class="file-cell" onclick="openFile('${f[1]}')">
+    <div style="color:var(--dim2);font-size:10px">${f[0]}</div>
+    <div class="fn">${f[1]}</div>
+    <div class="fw">${f[2]}</div></div>`).join('');
+}
+
+function openDrawer(id){
+  const t=(snap.tasks||[]).find(x=>x.id===id);
+  if(!t)return;
+  $('#drawer-pre').textContent=`${t.id} (${t.kind})\n状态: ${t.status} / ${t.verdict}\n\n${t.text}\n\n— 点文件名看原文 —`;
+  $('#drawer').classList.add('open');
+}
+function closeDrawer(){$('#drawer').classList.remove('open');}
+function openFile(p){ fetch('/api/file?p='+encodeURIComponent(p)).then(r=>r.text()).then(t=>{$('#drawer-pre').textContent=t;$('#drawer').classList.add('open');}); }
+
+function toggleExec(){execOpen=!execOpen;$('#exec').classList.toggle('open',execOpen);$('.exec-head button:last-child').textContent=execOpen?'收起 ▼':'展开 ▲';}
+
+function stopDispatch(){fetch('/api/dispatch/stop',{method:'POST'});}
+
+// SSE
+const es=new EventSource('/events');
+es.onmessage=e=>{
+  const evt=JSON.parse(e.data);
+  if(evt.type==='snapshot'){snap=evt.snapshot;snap.dispatch=lastDispatch;render();}
+  else if(evt.source==='dispatch'){ handleDispatchEvt(evt); }
+};
+let lastDispatch=null;
+function handleDispatchEvt(evt){
+  if(evt.type==='start'){
+    $('#exec-pulse').style.display='inline-block';
+    $('#exec-title').textContent=`${evt.agent} · ${evt.task.id}`;
+    $('#busy-banner').classList.add('show');
+    execFiles={};execThink='';
+    if(!execOpen){execOpen=true;$('#exec').classList.add('open');}
+  } else if(evt.type==='thinking'){appendThink('t',evt.text);}
+  else if(evt.type==='text'){appendThink('t',evt.text);}
+  else if(evt.type==='tool'){appendThink('tool',`▸ ${evt.name} ${fmtInput(evt.input)}`);if(evt.name==='Write'||evt.name==='Edit')addFile(evt.input);}
+  else if(evt.type==='tool_result'){appendThink('res',evt.ok?'✓':'✗ '+evt.content);}
+  else if(evt.type==='done'){
+    $('#exec-pulse').style.display='none';
+    $('#exec-title').textContent=`完成 ${evt.task.id} (${Math.round(evt.durationMs/1000)}s)`;
+    $('#busy-banner').classList.remove('show');
+    lastDispatch=null;
+  } else if(evt.type==='error'){appendThink('res','⚠ '+evt.msg);}
+  if(evt.type==='queue'||evt.type==='queue_cleared'||evt.type==='start'||evt.type==='done'){
+    fetch('/api/dispatch').then(r=>r.json()).then(s=>{lastDispatch=s;snap.dispatch=s;render();});
+  }
+}
+let execFiles={},execThink='';
+function addFile(input){const p=input.file_path||input.path;if(p){const n=p.split('/').pop();execFiles[n]=p;renderExecFiles();}}
+function renderExecFiles(){const ks=Object.keys(execFiles);$('#exec-files').innerHTML=ks.length?ks.map(k=>`<div class="f">✎ ${k}</div>`).join(''):'<div class="empty">—</div>';}
+function appendThink(cls,txt){execThink+=`<span class="${cls}">${escapeHtml(txt)}</span>`;$('#exec-think').innerHTML=execThink;$('#exec-think').scrollTop=1e6;}
+function fmtInput(i){if(!i)return'';if(i.file_path)return i.file_path.split('/').pop();if(i.path)return i.path.split('/').pop();return JSON.stringify(i).slice(0,60);}
+
+function escapeHtml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escapeAttr(s){return (s||'').replace(/"/g,'&quot;');}
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $('#v-'+t.dataset.tab).classList.add('active');
+});
+
+// 首次进 → 跳运转 tab
+if(!seen){document.querySelector('.tab[data-tab=how]').click();localStorage.setItem('cc-seen','1');}
+
+fetch('/api/snapshot').then(r=>r.json()).then(s=>{snap=s;render();});
+fetch('/api/dispatch').then(r=>r.json()).then(s=>{lastDispatch=s;snap.dispatch=s;render();});
+</script>
+</body>
+</html>

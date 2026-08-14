@@ -197,18 +197,31 @@ migrate_scattered() {
 update_gitignore() {
   local GI="$PROJECT_ROOT/.gitignore"
   touch "$GI"
-  if grep -qF '.cc_code/backup/' "$GI"; then
-    return 0
+  local added=0
+
+  if ! grep -qF '.cc_code/backup/' "$GI"; then
+    {
+      echo ""
+      echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
+      echo ".cc_code/backup/"
+      echo ""
+      echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
+      echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
+    } >> "$GI"
+    added=1
   fi
-  {
-    echo ""
-    echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
-    echo ".cc_code/backup/"
-    echo ""
-    echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
-    echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
-  } >> "$GI"
-  log "已追加 .cc_code/backup/ 到 .gitignore"
+
+  if ! grep -qF '.cc_code/.runtime/' "$GI"; then
+    {
+      echo ""
+      echo "# dashboard 运行时产物（pid/端口/会话 id），机器本地态，不入库"
+      echo ".cc_code/.runtime/"
+    } >> "$GI"
+    added=1
+  fi
+
+  [ "$added" -eq 1 ] && log "已同步 .gitignore（backup/ .runtime/）"
+  return 0
 }
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -253,6 +266,63 @@ ensure_codegraph() {
   else
     warn "codegraph 索引建立失败，增量半径 / 冗余检测 / 精准回归降级（不影响主流程）"
   fi
+  return 0
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# dashboard 只读镜子 + 串行控制台 —— cc-code 的可选增强（0.11.0 新增）
+# ══════════════════════════════════════════════════════════════════════════
+# ⛔ init 全程不调用本函数：init 只搭场域，一次性动作；
+#    拉起/复用服务是 /cc-code:dashboard 命令的职责，每次进来敲它即可。
+# 静默五铁则（与 ensure_codegraph 同规矩）：
+#   ① 零新增用户命令（只有 /cc-code:dashboard 这一个）
+#   ② 零阻塞（后台起，不等它）
+#   ③ 已就绪时只回地址，不报废话
+#   ④ 只在异常说一行（Node 未装 / 端口全占）
+#   ⑤ 永不自动装 Node（改全局环境是高风险操作，必须人点头）
+# ══════════════════════════════════════════════════════════════════════════
+ensure_dashboard() {
+  local RUNTIME="$TARGET/.runtime"
+  local PIDFILE="$RUNTIME/dashboard.pid"
+  local PORTFILE="$RUNTIME/dashboard.port"
+  mkdir -p "$RUNTIME"
+
+  if ! command -v node >/dev/null 2>&1; then
+    warn "DASHBOARD_NODE_MISSING —— dashboard 需要 Node.js（未装，静默降级，主流程不受影响）"
+    return 0
+  fi
+
+  # 已在跑？读 pid 探活，活着就只回地址，不重起（幂等）
+  if [ -f "$PIDFILE" ]; then
+    local OLD_PID
+    OLD_PID="$(cat "$PIDFILE" 2>/dev/null || echo "")"
+    if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+      local PORT
+      PORT="$(cat "$PORTFILE" 2>/dev/null || echo "37800")"
+      log "📊 Dashboard 已在跑 → http://localhost:${PORT}"
+      return 0
+    fi
+    rm -f "$PIDFILE"  # 进程已死，清理僵尸 pid
+  fi
+
+  local LOG="$RUNTIME/dashboard.log"
+  local SERVER="$PLUGIN_ROOT/dashboard/server.js"
+  if [ ! -f "$SERVER" ]; then
+    warn "dashboard/server.js 不存在，跳过（不影响主流程）"
+    return 0
+  fi
+
+  nohup node "$SERVER" "$PROJECT_ROOT" >"$LOG" 2>&1 &
+  local NEW_PID=$!
+  echo "$NEW_PID" > "$PIDFILE"
+
+  # 端口由 server.js 自行探测占用并打印，这里给个保底默认值
+  sleep 0.3
+  local PORT
+  PORT="$(grep -oE ':[0-9]+' "$LOG" 2>/dev/null | head -1 | tr -d ':')"
+  PORT="${PORT:-37800}"
+  echo "$PORT" > "$PORTFILE"
+  log "📊 Dashboard → http://localhost:${PORT}"
   return 0
 }
 
@@ -393,9 +463,10 @@ relocate_superseded() {
 # ══════════════════════════════════════════════════════════════════════════
 
 # ══════════════════════════════════════════════════════════════════════════
-# 子命令入口（供 AI 在升级 D6 / D7 阶段调用）
+# 子命令入口（供 AI 在升级 D6 / D7 阶段调用；--dashboard 供 /cc-code:dashboard 调用）
 #   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
 #   bash init.sh --stamp                    盖版本戳（迁移+校验全通过才盖）
+#   bash init.sh --dashboard                幂等拉起/复用 dashboard 服务
 # ══════════════════════════════════════════════════════════════════════════
 case "$SUBCMD" in
   --relocate)
@@ -406,6 +477,10 @@ case "$SUBCMD" in
   --stamp)
     [ -d "$TARGET" ] || { warn "无 .cc_code/，无处盖戳"; exit 1; }
     stamp_version
+    exit 0 ;;
+  --dashboard)
+    [ -d "$TARGET" ] || { warn "无 .cc_code/，请先跑 /cc-code:init"; exit 1; }
+    ensure_dashboard
     exit 0 ;;
 esac
 
@@ -501,3 +576,4 @@ log "  images/ scripts/  截图归档 + 散落脚本"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"
 log "  根目录 CLAUDE.md  工作流入口引导"
 warn "让 AI Read 根目录 CLAUDE.md → 进入状态机循环。"
+log "想看角色/进度/任务面板？随时敲 /cc-code:dashboard（不必现在敲）。"
