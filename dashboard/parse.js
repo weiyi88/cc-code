@@ -16,17 +16,20 @@ function rowCells(line) {
   return cells;
 }
 
-// 取某标题下第一个表格的所有数据行 (跨子标题直到下一个同级 ##)
-function firstTable(md, headingRe) {
+// 收集全文所有匹配标题下的表格数据行（标题可出现多次, 如每模块一个 §n.5）
+function allTables(md, headingRe) {
   if (!md) return [];
   const lines = md.split('\n');
-  let inSection = false, started = false, rows = [];
+  let inSection = false, rows = [];
   for (const line of lines) {
-    if (headingRe.test(line)) { inSection = true; continue; }
+    const isHeading = /^#{1,4}\s/.test(line);
+    if (isHeading) {
+      inSection = headingRe.test(line);
+      continue;
+    }
     if (!inSection) continue;
-    if (/^##\s/.test(line) && started) break;
     const cells = rowCells(line);
-    if (cells) { started = true; rows.push(cells); }
+    if (cells) rows.push(cells);
   }
   return rows;
 }
@@ -67,16 +70,16 @@ function parseAgent(md) {
   return { phase: g('当前执行阶段'), role: g('当前激活角色') };
 }
 
-// prd.md §1.5 A 断言主表
+// prd.md 所有模块的验收断言主表（每模块一个 §n.5，编号全局唯一）
 function parsePrdAssertions(md) {
-  const rows = firstTable(md, /1\.5|验收断言/);
+  const rows = allTables(md, /\d+\.5|验收断言/);
   return rows.map(r => ({ id: (r[0]||'').trim(), text: (r[1]||'').trim() }))
     .filter(a => /^A\d+/.test(a.id) && !a.text.includes('[待填写]'));
 }
 
 // ux.md §2.3 U 编号五态矩阵
 function parseUxAssertions(md) {
-  const rows = firstTable(md, /2\.3|交互状态矩阵/);
+  const rows = allTables(md, /\d+\.3|交互状态矩阵/);
   return rows.map(r => ({ id: (r[0]||'').trim(), element: (r[1]||'').trim(), state: (r[2]||'').trim() }))
     .filter(a => /^U\d/.test(a.id));
 }
@@ -93,12 +96,11 @@ function normalizeVerdict(v) {
 function parseGates(md) {
   const out = { A: {}, U: {} };
   if (!md) return out;
-  firstTable(md, /2\.1|A\s*段/).forEach(r => {
-    if (r[0] && /^A\d+/.test(r[0])) out.A[r[0].trim()] = normalizeVerdict(r[1]);
-  });
-  firstTable(md, /2\.2|U\s*段/).forEach(r => {
-    if (r[0] && /^U\d/.test(r[0])) out.U[r[0].trim()] = normalizeVerdict(r[1]);
-  });
+  // 2.1 A 段 / 2.2 U 段（标题本身区分段落, 不再用含糊的行内匹配）
+  const aRows = allTables(md, /A\s*段/);
+  const uRows = allTables(md, /U\s*段/);
+  aRows.forEach(r => { if (r[0] && /^A\d+/.test(r[0])) out.A[r[0].trim()] = normalizeVerdict(r[1]); });
+  uRows.forEach(r => { if (r[0] && /^U\d/.test(r[0])) out.U[r[0].trim()] = normalizeVerdict(r[1]); });
   return out;
 }
 

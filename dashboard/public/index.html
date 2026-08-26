@@ -85,10 +85,12 @@ main{max-width:1400px;margin:0 auto;padding:20px}
 .file-cell .fn{font-family:ui-monospace,monospace;color:var(--acc)}
 .file-cell .fw{color:var(--dim);margin-top:2px}
 .file-cell .fresh{color:var(--warn)}
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:29;opacity:0;pointer-events:none;transition:opacity .2s}
+.drawer-mask.open{opacity:1;pointer-events:auto}
 .drawer{position:fixed;top:0;right:0;width:480px;max-width:90vw;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:30;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:20px}
 .drawer.open{transform:translateX(0)}
-.drawer pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:6px;font-size:12px;overflow-x:auto}
-.drawer-close{position:absolute;top:12px;right:16px}
+.drawer-close{position:sticky;top:0;float:right}
+.drawer pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:6px;font-size:12px;overflow-x:auto;clear:both}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:none;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:460px;width:90%}
@@ -230,9 +232,10 @@ main{max-width:1400px;margin:0 auto;padding:20px}
   </div>
 </div>
 
-<!-- 抽屉 -->
+<!-- 抽屉: 半透明遮罩点击关闭 -->
+<div class="drawer-mask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
-  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <button class="drawer-close" onclick="closeDrawer()">✕ 关闭</button>
   <pre id="drawer-pre"></pre>
 </div>
 
@@ -444,10 +447,10 @@ function openDrawer(id){
   const t=(snap.tasks||[]).find(x=>x.id===id);
   if(!t)return;
   $('#drawer-pre').textContent=`${t.id} (${t.kind})\n状态: ${t.status} / ${t.verdict}\n\n${t.text}\n\n— 点文件名看原文 —`;
-  $('#drawer').classList.add('open');
+  $('#drawer').classList.add('open');$('#drawer-mask').classList.add('open');
 }
-function closeDrawer(){$('#drawer').classList.remove('open');}
-function openFile(p){ fetch('/api/file?p='+encodeURIComponent(p)).then(r=>r.text()).then(t=>{$('#drawer-pre').textContent=t;$('#drawer').classList.add('open');}); }
+function closeDrawer(){$('#drawer').classList.remove('open');$('#drawer-mask').classList.remove('open');}
+function openFile(p){ fetch('/api/file?p='+encodeURIComponent(p)).then(r=>r.text()).then(t=>{$('#drawer-pre').textContent=t;$('#drawer').classList.add('open');$('#drawer-mask').classList.add('open');}); }
 
 function toggleExec(){execOpen=!execOpen;$('#exec').classList.toggle('open',execOpen);$('.exec-head button:last-child').textContent=execOpen?'收起 ▼':'展开 ▲';}
 
