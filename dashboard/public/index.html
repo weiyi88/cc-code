@@ -149,6 +149,17 @@ main{max-width:1400px;margin:0 auto;padding:20px}
     <div class="card" style="padding:10px 16px">
       <span style="color:var(--dim);font-size:12px">🔒 灰底两列由 QA 实测决定, 拖不进去 · 拖动 = 派活, 不改文件</span>
     </div>
+    <div class="card" id="board-empty" style="display:none">
+      <div style="text-align:center;padding:24px 0">
+        <div style="font-size:28px;margin-bottom:10px">📋</div>
+        <div style="color:var(--txt);font-weight:600;margin-bottom:6px">看板还是空的</div>
+        <div style="color:var(--dim);font-size:13px;max-width:520px;margin:0 auto;line-height:1.8">
+          看板只是 <code style="background:var(--bg);padding:1px 5px;border-radius:3px">.cc_code/active/*.md</code> 的镜子，自己不存任务。<br>
+          卡片的来源：让 <b>PM</b> 把需求写进 <b>prd.md §1.5 验收断言</b>（A 编号）与 <b>ux.md §2.3 五态矩阵</b>（U 编号），<br>
+          <b>QA</b> 跑完验收在 <b>gates.md</b> 记 PASS/FAIL —— 文件一落笔，卡片几秒内自动出现。
+        </div>
+      </div>
+    </div>
     <div class="board" id="board"></div>
   </section>
 
@@ -207,11 +218,14 @@ main{max-width:1400px;margin:0 auto;padding:20px}
   <div class="exec-body">
     <div>
       <div style="color:var(--dim);font-size:12px;margin-bottom:6px">它改了什么</div>
-      <div class="files" id="exec-files"></div>
+      <div class="files" id="exec-files"><div class="empty">未派活时为空</div></div>
     </div>
     <div>
       <div style="color:var(--dim);font-size:12px;margin-bottom:6px">它在想什么</div>
-      <div class="think" id="exec-think"></div>
+      <div class="think" id="exec-think"><span class="res">执行台 = 被「派活」出去的 Dev/QA agent 的实时工作台。
+在「看板」里把一张卡片拖到「进行中」或「已过」列，就会起一个真 agent 去干活：
+它读哪些文件、改了哪几行、思考过程，都会实时滚在这里。
+还没派过活，所以是空的。</span></div>
     </div>
   </div>
 </div>
@@ -268,7 +282,7 @@ function renderOverview(){
     if(i<3) html+=`<span style="color:var(--dim2)">──►</span>`;
   });
   html+='</div>';
-  if(snap.status?.issue) html+=`<div style="margin-top:10px;color:var(--dim);font-size:13px">正在跑 <b style="color:var(--txt)">${snap.status.issue}</b></div>`;
+  if(snap.status?.issue) html+=`<div style="margin-top:10px;color:var(--dim);font-size:13px">正在跑 <b style="color:var(--txt)">${mdInline(snap.status.issue)}</b></div>`;
   flow.innerHTML=html;
 
   // coverage
@@ -285,7 +299,7 @@ function renderOverview(){
 
   // blockers
   const bl=snap.status?.blockers||[];
-  $('#blockers').innerHTML=bl.length?bl.map(b=>`<div style="color:var(--err);font-size:13px;margin:4px 0">🚧 ${b}</div>`).join(''):'<div class="empty">无卡点</div>';
+  $('#blockers').innerHTML=bl.length?bl.map(b=>`<div style="color:var(--err);font-size:13px;margin:4px 0">🚧 ${mdInline(b)}</div>`).join(''):'<div class="empty">无卡点</div>';
 
   // queue
   const q=snap.dispatch?.queue||0;
@@ -293,11 +307,12 @@ function renderOverview(){
 
   // recent (简化: 用 milestones)
   const ms=snap.status?.milestones||[];
-  $('#recent').innerHTML=ms.length?ms.slice(0,5).map(m=>`<div style="font-size:13px;color:var(--dim);margin:4px 0">📅 ${m}</div>`).join(''):'<div class="empty">暂无</div>';
+  $('#recent').innerHTML=ms.length?ms.slice(0,5).map(m=>`<div style="font-size:13px;color:var(--dim);margin:4px 0">📅 ${mdInline(m)}</div>`).join(''):'<div class="empty">暂无</div>';
 }
 
 function renderBoard(){
   const tasks=snap.tasks||[];
+  $('#board-empty').style.display=tasks.length?'none':'block';
   const cols={fix:[],todo:[],doing:[],done:[]};
   tasks.forEach(t=>{ if(cols[t.status]) cols[t.status].push(t); });
   const colDef=[
@@ -320,7 +335,7 @@ function renderBoard(){
 function taskCard(t,col){
   return `<div class="task ${t.status}" draggable="${t.status!=='doing'||true}" data-id="${t.id}" data-text="${escapeAttr(t.text)}">
     <div class="id">${t.id} ${t.kind==='U'?'<span style="color:var(--dim2)">UI</span>':''}</div>
-    <div class="tx">${escapeHtml(t.text)}</div>
+    <div class="tx">${mdInline(t.text)}</div>
     ${t.status==='doing'?'<div style="font-size:11px;color:var(--doing);margin-top:4px">◉ Dev 干着</div>':''}
   </div>`;
 }
@@ -361,7 +376,7 @@ function openDispatchModal(t,to){
   const agent=to==='verify'?'QA':'Dev';
   const verb=to==='verify'?'复验':(t.status==='fix'?'修复':'实现');
   $('#modal-title').textContent=`${t.id} ${verb} → 派给 ${agent}`;
-  $('#modal-body').innerHTML=`<b>${t.id}</b> ${escapeHtml(t.text)}<br><br>
+  $('#modal-body').innerHTML=`<b>${t.id}</b> ${mdInline(t.text)}<br><br>
     派给 <b>${agent}</b><br>
     它会 ${to==='verify'?'照 prd/ux 写测试取证, 更新 gates.md':'照 prd/api/data 改代码, 更新 status.md'}<br>
     能碰 <b>${to==='verify'?'gates.md, 测试目录':'src/, 测试目录, status.md'}</b><br>
@@ -391,16 +406,38 @@ function renderHow(){
     <div class="rl"><span class="k">它干什么</span><span>${rd.rule}</span>
     <span class="k">它能看/写</span><span>${rd.can}</span>
     <span class="k">它看不到</span><span>${rd.cant}</span></div></div>`;
-  const files=[
-    ['L0','active/Agent.md','人'],['L0','active/status.md','当前AI'],
-    ['L1','active/prd.md','PM'],['L2','active/ux.md','PM'],
-    ['L3','active/project.md','Architect'],['L3','active/data.md','Architect'],['L3','active/api.md','Architect'],
-    ['L4','active/gates.md','QA'],
+  const layers=[
+    {name:'L0 · 控制层',desc:'谁在管这个项目',files:[
+      ['active/Agent.md','最高宪法：当前角色 + 谁能读写哪些文件','人'],
+      ['active/status.md','当前坐标：在做啥、卡在哪、下一步','当前角色 AI'],
+    ]},
+    {name:'L1 · 意图层',desc:'想要什么（业务规则）',files:[
+      ['active/prd.md','分模块业务规则 + A 编号验收断言，QA 的尺子','PM'],
+    ]},
+    {name:'L2 · 表现层',desc:'长什么样（界面规格）',files:[
+      ['active/ux.md','视觉规格 + U 编号五态矩阵（正常/加载/完成/错误/空）','PM'],
+    ]},
+    {name:'L3 · 实现层',desc:'怎么做（技术契约）',files:[
+      ['active/project.md','技术宪法：选型 / 目录 / 编码原则','Architect'],
+      ['active/data.md','数据契约：interface ↔ DB 列对齐','Architect'],
+      ['active/api.md','接口契约：method / path / 入参 / 出参 / 错误码','Architect'],
+    ]},
+    {name:'L4 · 验收层',desc:'验没验过（实测结果）',files:[
+      ['active/gates.md','QA 实测的 PASS/FAIL 逐条记录，Dev 禁读','QA'],
+    ]},
   ];
-  $('#file-grid').innerHTML=files.map(f=>`<div class="file-cell" onclick="openFile('${f[1]}')">
-    <div style="color:var(--dim2);font-size:10px">${f[0]}</div>
-    <div class="fn">${f[1]}</div>
-    <div class="fw">${f[2]}</div></div>`).join('');
+  $('#file-grid').innerHTML=layers.map(L=>`
+    <div style="grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin-top:8px">
+      <span style="color:var(--doing);font-weight:600;font-size:13px">${L.name}</span>
+      <span style="color:var(--dim2);font-size:12px">${L.desc}</span>
+    </div>
+    ${L.files.map(f=>`<div class="file-cell" onclick="openFile('${f[0]}')">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div class="fn">${f[0].replace('active/','')}</div>
+        <div style="font-size:10px;color:var(--doing)">${f[2]}</div>
+      </div>
+      <div class="fw">${f[1]}</div></div>`).join('')}
+  `).join('');
 }
 
 function openDrawer(id){
@@ -430,6 +467,7 @@ function handleDispatchEvt(evt){
     $('#exec-title').textContent=`${evt.agent} · ${evt.task.id}`;
     $('#busy-banner').classList.add('show');
     execFiles={};execThink='';
+    renderExecFiles(); $('#exec-think').innerHTML='';
     if(!execOpen){execOpen=true;$('#exec').classList.add('open');}
   } else if(evt.type==='thinking'){appendThink('t',evt.text);}
   else if(evt.type==='text'){appendThink('t',evt.text);}
@@ -447,12 +485,25 @@ function handleDispatchEvt(evt){
 }
 let execFiles={},execThink='';
 function addFile(input){const p=input.file_path||input.path;if(p){const n=p.split('/').pop();execFiles[n]=p;renderExecFiles();}}
-function renderExecFiles(){const ks=Object.keys(execFiles);$('#exec-files').innerHTML=ks.length?ks.map(k=>`<div class="f">✎ ${k}</div>`).join(''):'<div class="empty">—</div>';}
-function appendThink(cls,txt){execThink+=`<span class="${cls}">${escapeHtml(txt)}</span>`;$('#exec-think').innerHTML=execThink;$('#exec-think').scrollTop=1e6;}
+function renderExecFiles(){const ks=Object.keys(execFiles);$('#exec-files').innerHTML=ks.length?ks.map(k=>`<div class="f">✎ ${k}</div>`).join(''):'<div class="empty">尚未改动文件</div>';}
+function appendThink(cls,txt){
+  const html=cls==='t'?mdInline(txt):escapeHtml(txt);
+  execThink+=`<span class="${cls}">${html}</span>`;
+  $('#exec-think').innerHTML=execThink;$('#exec-think').scrollTop=1e6;
+}
 function fmtInput(i){if(!i)return'';if(i.file_path)return i.file_path.split('/').pop();if(i.path)return i.path.split('/').pop();return JSON.stringify(i).slice(0,60);}
 
 function escapeHtml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function escapeAttr(s){return (s||'').replace(/"/g,'&quot;');}
+// 轻量行内 markdown: **粗体** `代码` [文字](链接) ~~删除~~，先转义再替换
+function mdInline(s){
+  let h=escapeHtml(s||'');
+  h=h.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+     .replace(/~~([^~]+)~~/g,'<del>$1</del>')
+     .replace(/`([^`]+)`/g,'<code style="background:var(--bg);padding:1px 4px;border-radius:3px;font-size:11px">$1</code>')
+     .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--acc)">$1</a>');
+  return h;
+}
 
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));

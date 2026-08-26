@@ -35,7 +35,8 @@ function parseStatus(md) {
   if (!md) return {};
   const get = (label) => {
     const m = md.match(new RegExp(`\\*\\*${label}[：:]\\*\\*\\s*(.+)`));
-    return m ? m[1].trim() : '';
+    const v = m ? m[1].trim() : '';
+    return v.includes('[待填写]') ? '' : v;
   };
   const listFrom = (heading) => {
     const block = md.match(new RegExp(`##[^\\n]*${heading}[\\s\\S]*?(?=##|$)`));

@@ -7,8 +7,8 @@ const path = require('path');
 const { parseAll } = require('./parse');
 const { Dispatcher } = require('./dispatch');
 
-const PORT = 37800;
 const HOST = '127.0.0.1';
+const PORTS = [37800, 37801, 37802, 37803, 37804];
 
 function start(projectRoot) {
   const ccDir = path.join(projectRoot, '.cc_code');
@@ -45,7 +45,7 @@ function start(projectRoot) {
   dispatcher.on((evt) => broadcast({ ...evt, source: 'dispatch' }));
 
   const server = http.createServer((req, res) => {
-    const url = new URL(req.url, `http://${HOST}:${PORT}`);
+    const url = new URL(req.url, `http://${HOST}:0`);
 
     if (req.method === 'GET' && url.pathname === '/') {
       return serveFile(res, path.join(pubDir, 'index.html'), 'text/html; charset=utf-8');
@@ -99,13 +99,23 @@ function start(projectRoot) {
     json(res, { error: 'not found' }, 404);
   });
 
-  server.listen(PORT, HOST, () => {
-    console.log(`[cc-code dashboard] http://${HOST}:${PORT}`);
-  });
-  server.on('error', (e) => {
-    if (e.code === 'EADDRINUSE') console.log(`[cc-code dashboard] 端口 ${PORT} 占用, 跳过`);
-    else console.log(`[cc-code dashboard] 启动失败: ${e.message}`);
-  });
+  let portIdx = 0;
+
+  function tryListen() {
+    server.once('error', (e) => {
+      if (e.code === 'EADDRINUSE' && portIdx < PORTS.length - 1) {
+        portIdx += 1;
+        tryListen(); // 冲突自增找空端口
+      } else {
+        console.log(`[cc-code dashboard] 启动失败: ${e.message}`);
+        process.exit(1);
+      }
+    });
+    server.listen(PORTS[portIdx], HOST, () => {
+      console.log(`[cc-code dashboard] http://${HOST}:${PORTS[portIdx]}`);
+    });
+  }
+  tryListen();
   return server;
 }
 
