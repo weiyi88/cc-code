@@ -48,6 +48,7 @@ main{max-width:1400px;margin:0 auto;padding:20px}
 .col h4 .cnt{background:var(--panel2);padding:1px 7px;border-radius:8px;color:var(--txt)}
 .col.fix h4 .cnt{color:var(--fix)} .col.done h4 .cnt{color:var(--done)}
 .task{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:6px;cursor:grab;font-size:13px}
+.col.locked .task{cursor:pointer}  /* 锁定列的卡只可点击查看, 不可拖 */
 .task:active{cursor:grabbing;opacity:.8}
 .task .id{font-weight:700;font-size:12px}
 .task.fix .id{color:var(--fix)} .task.todo .id{color:var(--todo)} .task.doing .id{color:var(--doing)} .task.done .id{color:var(--done)}
@@ -90,7 +91,22 @@ main{max-width:1400px;margin:0 auto;padding:20px}
 .drawer{position:fixed;top:0;right:0;width:480px;max-width:90vw;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:30;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:20px}
 .drawer.open{transform:translateX(0)}
 .drawer-close{position:sticky;top:0;float:right}
-.drawer pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:6px;font-size:12px;overflow-x:auto;clear:both}
+.md-body{font-size:13px;line-height:1.7;clear:both;overflow-x:auto}
+.md-body h1,.md-body h2,.md-body h3,.md-body h4{margin:14px 0 8px;color:var(--txt)}
+.md-body h1{font-size:18px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.md-body h2{font-size:16px}.md-body h3{font-size:14px;color:var(--doing)}.md-body h4{font-size:13px}
+.md-body p{margin:6px 0}
+.md-body blockquote{border-left:3px solid var(--border);padding:4px 10px;margin:8px 0;color:var(--dim);background:var(--bg);border-radius:0 6px 6px 0}
+.md-body table{border-collapse:collapse;margin:8px 0;width:100%;font-size:12px}
+.md-body th,.md-body td{border:1px solid var(--border);padding:5px 8px;text-align:left;vertical-align:top}
+.md-body th{background:var(--panel2);color:var(--dim);font-weight:600}
+.md-body tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.md-body code{background:var(--bg);padding:1px 4px;border-radius:3px;font-size:11px;font-family:ui-monospace,monospace}
+.md-body pre{background:var(--bg);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0}
+.md-body pre code{background:none;padding:0}
+.md-body ul,.md-body ol{padding-left:22px;margin:6px 0}
+.md-body hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.md-body a{color:var(--acc)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:none;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:460px;width:90%}
@@ -149,7 +165,7 @@ main{max-width:1400px;margin:0 auto;padding:20px}
   <!-- Tab 2: 看板 -->
   <section class="view" id="v-board">
     <div class="card" style="padding:10px 16px">
-      <span style="color:var(--dim);font-size:12px">🔒 灰底两列由 QA 实测决定, 拖不进去 · 拖动 = 派活, 不改文件</span>
+      <span style="color:var(--dim);font-size:12px">唯一的拖拽操作：<b style="color:var(--txt)">要修 → 待做</b>（= 派 Dev 修复）。进行中 / 已过 / 待做卡片由文件落位，🔒 灰底列不可拖不可放</span>
     </div>
     <div class="card" id="board-empty" style="display:none">
       <div style="text-align:center;padding:24px 0">
@@ -189,10 +205,10 @@ main{max-width:1400px;margin:0 auto;padding:20px}
     </div>
     <div class="card">
       <h3>看板拖一下, 到底发生了什么</h3>
-      <div class="flow">  人拖卡片          扣扳机, 不改文件
+      <div class="flow">  人拖「要修」卡进「待做」   扣扳机, 不改文件
      │
      ▼
-  起一个真 agent    按拖动方向决定派 Dev 还是 QA
+  起一个真 Dev agent       串行, 队列只排不抢
      │
      ▼
   agent 守宪法      照样只能读写自己那层, 权限一分不多
@@ -236,7 +252,7 @@ main{max-width:1400px;margin:0 auto;padding:20px}
 <div class="drawer-mask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <button class="drawer-close" onclick="closeDrawer()">✕ 关闭</button>
-  <pre id="drawer-pre"></pre>
+  <div id="drawer-md" class="md-body"></div>
 </div>
 
 <!-- 派活确认 -->
@@ -319,9 +335,9 @@ function renderBoard(){
   const cols={fix:[],todo:[],doing:[],done:[]};
   tasks.forEach(t=>{ if(cols[t.status]) cols[t.status].push(t); });
   const colDef=[
-    {k:'fix',t:'要修',locked:true,deny:'FAIL 只能由 QA 实测判定'},
-    {k:'todo',t:'待做',locked:false},
-    {k:'doing',t:'进行中',locked:false,max1:true},
+    {k:'fix',t:'要修',locked:false,deny:'唯一可拖的列 → 拖进「待做」即派活'},
+    {k:'todo',t:'待做',locked:false,hint:'⬇ 接收「要修」卡片'},
+    {k:'doing',t:'进行中',locked:true,max1:true,deny:'由 agent 干活落位, 不能拖'},
     {k:'done',t:'已过',locked:true,deny:'PASS 只能由 QA 实测产出'},
   ];
   $('#board').innerHTML=colDef.map(c=>{
@@ -330,13 +346,15 @@ function renderBoard(){
       <h4>${c.t} <span class="cnt">${list.length}${c.max1?'/1':''}</span></h4>
       ${list.map(t=>taskCard(t,c.k)).join('')||'<div class="empty">—</div>'}
       ${c.deny?`<div class="lock-tag">🔒 ${c.deny}</div>`:''}
+      ${c.hint?`<div class="lock-tag" style="color:var(--ok)">${c.hint}</div>`:''}
     </div>`;
   }).join('');
   bindDnD();
 }
 
 function taskCard(t,col){
-  return `<div class="task ${t.status}" draggable="${t.status!=='doing'||true}" data-id="${t.id}" data-text="${escapeAttr(t.text)}">
+  // 只有「要修」列的卡可拖（唯一合法操作: 要修 → 待做）
+  return `<div class="task ${t.status}" draggable="${col==='fix'}" data-id="${t.id}" data-text="${escapeAttr(t.text)}">
     <div class="id">${t.id} ${t.kind==='U'?'<span style="color:var(--dim2)">UI</span>':''}</div>
     <div class="tx">${mdInline(t.text)}</div>
     ${t.status==='doing'?'<div style="font-size:11px;color:var(--doing);margin-top:4px">◉ Dev 干着</div>':''}
@@ -351,25 +369,20 @@ function bindDnD(){
   });
   document.querySelectorAll('.col').forEach(col=>{
     col.ondragover=e=>{
-      e.preventDefault();
       const to=col.dataset.col;
-      if(to==='fix'){col.classList.add('drop-deny');col.classList.remove('drop-ok');return;}
-      if(to==='done'){col.classList.add('drop-ok');col.classList.remove('drop-deny');return;}
-      // doing: 若已有1张, 仍允许(排队)
+      if(to!=='todo'){ return; }   // 只有「待做」是合法落点, 其余列不接受拖放
+      e.preventDefault();
       col.classList.add('drop-ok');col.classList.remove('drop-deny');
     };
     col.ondragleave=()=>{col.classList.remove('drop-ok','drop-deny');};
     col.ondrop=e=>{
       e.preventDefault();
       col.classList.remove('drop-ok','drop-deny');
+      if(col.dataset.col!=='todo')return;
       const id=e.dataTransfer.getData('id');
-      const to=col.dataset.col;
       const t=(snap.tasks||[]).find(x=>x.id===id);
-      if(!t)return;
-      if(to==='fix')return; // 禁止拖入要修
-      if(to==='done'){ openDispatchModal(t,'verify'); return; }
-      if(to==='doing'){ openDispatchModal(t,'doing'); return; }
-      if(to==='todo'){ openDispatchModal(t,'todo'); return; }
+      if(!t||t.status!=='fix')return; // 只接受「要修」卡
+      openDispatchModal(t,'todo');
     };
   });
 }
@@ -385,7 +398,7 @@ function openDispatchModal(t,to){
     能碰 <b>${to==='verify'?'gates.md, 测试目录':'src/, 测试目录, status.md'}</b><br>
     碰不到 <b>${to==='verify'?'⛔ prd.md, ux.md':'⛔ prd.md, ux.md, gates.md'}</b><br><br>
     ${snap.dispatch?.current?'⚠️ 执行台正忙, 将排入队列':''}`;
-  $('#modal-ok').textContent=to==='todo'?'撤回(不派活)':'派活';
+  $('#modal-ok').textContent='派活';
   $('#modal').classList.add('open');
 }
 function closeModal(){$('#modal').classList.remove('open');pendingDispatch=null;}
@@ -446,11 +459,55 @@ function renderHow(){
 function openDrawer(id){
   const t=(snap.tasks||[]).find(x=>x.id===id);
   if(!t)return;
-  $('#drawer-pre').textContent=`${t.id} (${t.kind})\n状态: ${t.status} / ${t.verdict}\n\n${t.text}\n\n— 点文件名看原文 —`;
+  $('#drawer-md').innerHTML=mdRender(`### ${t.id}（${t.kind==='U'?'UI 五态':'业务断言'}）\n\n- **状态：** ${t.status} ｜ **实测：** ${t.verdict}\n- **内容：** ${t.text}\n\n> 点「运转」tab 里的文件名可看 md 原文渲染`);
   $('#drawer').classList.add('open');$('#drawer-mask').classList.add('open');
 }
 function closeDrawer(){$('#drawer').classList.remove('open');$('#drawer-mask').classList.remove('open');}
-function openFile(p){ fetch('/api/file?p='+encodeURIComponent(p)).then(r=>r.text()).then(t=>{$('#drawer-pre').textContent=t;$('#drawer').classList.add('open');$('#drawer-mask').classList.add('open');}); }
+function openFile(p){ fetch('/api/file?p='+encodeURIComponent(p)).then(r=>r.text()).then(t=>{$('#drawer-md').innerHTML=mdRender(t);$('#drawer').classList.add('open');$('#drawer-mask').classList.add('open');}); }
+
+// 轻量 markdown → HTML (零依赖): 标题/表格/列表/代码块/引用/分割线/行内样式
+function mdRender(src){
+  const lines=(src||'').split('\n');
+  let out=[],i=0;
+  const flushList=(tag)=>{if(listBuf.length){out.push(`<${tag}>`+listBuf.map(li=>`<li>${mdInline(li)}</li>`).join('')+`</${tag}>`);listBuf=[];}};
+  let listBuf=[],listTag='';
+  while(i<lines.length){
+    let line=lines[i];
+    // 代码块 ``` 围栏
+    if(/^```/.test(line.trim())){
+      flushList(listTag);
+      let code=[];i++;
+      while(i<lines.length&&!/^```/.test(lines[i].trim())){code.push(lines[i]);i++;}
+      i++;out.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);continue;
+    }
+    // 表格: 当前行是 | 开头且下一行是分隔行
+    if(line.trim().startsWith('|')&&i+1<lines.length&&/^\s*\|[\s:|-]+\|?\s*$/.test(lines[i+1])){
+      flushList(listTag);
+      const head=rowCellsHtml(line);i+=2;
+      let body=[];
+      while(i<lines.length&&lines[i].trim().startsWith('|')){body.push(rowCellsHtml(lines[i]));i++;}
+      out.push(`<table><thead><tr>${head.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`);continue;
+    }
+    const hm=line.match(/^(#{1,4})\s+(.*)/);
+    if(hm){flushList(listTag);out.push(`<h${hm[1].length}>${mdInline(hm[2])}</h${hm[1].length}>`);i++;continue;}
+    if(/^\s*(---|\*\*\*)\s*$/.test(line)){flushList(listTag);out.push('<hr>');i++;continue;}
+    if(/^>\s?/.test(line)){flushList(listTag);out.push(`<blockquote>${mdInline(line.replace(/^>\s?/,''))}</blockquote>`);i++;continue;}
+    const ul=line.match(/^\s*[-*+]\s+(.*)/);
+    const ol=line.match(/^\s*\d+\.\s+(.*)/);
+    if(ul||ol){
+      const tag=ul?'ul':'ol',txt=(ul||ol)[1];
+      if(listTag&&listTag!==tag)flushList(listTag);
+      listTag=tag;listBuf.push(txt);i++;continue;
+    }
+    if(!line.trim()){flushList(listTag);i++;continue;}
+    flushList(listTag);out.push(`<p>${mdInline(line)}</p>`);i++;
+  }
+  flushList(listTag);
+  return out.join('\n');
+}
+function rowCellsHtml(line){
+  return line.split('|').slice(1,-1).map(c=>mdInline(c.trim()));
+}
 
 function toggleExec(){execOpen=!execOpen;$('#exec').classList.toggle('open',execOpen);$('.exec-head button:last-child').textContent=execOpen?'收起 ▼':'展开 ▲';}
 

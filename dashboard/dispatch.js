@@ -65,23 +65,22 @@ class Dispatcher {
   }
 
   // 拖动方向 → agent + prompt
+  // ⭐ 唯一合法拖拽: 要修(fix) → 待做(todo), 语义 = 派 Dev 修复
   buildPrompt(task, to) {
     const id = task.id, text = task.text || '';
-    if (to === 'doing') {
-      // 待做/要修 → 进行中: 派 Dev 实现/修复
+    if (to === 'todo' || to === 'doing') {
       return {
         agent: 'dev',
         prompt: `执行 cc-code Dev 任务。先 Read .cc_code/active/Agent.md 与 .cc_code/active/status.md 同步坐标与权限, 再按 .cc_code/active/prd.md 的断言 ${id} 实现或修复: ${text}。对照 .cc_code/active/api.md 与 .cc_code/active/data.md 契约, 照 .cc_code/active/ux.md 还原界面。完成后更新 .cc_code/active/status.md 的当前坐标与里程碑。⛔ 不得修改 prd.md / ux.md / gates.md; 修不动就上报, 绝不改需求迁就实现。`,
       };
     }
     if (to === 'verify') {
-      // 进行中/要修 → 已过(送验): 派 QA 复验
+      // 保留送验入口(供后续交互扩展), 当前 UI 未开放
       return {
         agent: 'qa',
         prompt: `执行 cc-code QA 复验。Read .cc_code/active/prd.md 断言 ${id} (${text}) 作为唯一尺子, 照 .cc_code/active/ux.md 五态, 写测试取证 (不靠读代码发议论)。更新 .cc_code/active/gates.md §二矩阵该行 Verdict 与轮次。⛔ 不得修改 prd.md / ux.md; 永不把 FAIL 四舍五入成 PASS。`,
       };
     }
-    // to === 'todo': 进行中 → 待做, 撤回, 不派 agent, 只提示
     return null;
   }
 

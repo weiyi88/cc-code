@@ -81,7 +81,9 @@ function parsePrdAssertions(md) {
 function parseUxAssertions(md) {
   const rows = allTables(md, /\d+\.3|交互状态矩阵/);
   return rows.map(r => ({ id: (r[0]||'').trim(), element: (r[1]||'').trim(), state: (r[2]||'').trim() }))
-    .filter(a => /^U\d/.test(a.id));
+    .filter(a => /^U\d/.test(a.id))
+    // 过滤模板占位行: 元素名是 [待填写]/[元素名] 或整行未填
+    .filter(a => a.element && !a.element.includes('[待填写]') && !a.element.includes('[元素名]'));
 }
 
 function normalizeVerdict(v) {
