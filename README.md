@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.12.0** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **0.13.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
@@ -15,7 +15,7 @@
 - [完整生命周期](#完整生命周期)
 - [快速开始](#快速开始)
 - [可选增强：codegraph](#可选增强codegraph)
-- [Skill 一览（14 个）](#skill-一览14-个)
+- [Skill 一览（16 个）](#skill-一览16-个)
 - [Agent（3 个）](#agent3-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
@@ -114,12 +114,12 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、14 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 3 个配套 agent。
 
 ## 完整生命周期
 
 ```
-/cc-code:init          搭场域（8模板 + 迁移散落物 + 盖版本戳
+/cc-code:init          搭场域（8模板 + bugs.md debug 便签 + 迁移散落物 + 盖版本戳
                        + 刷新 .cc_code/README.md 使用手册）
                        旧版场域自动走升级迁移（零删除）
        ↓
@@ -144,13 +144,23 @@ PM ──► Architect ──► Dev ──► QA
        ↓
 /cc-code:agent-to-feature  增量纯执行（增量定位 → Dev→QA，affected 精准回归）
 
+────────── 任意时刻修 bug 走这条支线（需求明确但实现错了）──────────
+
+/cc-code:debug-plan          ⭐第一动作 call EnterPlanMode → 问诊把 bug 问清楚
+                             +codegraph 查脉络（链路/半径/测试面）+ 裁决门
+                             （动契约/动需求 → 拒修指路规划）+ 三件套确认
+                             → 落盘 B-n 到 active/bugs.md（施工便签，修完即删）
+       ↓
+/cc-code:debug-qa-dev        bug 修复纯执行（定位 B-n → Dev→QA，affected 精准回归
+                             + 回归测试留守，无全量清算）
+
 ────────── 任意时刻 ──────────
 
 /cc-code:experience-summary  踩坑/复盘 → 提炼设计准则 → references/ 资料库
 /cc-code:init                插件升级后再跑一次：场域迁移 + 手册刷新到最新
 ```
 
-**主线是 4 个 skill 两两配对串起来**：规划（商讨落盘定稿）→ 执行（纯机器推进）→ 全量验收。
+**主线是 6 个 skill 三对配对串起来**：规划（商讨落盘定稿）→ 执行（纯机器推进）→ 全量验收。
 `cc-code` skill 在背后管运行时协议（角色路由 + 分层），`init` 是入场。无 Stop Hook，所有状态由 AI 顺手写。
 
 ## 快速开始
@@ -208,7 +218,7 @@ PM ──► Architect ──► Dev ──► QA
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill 一览（14 个）
+## Skill 一览（16 个）
 
 **框架核心（管流程）**
 
@@ -220,6 +230,8 @@ PM ──► Architect ──► Dev ──► QA
 | `plan-prd-feature` | `/cc-code:plan-prd-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 就地收敛落 L1/L2/L3，落盘即定稿 + status.md 点名 F-n） |
 | `agent-to-mvp` | `/cc-code:agent-to-mvp` | **MVP 纯执行编排**（读定稿文档，Dev→QA + qa→dev 循环，中途零确认，whole-qa 收口） |
 | `agent-to-feature` | `/cc-code:agent-to-feature` | **增量纯执行编排**（增量定位 → Dev→QA + qa→dev 循环，affected 精准回归，无全量清算） |
+| `debug-plan` | `/cc-code:debug-plan` | **bug 诊断器**（第一动作 EnterPlanMode，plan 内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认 → 落盘 B-n 到 `bugs.md`；禁改需求禁写代码） |
+| `debug-qa-dev` | `/cc-code:debug-qa-dev` | **bug 修复纯执行编排**（定位 B-n → Dev→QA + qa→dev 循环，affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过，无全量清算） |
 | `whole-qa` | `/cc-code:whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口 + 冗余检测，FAIL≤3轮回环） |
 | `experience-summary` | `/cc-code:experience-summary` | **项目级经验沉淀器**（踩坑/复盘 → 提炼准则 → 主人过目 → 落 `references/[角色]-[事件域]-references.md` + INDEX 按需读取） |
 | `short` | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
@@ -279,10 +291,10 @@ PM ──► Architect ──► Dev ──► QA
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           14 个 skill 目录
+├── skills/           16 个 skill 目录
 ├── agents/           3 个 agent（prd-plan / dev / qa）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
-├── templates/        8 个 md 骨架（L0~L4，含写入纪律 + 变更台账）
+├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）
 ├── docs/             ARCHITECTURE.md
 └── 无 hooks/         （0.5.0 砍除，无自动化机械活）
 ```
@@ -302,7 +314,8 @@ cc-code/
     │   ├── project.md     L3 技术宪法（Architect）
     │   ├── data.md        L3 数据契约 interface ↔ DB 列（Architect）
     │   ├── api.md         L3 接口契约 method/path/入参/出参/错误码（Architect）
-    │   └── gates.md       L4 A+U 验收追溯矩阵 + 未关闭 FAIL（QA，Dev 禁读）
+    │   ├── gates.md       L4 A+U 验收追溯矩阵 + 未关闭 FAIL（QA，Dev 禁读）
+    │   └── bugs.md        🐛 未修复 bug 工作上下文 B-n（debug-plan 写，修完即删，常态为空）
     ├── docs/qa/         🔵 全量验收报告 + 元素清单（whole-qa 产出）
     ├── test/           ⭐ 测试代码（源码，必须入库；affected 精准回归的索引基础）
     ├── images/          🔵 截图（init 迁移，扁平存放）

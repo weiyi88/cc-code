@@ -21,6 +21,7 @@
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单 | QA |
+| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n：复现/期望出处/根因/方案/影响面）；施工便签，修完即删，常态为空 | `/cc-code:debug-plan` 写入 · `/cc-code:debug-qa-dev` 结算删除 |
 | — | `backup/**` | 冷数据归档（人看历史，AI 工作时禁读；格式见下方归档规范） | 各写者追加 |
 | — | `references/**` | 项目级经验资料库（`/cc-code:experience-summary` 产出，INDEX 按需读） | — |
 
@@ -32,7 +33,7 @@
 | 文件 | 谁追加 | 列（顺序固定，不许增删换位） |
 | :--- | :--- | :--- |
 | `backup/change-log.md` | 任何写 active 的角色（增量 F-n 落盘时） | F 号 ｜ 日期 ｜ 层 ｜ 文件 ｜ 模块 ｜ 改了什么 ｜ 冲突裁决 ｜ 详情 |
-| `backup/milestone-log.md` | 当前角色 AI（任务节点完成时） | 日期 ｜ 模块 ｜ 里程碑 ｜ 关联 |
+| `backup/milestone-log.md` | 当前角色 AI（任务节点完成时） | 日期 ｜ 模块 ｜ 里程碑 ｜ 关联（bug 修复记 `B-n <简述> 修复 PASS`，关联填期望出处断言号或 B-n） |
 
 ```
 示例（change-log.md）：
@@ -44,6 +45,7 @@
 | 日期 | 模块 | 里程碑 | 关联 |
 | :-- | :-- | :-- | :-- |
 | 2026-09-03 | 登录 | whole-qa 第2轮 PASS，覆盖率 11/12 | F-3 |
+| 2026-09-04 | 登录 | B-3 重复提交修复 PASS | A12.4 |
 ```
 
 ### 信息流铁律（单向，违反即系统失效）

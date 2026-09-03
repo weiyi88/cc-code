@@ -10,10 +10,10 @@
 ## 资产分布
 
 ```
-skills/      13 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
+skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
 agents/       3 个 .md  → prd-plan / dev / qa
 scripts/     init.sh  (脚手架 + 散落物迁移)
-templates/   8 个 .md 骨架 + references-INDEX.md → init 时 cp 进 .cc_code/
+templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ references-INDEX.md → init 时 cp 进 .cc_code/
 ```
 
 > 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`。

@@ -23,7 +23,8 @@ PLUGIN_VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1
                   "$PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)"
 PLUGIN_VERSION="${PLUGIN_VERSION:-unknown}"
 
-# 规范 8 文件（L0~L4），升级清点的分母
+# 规范 8 文件（L0~L4），升级清点的分母；bugs.md 为 debug 链施工便签（0.13.0 起，
+# 新建与升级都补建，但不计入「规范位缺失」分母 —— 常态为空，缺了无碍主流程）
 CANON="Agent.md status.md prd.md ux.md project.md data.md api.md gates.md"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
@@ -50,6 +51,17 @@ TEMP_RE='^(tmp|temp|debug|scratch|draft|wip|check|verify|demo|untitled)[-_.]|[-_
 REPORT_RE='(REPORT|COMPLETED|COMPLETION|HANDOFF|NEXT_STEPS|MVP|FINAL|VERIFICATION|VERIFIED|IMPLEMENTATION|REVIEW|BATCH|DELIVERY|STATUS|SUMMARY|PHASE|PROGRESS|ANALYSIS)'
 ALLCAPS_MD='^[A-Z0-9_]+\.md$'
 SHOT_RE='(screenshot|screen-shot|screen_shot|snap|capture|Snipaste|CleanShot|图片|截图)'
+
+# ══════════════════════════════════════════════════════════════════════════
+# bugs.md 补建（0.13.0 新增）—— debug 链（debug-plan / debug-qa-dev）的施工便签。
+# 只补建缺失，绝无脑覆盖（里面可能有 OPEN 状态的 B-n 条目）。
+# ══════════════════════════════════════════════════════════════════════════
+ensure_bugs() {
+  if [ ! -f "$TARGET/active/bugs.md" ]; then
+    [ -f "$TEMPLATES/bugs.md" ] && cp "$TEMPLATES/bugs.md" "$TARGET/active/bugs.md" && \
+      log "已补建 active/bugs.md（0.13.0 debug 链施工便签）"
+  fi
+}
 
 # ══════════════════════════════════════════════════════════════════════════
 # 使用手册刷新（每次 init 无条件同步最新版，防旧手册误导新手）
@@ -422,6 +434,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
     warn "Track C：场域已是 ${PLUGIN_VERSION}，跳过脚手架，仅执行散落物迁移 + 手册刷新。"
     migrate_scattered
     update_gitignore
+    ensure_bugs
     refresh_handbook
     ensure_codegraph
     exit 0
@@ -435,6 +448,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
   audit_layout
   migrate_scattered
   update_gitignore
+  ensure_bugs
   ensure_codegraph
 
   YM="$(date +%Y-%m)"
@@ -463,6 +477,7 @@ cp "$TEMPLATES/project.md"    "$TARGET/active/project.md"    # L3 实现
 cp "$TEMPLATES/data.md"       "$TARGET/active/data.md"       # L3 实现
 cp "$TEMPLATES/api.md"        "$TARGET/active/api.md"        # L3 实现
 cp "$TEMPLATES/gates.md"      "$TARGET/active/gates.md"      # L4 验收
+cp "$TEMPLATES/bugs.md"       "$TARGET/active/bugs.md"       # debug 链施工便签（B-n）
 
 # references 索引（经验资料库，按需读取）+ 使用手册
 refresh_handbook

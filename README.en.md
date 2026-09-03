@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.12.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **0.13.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -15,7 +15,7 @@
 - [Full Lifecycle](#full-lifecycle)
 - [Quick Start](#quick-start)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
-- [Skill List (14)](#skill-list-14)
+- [Skill List (16)](#skill-list-16)
 - [Agents (3)](#agents-3)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
@@ -114,12 +114,12 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 14 skills, and 3 companion agents.
+After install you get the `/cc-code:*` command family, 16 skills, and 3 companion agents.
 
 ## Full Lifecycle
 
 ```
-/cc-code:init          Scaffold (8 templates + migrate scattered files + stamp version
+/cc-code:init          Scaffold (8 templates + bugs.md debug note + migrate scattered files + stamp version
                        + refresh .cc_code/README.md handbook)
                        Old-version fields auto-run upgrade migration (zero deletion)
        ↓
@@ -144,13 +144,24 @@ Deploy                 /cc-code:vercel_supabase or /cc-code:cf_online
        ↓
 /cc-code:agent-to-feature  Incremental pure execution (increment locate → Dev→QA, affected precise regression)
 
+────────── Anytime, bug fixing takes this branch (requirement clear, implementation wrong) ──────────
+
+/cc-code:debug-plan        ⭐ First action call EnterPlanMode → interrogate the bug
+                           + codegraph trace the chain (links/radius/test surface) + ruling gate
+                           (touches contract/requirement → refuse, redirect to planning)
+                           + three-piece-set confirmation → land B-n into active/bugs.md
+                           (sticky note, deleted once fixed)
+       ↓
+/cc-code:debug-qa-dev      Bug-fix pure execution (locate B-n → Dev→QA, affected precise
+                           regression + regression test retained, no full sweep)
+
 ────────── Anytime ──────────
 
 /cc-code:experience-summary  Pitfalls/retros → distill design rules → references/ library
 /cc-code:init                Run again after plugin upgrade: field migration + handbook refresh
 ```
 
-**The main line is 4 skills chained in pairs**: plan (conversation to final docs) → execute (pure machine) → full acceptance.
+**The main line is 6 skills chained in three pairs**: plan (conversation to final docs) → execute (pure machine) → full acceptance.
 The `cc-code` skill manages the runtime protocol (role routing + layering) in the background; `init` is the entry. No Stop Hook; all state written by AI in-conversation.
 
 ## Quick Start
@@ -208,7 +219,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 2. **Tests must import the source under test** — static `import` ✅ dynamic `await import()` ✅ pure HTTP-interface scripts ⛔ (no import edge to trace).
 3. **Non-standard names must register a glob** — defaults match `*.spec.*` / `*.test.*` / `__tests__/`; others need `--filter`.
 
-## Skill List (14)
+## Skill List (16)
 
 **Framework Core (manages flow)**
 
@@ -220,6 +231,8 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `plan-prd-feature` | `/cc-code:plan-prd-feature` | **Incremental requirement planner** (post-MVP iteration: spec checkup + codegraph blast radius + per-conflict hard gate + converge in place into L1/L2/L3, landing = final + status.md names F-n) |
 | `agent-to-mvp` | `/cc-code:agent-to-mvp` | **MVP pure-execution orchestration** (read final docs, Dev→QA + qa→dev loop, zero mid-run confirmation, whole-qa wrap-up) |
 | `agent-to-feature` | `/cc-code:agent-to-feature` | **Incremental pure-execution orchestration** (increment locate → Dev→QA + qa→dev loop, affected precise regression, no full sweep) |
+| `debug-plan` | `/cc-code:debug-plan` | **Bug diagnostician** (first action EnterPlanMode; in plan mode: interrogate + codegraph trace + ruling gate + three-piece-set confirmation → land B-n into `bugs.md`; never edits requirements, never writes code) |
+| `debug-qa-dev` | `/cc-code:debug-qa-dev` | **Bug-fix pure-execution orchestration** (locate B-n → Dev→QA + qa→dev loop, affected precise regression, PASS hard condition = regression test exists and passes, no full sweep) |
 | `whole-qa` | `/cc-code:whole-qa` | **Full acceptance + fix loop** (per-page/button/interface + redundancy detection, FAIL≤3-round loop) |
 | `experience-summary` | `/cc-code:experience-summary` | **Project-level experience sediment** (pitfalls/retros → distill rules → user review → land `references/[role]-[domain]-references.md` + INDEX on-demand) |
 | `short` | `/cc-code:short` | Minimal reply (when no thinking needed, ≤50 chars) |
@@ -279,10 +292,10 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           14 skill directories
+├── skills/           16 skill directories
 ├── agents/           3 agents (prd-plan / dev / qa)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
-├── templates/        8 md skeletons (L0~L4, with write-discipline + change-ledger)
+├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)
 ├── docs/             ARCHITECTURE.md
 └── no hooks/         (removed in 0.5.0, no automated mechanical work)
 ```
@@ -303,6 +316,7 @@ project-root/
     │   ├── data.md        L3 data contract interface ↔ DB columns (Architect)
     │   ├── api.md         L3 interface contract method/path/in/out/error codes (Architect)
     │   └── gates.md       L4 A+U acceptance traceability matrix + unclosed FAILs (QA, Dev forbidden)
+    │   └── bugs.md        🐛 Open-bug working context B-n (debug-plan writes; deleted once fixed; empty at rest)
     ├── docs/qa/         🔵 Full acceptance reports + element inventory (whole-qa produces)
     ├── test/           ⭐ Test code (source, must be in repo; index base for affected precise regression)
     ├── images/          🔵 Screenshots (init migrates, flat storage)

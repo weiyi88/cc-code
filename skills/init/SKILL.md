@@ -30,7 +30,7 @@ disable-model-invocation: true
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" "$(pwd)"
 ```
 
-脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/ references/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ `references/INDEX.md` 索引 + **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版）+ **版本戳**。Track C 搬散落物 + 刷新手册 + **AI 跑 D4 轻量骨架体检**。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的 `references/`）。
+脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/ references/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ `bugs.md`（0.13.0 起，debug 链施工便签，常态为空）+ `references/INDEX.md` 索引 + **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版）+ **版本戳**。Track C 搬散落物 + 补建缺失的 `bugs.md` + 刷新手册 + **AI 跑 D4 轻量骨架体检**。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的 `references/` 与 `bugs.md`）。
 
 子命令（供 AI 在升级阶段调用）：
 
