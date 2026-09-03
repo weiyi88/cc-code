@@ -451,7 +451,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
 fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
-mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/plans" "$TARGET/docs/qa" \
+mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/qa" \
          "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test"
 
 # 热区骨架（8 个 active 文件，按 L0~L4 分层）
@@ -494,7 +494,6 @@ stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
 log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
-log "  docs/plans/  阶段方案（Architect 产出，Dev 按 phase 读）"
 log "  docs/qa/     全量验收报告（whole-qa 产出）"
 log "  test/     ⭐测试代码（源码，必须入库；affected 精准回归的索引基础）"
 log "  images/ scripts/  截图归档 + 散落脚本"

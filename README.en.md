@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.11.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **0.12.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -15,7 +15,7 @@
 - [Full Lifecycle](#full-lifecycle)
 - [Quick Start](#quick-start)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
-- [Skill List (13)](#skill-list-13)
+- [Skill List (14)](#skill-list-14)
 - [Agents (3)](#agents-3)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
@@ -57,7 +57,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 | Role | Owns | Writable | Forbidden |
 | --- | --- | --- | --- |
 | PM | L1+L2 | prd, ux | src/, project, data, api |
-| Architect | L3 | project, data, api, docs/plans | src/ business code |
+| Architect | L3 | project, data, api | src/ business code |
 | Dev | code | src/, test dir | gates |
 | QA | L4 (gray box) | gates, test dir | unrelated history code |
 
@@ -100,7 +100,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
                U-number (ux.md §2.3 matrix) = UI layout / interaction five-states
 
    Purest    ── every line answers "what is it now", not "how it was decided"
-               process artifacts → docs/plans/  ·  per-round acceptance details → docs/qa/
+               process artifacts not persisted (change-log one line) · per-round acceptance details → docs/qa/
                history via git (.cc_code is version-controlled, no extra snapshots)
 ```
 
@@ -114,7 +114,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 13 skills, and 3 companion agents.
+After install you get the `/cc-code:*` command family, 14 skills, and 3 companion agents.
 
 ## Full Lifecycle
 
@@ -126,9 +126,10 @@ After install you get the `/cc-code:*` command family, 13 skills, and 3 companio
 Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
        ↓
 /cc-code:plan-prd-mvp  ⭐ First action call EnterPlanMode → probe + three-piece-set in plan
-                       + per-point conversation until smooth → land prd.md
+                       + per-point conversation until smooth → land five docs (prd/ux/project/data/api)
+                       (landing = final, no second review)
        ↓
-/cc-code:agent-to-mvp  Orchestrate impl (PM→Architect→Dev→QA, FAIL≤3-round loop)
+/cc-code:agent-to-mvp  Pure execution (read final docs, Dev→QA, FAIL≤3-round loop, zero mid-run confirmation)
        ↓
 /cc-code:whole-qa      Full acceptance (function + redundancy, FAIL≤3-round loop)
        ↓
@@ -138,9 +139,10 @@ Deploy                 /cc-code:vercel_supabase or /cc-code:cf_online
 
 /cc-code:plan-prd-feature  ⭐ First action call EnterPlanMode → spec checkup + lock baseline
                            + codegraph blast radius → per-conflict hard-gate ruling
-                           + three-piece-set conversation → land L1/L2/L3 by layer/role
+                           + three-piece-set conversation → converge in place (landing = final)
+                           + status.md names F-n and new assertion ids
        ↓
-/cc-code:agent-to-mvp      Orchestrate impl (Dev→QA)
+/cc-code:agent-to-feature  Incremental pure execution (increment locate → Dev→QA, affected precise regression)
 
 ────────── Anytime ──────────
 
@@ -148,7 +150,7 @@ Deploy                 /cc-code:vercel_supabase or /cc-code:cf_online
 /cc-code:init                Run again after plugin upgrade: field migration + handbook refresh
 ```
 
-**The main line is 3 skills chained**: produce requirements → orchestrate impl → full acceptance.
+**The main line is 4 skills chained in pairs**: plan (conversation to final docs) → execute (pure machine) → full acceptance.
 The `cc-code` skill manages the runtime protocol (role routing + layering) in the background; `init` is the entry. No Stop Hook; all state written by AI in-conversation.
 
 ## Quick Start
@@ -206,7 +208,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 2. **Tests must import the source under test** — static `import` ✅ dynamic `await import()` ✅ pure HTTP-interface scripts ⛔ (no import edge to trace).
 3. **Non-standard names must register a glob** — defaults match `*.spec.*` / `*.test.*` / `__tests__/`; others need `--filter`.
 
-## Skill List (13)
+## Skill List (14)
 
 **Framework Core (manages flow)**
 
@@ -214,9 +216,10 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | --- | --- | --- |
 | `init` | `/cc-code:init` | **Entry + upgrade** three-track init (new/latest/old-upgrade-migrate); judgment-chain migrates scattered files; upgrade runs "archive→audit→migrate→verify→relocate", **zero deletion** |
 | `cc-code` | auto | **Runtime protocol** role routing + file layering + state-machine constraints |
-| `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | PRD generator (first action EnterPlanMode, per-point conversation in plan mode until logic is smooth) |
-| `plan-prd-feature` | `/cc-code:plan-prd-feature` | **Incremental requirement planner** (post-MVP iteration: spec checkup + codegraph blast radius + per-conflict hard gate + land L1/L2/L3 by layer/role) |
-| `agent-to-mvp` | `/cc-code:agent-to-mvp` | MVP lifecycle orchestration (PM→Architect→Dev→QA + qa→dev loop) |
+| `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | **MVP planner** (first action EnterPlanMode, per-point conversation in plan mode until logic is smooth; produces five docs prd/ux/project/data/api, landing = final) |
+| `plan-prd-feature` | `/cc-code:plan-prd-feature` | **Incremental requirement planner** (post-MVP iteration: spec checkup + codegraph blast radius + per-conflict hard gate + converge in place into L1/L2/L3, landing = final + status.md names F-n) |
+| `agent-to-mvp` | `/cc-code:agent-to-mvp` | **MVP pure-execution orchestration** (read final docs, Dev→QA + qa→dev loop, zero mid-run confirmation, whole-qa wrap-up) |
+| `agent-to-feature` | `/cc-code:agent-to-feature` | **Incremental pure-execution orchestration** (increment locate → Dev→QA + qa→dev loop, affected precise regression, no full sweep) |
 | `whole-qa` | `/cc-code:whole-qa` | **Full acceptance + fix loop** (per-page/button/interface + redundancy detection, FAIL≤3-round loop) |
 | `experience-summary` | `/cc-code:experience-summary` | **Project-level experience sediment** (pitfalls/retros → distill rules → user review → land `references/[role]-[domain]-references.md` + INDEX on-demand) |
 | `short` | `/cc-code:short` | Minimal reply (when no thinking needed, ≤50 chars) |
@@ -237,7 +240,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 
 | agent | Model | cc-code Role | Responsibility |
 | --- | --- | --- | --- |
-| `prd-plan` | opus | PM + Architect | Requirements→spec→tech plan; produces prd/ux/project/data/api + `docs/plans/phaseN-plan.md` |
+| `prd-plan` | opus | PM + Architect | Requirements→spec→tech plan; produces prd/ux/project/data/api (phase plans live inside project.md, serving plan-prd-mvp / plan-prd-feature) |
 | `dev` | haiku | Dev | Implement code per spec + three-layer tests; self-check lint/tsc/test/e2e |
 | `qa` | sonnet | QA (gray box) | Write+run three-layer tests (logic/api/browser), structured FAIL list back to dev, ≤3-round loop |
 
@@ -276,7 +279,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           13 skill directories
+├── skills/           14 skill directories
 ├── agents/           3 agents (prd-plan / dev / qa)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        8 md skeletons (L0~L4, with write-discipline + change-ledger)
@@ -300,7 +303,6 @@ project-root/
     │   ├── data.md        L3 data contract interface ↔ DB columns (Architect)
     │   ├── api.md         L3 interface contract method/path/in/out/error codes (Architect)
     │   └── gates.md       L4 A+U acceptance traceability matrix + unclosed FAILs (QA, Dev forbidden)
-    ├── docs/plans/      🔵 Phase plans (Architect produces, Dev reads per phase)
     ├── docs/qa/         🔵 Full acceptance reports + element inventory (whole-qa produces)
     ├── test/           ⭐ Test code (source, must be in repo; index base for affected precise regression)
     ├── images/          🔵 Screenshots (init migrates, flat storage)
@@ -323,7 +325,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 | Role | Owns | Writable | Forbidden |
 | --- | --- | --- | --- |
 | PM | L1+L2 | prd, ux | src/, project, data, api |
-| Architect | L3 | project, data, api, docs/plans | src/ business code |
+| Architect | L3 | project, data, api | src/ business code |
 | Dev | code | src/, test dir | gates |
 | QA | L4 (gray box) | gates, test dir | unrelated history code |
 

@@ -153,7 +153,7 @@ D7 盖戳       ⭐AI：init.sh --stamp（仅校验全过才允许）
 | 交互流程 / 页面状态机 / 五态矩阵 | `active/ux.md` 五态矩阵段 | L2 |
 | 视觉规格 / 逐页布局 / 组件清单 / i18n key | `active/ux.md` 视觉规格段 | L2 |
 | 业务规则 / 模块职责 / 验收标准 | `active/prd.md` | L1 |
-| 阶段实现方案 / 任务拆分 | `docs/plans/` | — |
+| 阶段实现方案 / 任务拆分 | `active/project.md` 对应章节 | L3 |
 | 历史变更 / 版本记录 / 里程碑 | `back_up/milestone-log.md` 逐条追加（格式见 `Agent.md` 归档规范），全文留在 D1 快照 | — |
 | 踩坑记录（`errors.md`，**0.5.0 已废除**） | 不并入 active/；D1 快照已存档，在 `project.md` 特殊约束留一行指针 | — |
 | 数据模型 / 字段规则 | `active/data.md` | L3 |
@@ -178,7 +178,7 @@ for 每个规范文件 X ∈ {Agent status prd ux project data api gates}:
   │              （只加不覆盖 —— 绝不用空模板盖掉项目已填内容）
   └─ 项目有、模板没有的段落 → 判性质：
        ├─ 过程性 / 历史性（「第 N 轮回归」「增量 F-n」「迁移清单」「漂移登记」）
-       │    → 迁 docs/（qa 报告去 docs/qa/，方案与裁决去 docs/plans/）
+       │    → 迁冷归档（qa 报告去 docs/qa/，方案与裁决去 backup/YYYY-MM/）
        │      并在 `back_up/change-log.md` 追加一行指针（⛔ 不在 active 文件内留台账）
        └─ 项目自定义业务内容 → 原样保留（不擅自删、不擅自搬）
 ```
@@ -204,10 +204,10 @@ for 每个规范文件 X ∈ {Agent status prd ux project data api gates}:
 
 | 发现的旧形态 | 归位动作 |
 | --- | --- |
-| 任意 active 文件有 `## 增量 F-n` 章节 | 章节内的**当前态规格**就地合并进对应小节（同 interface / 同 path / 同模块 / 同页面合成一段）；**过程性内容**（需求清单 / 冲突收敛表 / 漂移登记 / 迁移清单）迁 `docs/plans/F-n-<需求名>.md`；`back_up/change-log.md` 补一行 |
-| `prd.md` 断言散在多个增量小节 | 全部**并回 §1.5 主表**（编号原样，禁重排）；原小节的过程内容迁 `docs/plans/` |
+| 任意 active 文件有 `## 增量 F-n` 章节 | 章节内的**当前态规格**就地合并进对应小节（同 interface / 同 path / 同模块 / 同页面合成一段）；**过程性内容**（需求清单 / 冲突收敛表 / 漂移登记 / 迁移清单）迁 `backup/YYYY-MM/`（冷归档）；`back_up/change-log.md` 补一行 |
+| `prd.md` 断言散在多个增量小节 | 全部**并回 §1.5 主表**（编号原样，禁重排）；原小节的过程内容迁 `backup/YYYY-MM/`（冷归档） |
 | `gates.md` 有「第 N 轮回归 / 第 N 轮验收」章节 | 各轮详情迁 `docs/qa/<日期>-round-N.md`；结果**汇总进 §二 追溯矩阵**（每断言一行，取最新一轮结论） |
-| active 文件文末有「附录 / 变更台账」章节 | 台账行逐条迁 `back_up/change-log.md`（格式见 `Agent.md` 归档规范），删除该附录章节；详情列指向 `docs/plans/` 的保持不变 |
+| active 文件文末有「附录 / 变更台账」章节 | 台账行逐条迁 `back_up/change-log.md`（格式见 `Agent.md` 归档规范），删除该附录章节；详情列指向旧 `docs/plans/` 的改指 `back_up/change-log.md` 同 F 号行 |
 | `ux.md` 五态矩阵无 `U` 编号 | 按 `U<页章号>.<元素序>.<态>` 补编号（**首次发号即永久固定**）；报主人本次发号范围 |
 | `api.md` / `data.md` 混入验收断言 | 删除该副本（`prd.md` §1.5 是唯一源）；⚠️ 先确认 `prd.md` 确有对应断言，**没有则先补进主表再删副本** |
 

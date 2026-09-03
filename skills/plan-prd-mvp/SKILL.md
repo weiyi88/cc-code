@@ -1,14 +1,17 @@
 ---
-description: ⭐显式触发的 PRD 生成器。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。进入 plan 模式后在其中探测项目、输出 ascii 三件套（逻辑图+原型图+差异表）、逐点循环提问直至所有逻辑与配置通顺，才 ExitPlanMode 落地 prd.md。⛔禁批量决策清单。不找 bug、不写代码。
+name: plan-prd-mvp
+description: ⭐显式触发的 MVP 规划器（商讨+落盘定稿，0→1 全量）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。进入 plan 模式后在其中探测项目、输出 ascii 三件套（逻辑图+原型图+差异表）、逐点循环提问直至所有逻辑与配置通顺，才 ExitPlanMode 落盘。落盘按 PM 批 → Architect 批切角色（免请示）：prd/ux（PM）+ project/data/api 含阶段拆分（Architect）。落盘即定稿，无二次验收；产出供 /cc-code:agent-to-mvp 纯执行。⛔禁批量决策清单。不找 bug、不写代码。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
 ---
 
-# /cc-code:plan-prd-mvp — PRD 生成器（第一动作即 plan 模式）
+# /cc-code:plan-prd-mvp — MVP 规划器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
 > 所有探测 / 三件套 / 交谈都在 plan 模式内做，**没有 plan 外窗口**。
 > AI 从第一秒就在 plan only，Write/Edit 被锁死，无法逃避。
+> **产出全部规划产物**：prd / ux（PM 域）+ project / data / api（Architect 域）。
+> **落盘即定稿**：对话内的逐点交谈就是主人的确认，落盘后无二次验收；想改直接改对应文件或重跑本命令。
 
 ## ⛔ 三条铁律（违反即失败）
 
@@ -54,8 +57,12 @@ Step4 逐点循环提问（一次一个模糊点，不批量）：
      ↓ ──── 通顺后 ────
 Step5 call ExitPlanMode → 主人 approve
      ↓ ──── 退出 plan 模式 ────
-Step6 Write .cc_code/active/prd.md（旧版归档 backup/YYYY-MM/）
-Step7 提示走 /cc-code:agent-to-mvp
+Step6 分批切角色落盘（⭐免请示：对话定稿即授权）：
+      ├─ PM 批：Write prd.md（旧版归档 backup/YYYY-MM/）+ ux.md
+      │    └─ Edit Agent.md「当前激活角色」→ PM → 落盘 → 复位
+      └─ Architect 批：Write project.md / data.md / api.md
+           └─ 阶段拆分（phaseN）并入 project.md 对应章节（Dev 按此分阶段编码）
+Step7 顺手更新 status.md 坐标 → 提示走 /cc-code:agent-to-mvp
 ```
 
 ---
@@ -86,6 +93,16 @@ Step7 提示走 /cc-code:agent-to-mvp
 
 > 不含：bug 清单（→ gates.md）、UI 规格（→ ux.md）、接口参数（→ api.md）
 
+## 三·五、其余规划产物（Architect 域）
+
+| 文件 | 落什么 | 说明 |
+| --- | --- | --- |
+| `project.md` | 技术选型 / 架构决策 / 目录规约 / **阶段拆分（phaseN + 各阶段验收断言范围）** / §六 测试基建契约 | 阶段拆分是 agent-to-mvp 的阶段来源；无阶段拆分则整体单阶段跑 |
+| `data.md` | 数据契约（interface ↔ DB 列） | Architect 契约纪律 |
+| `api.md` | 接口契约（method/path/入参/出参/错误码） | 同上 |
+
+> 阶段拆分并入 `project.md` 对应章节，**不另建方案文件** —— active 只答「现在是什么」，过程靠 git。
+
 ---
 
 ## 四、PM 产物边界
@@ -96,7 +113,8 @@ Step7 提示走 /cc-code:agent-to-mvp
 | `ux.md` | 视觉规格 + 交互五态（长什么样、点了怎么变） | 业务规则、字段类型 |
 
 > 判据：能脱离界面存在的 → `prd.md`；离开界面就没意义的 → `ux.md`。
-> plan-prd-mvp 只产 `prd.md`，`ux.md` 由 agent-to-mvp 的 PM 段基于 prd 细化。
+> 本命令产全部五件：`prd.md` + `ux.md`（PM 域）→ `project.md` / `data.md` / `api.md`（Architect 域）。
+> `agent-to-mvp` 是纯执行器，**不再细化任何规划产物**——缺什么本命令补齐。
 
 ---
 
@@ -110,7 +128,7 @@ Step7 提示走 /cc-code:agent-to-mvp
 | 逐点循环至通顺 | 所有逻辑+配置通顺才 ExitPlanMode |
 | plan 内只读 + 输出 | plan 模式内不 Write 业务文件，prd.md 等 ExitPlanMode 后落地 |
 | 动态读取 | 按项目结构探测，守上下文最小化 |
-| 不越界 | 只写 `prd.md`，不碰 active/ 其他 md，不改代码 |
+| 不越界 | 只写 `prd.md` / `ux.md` / `project.md` / `data.md` / `api.md`，不碰 active/ 其他 md，不改代码 |
 | 不找 bug | bug 是 QA 职责 |
 
 ---
@@ -118,15 +136,16 @@ Step7 提示走 /cc-code:agent-to-mvp
 ## 六、与主线的关系
 
 ```
-plan-prd-mvp（支线）                   cc-code 主线
+plan-prd-mvp（规划，人参与）             cc-code 主线
 ────────────────────                  ──────────────────
-Step0 call EnterPlanMode               /cc-code:agent-to-mvp
-Step1-4 plan 内探测+三件套+逐点交谈      ├─ PM（基于 prd 产 ux.md）
-Step5 ExitPlanMode approve             ├─ Architect（产 project/data/api）
-Step6 落地 prd.md ──────────────►      ├─ Dev（编码）
-                                      └─ QA（验收 → gates.md）
-                                    /cc-code:whole-qa（收口全量验收）
+Step0 call EnterPlanMode               /cc-code:agent-to-mvp（纯执行）
+Step1-4 plan 内探测+三件套+逐点交谈      ├─ Dev（编码）
+Step5 ExitPlanMode approve             └─ QA（验收 → gates.md）
+Step6 落盘五件 ──────────────►           → whole-qa（收口全量验收）
+（prd/ux + project/data/api）
 ```
+
+> 功能迭代不走本命令，走 `plan-prd-feature`（规划）→ `agent-to-feature`（执行）。
 
 ---
 

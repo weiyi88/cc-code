@@ -37,7 +37,7 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 | 角色 | 掌 | 必读 | 可写 | 禁读 |
 | --- | --- | --- | --- | --- |
 | PM | L1+L2 | status | prd.md, ux.md | src/, project.md, data.md, api.md |
-| Architect | L3 | status, prd, ux | project.md, data.md, api.md, docs/plans/ | src/ 业务代码 |
+| Architect | L3 | status, prd, ux | project.md, data.md, api.md（阶段拆分并入 project.md 章节） | src/ 业务代码 |
 | Dev | 代码 | status, prd, ux, project, data, api | src/, 项目测试目录 | gates.md；无关业务模块 |
 | QA（灰盒） | L4 | prd（唯一尺子）, ux, api, data | gates.md, 项目测试目录, check.sh | 无关历史业务代码（src 仅本阶段改动可读） |
 
@@ -72,8 +72,15 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 - 不向用户报告归档/进度流转细节。
 - 进度以 `status.md` 为准，禁止凭记忆作答。
 
-## 配套 agent（可选增强）
+## 配套 agent 与命令配对（可选增强）
 
-三 agent 与本协议角色串行绑定，可由 `/cc-code:agent-to-mvp` 编排调用：`prd-plan`(PM+Architect) / `dev`(Dev) / `qa`(QA 灰盒)。不用 agent 时，主控直接扮演各角色亦可。
+规划与执行两两配对，单一职责：
+
+| 场景 | 规划命令（人参与，落盘即定稿） | 执行命令（纯机器，中途零确认） |
+| --- | --- | --- |
+| 0→1 MVP | `/cc-code:plan-prd-mvp` | `/cc-code:agent-to-mvp`（Dev→QA→whole-qa 收口） |
+| 功能迭代 | `/cc-code:plan-prd-feature` | `/cc-code:agent-to-feature`（增量定位→Dev→QA，精准回归） |
+
+`prd-plan` agent（PM+Architect）服务规划命令；`dev` / `qa` agent 服务执行命令。不用 agent 时，主控直接扮演各角色亦可。
 
 阶段性增量验收用 `qa`；**MVP 收口前的全量验收 + 修复闭环用 `/cc-code:whole-qa`**（编排器：逐页逐按钮逐接口穷尽测试，分模块 fan-out，FAIL 自动回环给 dev，≤3 轮）。

@@ -20,7 +20,7 @@
 ```
    最新   ── 同一对象只有一处描述且是当前态 ⛔禁新开「增量 F-n」章节, 就地改写
    最完整 ── 每个待验维度都有稳定编号: A(prd §1.5) 管逻辑/链路/接口, U(ux §2.3) 管 UI/五态
-   最纯净 ── 只答「现在是什么」; 过程→docs/plans/, 逐轮验收→docs/qa/, 历史→git
+   最纯净 ── 只答「现在是什么」; 过程不落盘(change-log 留痕), 逐轮验收→docs/qa/, 历史→git
 ```
 
 写入前三问：① 已有对应小节吗？→ 就地改写。② 在答「现在是什么」吗？→ 否则落 `docs/`。③ 别的层有了吗？→ 只留指针。
@@ -50,7 +50,6 @@ PM ──► Architect ──► Dev ──► QA
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读） | experience-summary |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） | init |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |
-| — | `docs/plans/` | 阶段实现方案 | Architect |
 | — | `images/` | 截图（扁平存放） | init 迁移 |
 | — | `scripts/` | 散落脚本归档 | init |
 | — | `.cc_code_version` | 场域版本戳（决定 init 是否升级迁移） | init |
