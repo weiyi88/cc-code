@@ -23,18 +23,20 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 
 ## 二、断言追溯矩阵
 
-| 断言 ID | 模块 | Verdict | 测试位置 / 证据 | 实测结果 |
+> 📢 「模块·功能」列必须写**中文**（从 prd.md 模块清单提炼），⛔ 禁止只写 `M1` 这类代号 —— 报告要让人不查表就读懂。
+
+| 断言 ID | 模块·功能（中文） | Verdict | 测试位置 / 证据 | 实测结果 |
 | --- | --- | --- | --- | --- |
-| A1 | M1 | ✅ PASS | `tests/api/auth.test.ts::登录成功` | 1/1 pass |
-| A2 | M1 | ❌ FAIL | `docs/qa/shots/m1-a2.png` | 按钮未禁用，连点产生 3 次提交 |
-| A7 | M2 | ⚠️ UNVERIFIABLE | — | 需 seed 一个过期订单，当前无样本 |
-| A9 | M3 | 🚫 VOID | — | prd.md 已标作废 |
+| A1 | 登录 · 会话过期登出 | ✅ PASS | `tests/api/auth.test.ts::登录成功` | 1/1 pass |
+| A2 | 登录 · 重复提交防护 | ❌ FAIL | `docs/qa/shots/m1-a2.png` | 按钮未禁用，连点产生 3 次提交 |
+| A7 | 订单 · 过期订单可见性 | ⚠️ UNVERIFIABLE | — | 需 seed 一个过期订单，当前无样本 |
+| A9 | 看板 · 卡片拖拽 | 🚫 VOID | — | prd.md 已标作废 |
 
 ## 三、元素级结果
 
 | 元素 ID | 页面 | 类型 | testid | 同构组 | Verdict | 失败断言 | 证据 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| E12 | `/dashboard` | button | `btn-submit` | 唯一 | ❌ | B3 防重复提交 | `shots/e12.png` |
+| E12 | `/dashboard` | button | `btn-submit` | 唯一 | ❌ | A3｜看板-重复提交防护 | `shots/e12.png` |
 | E45 | `/list` | button | `row-del` | N=137, 实测 3 | ✅ | — | `shots/e45.png` |
 
 ## 四、接口级结果
@@ -74,7 +76,7 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 
 ## 七、Critical Failures（回 dev 必修）
 
-### 1. [A2] <一句话标题>
+### 1. [A2｜登录-重复提交] <一句话标题>
 *   **Required：** <`prd.md` 原文>
 *   **Actual：** <实际行为 / 测试失败信息>
 *   **Repro：** `<命令或步骤>`

@@ -34,7 +34,7 @@ PM ──► Architect ──► Dev ──► QA
 | 层 | 文件 | 装什么 | 谁写 |
 | --- | --- | --- | --- |
 | **L0 控制** | `active/Agent.md` | 最高宪法：角色 + 权限路由表 | 人 |
-| | `active/status.md` | 当前坐标 + 下一步 + 里程碑 | 当前角色 AI |
+| | `active/status.md` | 当前坐标 + 卡点 + 下一步（里程碑不落此文件） | 当前角色 AI |
 | **L1 意图** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 A1..An | PM |
 | **L2 表现** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM |
 | **L3 实现** | `active/project.md` | 技术宪法（架构/选型/决策记录） | Architect |
@@ -44,7 +44,7 @@ PM ──► Architect ──► Dev ──► QA
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读；含 bull-redis-queue 示例） | experience-summary |
 | — | `docs/plans/` | 阶段实现方案 | Architect |
 | — | `docs/qa/` | QA 全量报告 | QA |
-| — | `backup/` | 冷数据归档（溯源才翻） | — |
+| — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读） | 各写者追加 |
 | — | `.cc_code_version` | 场域版本戳 | init |
 
 **信息流单向**：`L1 → L2 → L3 → 代码 → L4 回验`。L4 只拿 L1/L2 当尺子，绝不拿代码当尺子。
@@ -123,7 +123,7 @@ AI：产出 prd.md（含验收断言 A1..A12），请你验收
 你：/cc-code:plan-prd-feature 加一个「429 限流自动退避重试」
 AI：codegraph 侦察现状 → 判定需求三态 → 有冲突逐条请你裁决
 AI：就地收敛落盘（prd.md 改写模块小节 + 断言进 §1.5 主表 / api.md 改写该 path 小节）
-    过程产物 → docs/plans/F-4-*.md　各文件文末变更台账 +1 行
+    过程产物 → docs/plans/F-4-*.md　back_up/change-log.md 追加 1 行
 你：切 Dev 角色实现 → 切 QA 验收断言 A12.21~A12.24
 ```
 

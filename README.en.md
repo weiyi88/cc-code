@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.10.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **0.11.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.

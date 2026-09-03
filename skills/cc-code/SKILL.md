@@ -57,7 +57,7 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 | `prd.md` / `ux.md` | PM | 定义需求时 |
 | `project.md` / `data.md` / `api.md` | Architect | 定契约时 |
 
-`status.md` 长度由 AI 自管（里程碑保留最近 10 条，更早的移入 `backup/`）。
+`status.md` 只答「坐标/卡点/下一步」；里程碑一律追加到 `back_up/milestone-log.md`（格式见 `active/Agent.md` 归档规范），⛔ 不落 `status.md`。
 
 ## 角色切换
 

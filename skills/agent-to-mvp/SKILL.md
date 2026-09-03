@@ -108,8 +108,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 ## 阶段结算
 
-- QA PASS 后，**AI** 更新 `status.md` 的「最近完成里程碑」（只留最近 10 条）。
-- AI 顺手更新 `status.md`「当前坐标 + 下一步」。
+- QA PASS 后，**AI** 在 `back_up/milestone-log.md` 追加一行（格式见 `active/Agent.md` 归档规范），⛔ 不写进 `status.md`。
+- AI 顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」。
 - 执行 `/cc-code:cc-code` 校准，确认进入下一阶段。
 
 ## MVP 收口（全部阶段 PASS）

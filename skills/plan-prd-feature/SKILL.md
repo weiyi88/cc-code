@@ -73,9 +73,10 @@ Step0.5 规范体检门
   │
 Step1 基线锁定（只读，守上下文最小化）
   │   Agent.md   → 锁角色权限路由表
-  │   status.md  → 里程碑=已开发 · 下一步=已规划未开发 · Blockers
-  │   prd.md     → 章节标题 + 模块清单 + 断言最大编号 + Out of Scope
+  │   status.md  → 当前坐标 · 下一步=已规划未开发 · Blockers
+  │   prd.md     → 章节标题 + 模块清单（✅状态列=已开发）+ 断言最大编号 + Out of Scope
   │   gates.md   → 已 PASS / FAIL / UNVERIFIABLE / ESCALATE
+  │   ⛔ 不读 back_up/（历史是人的，AI 判断已开发用模块清单状态列 + gates 实测）
   │
 Step2 codegraph 侦察（受铁律 2 约束，只取事实）
   │   ⓪ 新鲜度保险 → status --json：pendingChanges 非 0 则先 sync
@@ -201,7 +202,7 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 | 2 | 模块核心规则 R | `active/prd.md` 逐模块规格 | L1 |
 | 3 | 全局规则 G | `active/prd.md` 全局规则 | L1 |
 | 4 | 明确不做 | `active/prd.md` Out of Scope | L1 |
-| 5 | 已作废/已删功能 | `active/prd.md` 的 `~~作废~~` 断言 + 各文件**文末变更台账**（顺台账链翻 `docs/plans/F-n-*.md` 的冲突收敛表） | L1 |
+| 5 | 已作废/已删功能 | `active/prd.md` 的 `~~作废~~` 断言 + `back_up/change-log.md`（顺台账链翻 `docs/plans/F-n-*.md` 的冲突收敛表） | L1 |
 | 6 | 交互五态 | `active/ux.md` 五态矩阵 | L2 |
 | 7 | 数据契约 | `active/data.md` interface ↔ DB 列 | L3 |
 | 8 | 接口契约 + 架构决策 | `active/api.md` / `active/project.md` Needs Decision | L3 |
@@ -237,11 +238,11 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
       → Dev 得读 N 处自行拼接才知道「现在长什么样」
       → active 行数随迭代线性膨胀, 且无收敛出口
 
-   ✅ 新协议(0.9.0 起): 就地改写 + 台账留痕 + 过程外置
+   ✅ 新协议(0.9.0 起): 就地改写 + 台账外置 + 过程外置
       ├─ 变更内容 ──► 直接改写 active 里对应小节（原位覆盖）
       ├─ 新断言   ──► 续编进 prd.md §1.5 主表 / ux.md §2.3 矩阵
       ├─ 过程产物 ──► docs/plans/F-n-<需求名>.md
-      ├─ 变更留痕 ──► 各文件文末「变更台账」追加 1 行
+      ├─ 变更留痕 ──► back_up/change-log.md 追加 1 行（⛔ active 文件内不留台账）
       └─ 历史版本 ──► 靠 git（.cc_code 已在版本控制内，不另存快照）
 ```
 
@@ -263,16 +264,16 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 | **L3** | `active/data.md` | Architect | 数据契约（改写该 interface / 该表小节） | 需求、线框、**增量章节** |
 | **L3** | `active/api.md` | Architect | method / path / 入参 / 出参 / 错误码（改写该 path 小节） | 需求、线框、验收断言、**增量章节** |
 | — | `docs/plans/F-n-<需求名>.md` | 本 skill | ⭐**过程产物集中地**：需求清单 R · 冲突收敛表 · 裁决记录 · 契约漂移登记 · 迁移检查清单 · 现状态原型 · 待澄清 | 当前态规格（那些进 active） |
-| L0 | `active/status.md` | 当前角色 AI | 坐标 + 下一步（规范协议第 4 条授权顺手写） | 里程碑（QA PASS 后才写） |
+| L0 | `active/status.md` | 当前角色 AI | 坐标 + 下一步（规范协议第 4 条授权顺手写） | 里程碑（落 `back_up/milestone-log.md`，QA PASS 后才写） |
 | L0 | `active/Agent.md` | **人** | ⛔ 仅代笔改「当前激活角色」一行 | 权限路由表任何一字 |
 | L4 | `active/gates.md` | QA | ⛔ **绝不碰** | — |
 | — | `src/` + 测试目录 | Dev | ⛔ **绝不碰** | — |
 
 **判据速查：** 能脱离界面存在的 → L1；离开界面就没意义的 → L2；只有工程师关心的 → L3；**回答「当时怎么决定的」→ `docs/plans/`**。
 
-**增量批次号（F-n）：** 读各层文件**文末「变更台账」**已有最大 `F-n` → 本次取 `F-(n+1)`。同一需求在所有命中文件用同一个 F 号，台账行 + `docs/plans/F-n-*.md` 共同构成跨文件追溯链。
+**增量批次号（F-n）：** 读 `back_up/change-log.md` 已有最大 `F-n` → 本次取 `F-(n+1)`。同一需求在所有命中文件用同一个 F 号，`back_up/change-log.md` 一行 + `docs/plans/F-n-*.md` 共同构成跨文件追溯链。
 
-> ⚠️ **台账不是章节**：台账是文末一张表，每次增量只加**一行**（F 号 / 日期 / 改了什么一句 / 冲突裁决 / 详情链接）。它顶替旧协议里 `## 增量 F-n` 章节的追溯职能，代价从数十行降到 1 行。
+> ⚠️ **台账不是章节**：台账是 `back_up/change-log.md` 全局流水表（列结构见 `Agent.md` 归档规范），每次增量只加**一行**（F 号 / 日期 / 层 / 文件 / 模块 / 改了什么 / 裁决 / 详情链接）。它顶替旧协议里 `## 增量 F-n` 章节的追溯职能，代价从数十行降到 1 行，且不污染任何 active 文件。
 
 **三件套的落盘去向（避免重复，守 DRY）：**
 
@@ -320,12 +321,12 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
      │    ├─ 无对应小节 → 在该文件**语义正确的位置**新建小节（不是文件尾巴）
      │    ├─ 新断言 → 续编进 prd.md §1.5 主表 / ux.md §2.3 U 矩阵
      │    └─ ⛔ 禁新开「## 增量 F-n」章节
-     ├─ 文末「变更台账」追加 1 行（F 号 / 日期 / 改了什么 / 裁决 / docs/plans 链接）
+     ├─ `back_up/change-log.md` 追加 1 行（F 号 / 日期 / 层 / 文件 / 模块 / 改了什么 / 裁决 / docs/plans 链接）
      └─ 报本批产物清单（含「改写了哪些小节」明细，便于主人核对）
 8.4 落完报「Dev / QA 域未动」，提示主人走 /cc-code:agent-to-mvp
 ```
 
-> ⭐ **就地改写 ≠ 丢历史**：`.cc_code` 在 git 内，`git log -p active/prd.md` 即完整变更史。台账行 + `docs/plans/F-n-*.md` 提供语义级追溯。三者叠加，比堆积增量章节更完整且不污染 active。
+> ⭐ **就地改写 ≠ 丢历史**：`.cc_code` 在 git 内，`git log -p active/prd.md` 即完整变更史。`back_up/change-log.md` + `docs/plans/F-n-*.md` 提供语义级追溯。三者叠加，比堆积增量章节更完整且不污染 active。
 
 ⚠️ 切角色前严禁预读下一角色的禁读文件 —— 侦察阶段（Step1/Step2）的全域只读是**具名例外**，落盘阶段必须回到严格角色权限。
 
@@ -340,7 +341,7 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 | 代码理解 | Glob / Grep 表层 | codegraph 四路侦察：explore/node 读现状 · impact 算传递闭包半径 · files 对账目录 · affected 算测试面（受铁律 2 约束） |
 | 冲突处理 | 无（首版无历史） | 八处冲突源 + 逐条硬门控裁决 |
 | 契约漂移 | 不涉及 | 撞出即停，逐条二选一 |
-| 产出 | 覆写 `prd.md`（旧版归档 `backup/`） | **就地收敛改写**命中层文件对应小节 + 台账 1 行 + 过程落 `docs/plans/` |
+| 产出 | 覆写 `prd.md`（旧版归档 `backup/`） | **就地收敛改写**命中层文件对应小节 + `back_up/change-log.md` 1 行 + 过程落 `docs/plans/` |
 | 落盘层 | 仅 L1 | L1 + L2 + L3 动态命中 |
 | 角色 | 单一 PM 域 | PM 批 → Architect 批，逐批请示切换 |
 | 断言 | A1..An 全新 | A 序列**续编进 §1.5 主表**，作废加删除线；UI 侧 U 序列续编进 `ux.md` §2.3 |
@@ -360,7 +361,7 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 | ⛔ 禁批量决策清单 | 一次一个模糊点 |
 | 冲突未裁决完禁出关 | 硬门控 |
 | ⛔ 禁塞单一文件 | 按层路由，一层一文件一角色 |
-| ⛔ 禁追加增量章节 | 就地收敛改写对应小节；过程落 `docs/plans/`；台账 1 行留痕 |
+| ⛔ 禁追加增量章节 | 就地收敛改写对应小节；过程落 `docs/plans/`；`back_up/change-log.md` 1 行留痕 |
 | 切角色须请示 | `Agent.md` 只许改「当前激活角色」一行 |
 | plan 内只读 | 一切写入等 ExitPlanMode 后 |
 | 不找 bug | bug 是 QA 职责 |

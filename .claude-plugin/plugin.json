@@ -1,6 +1,6 @@
 {
   "name": "cc-code",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "极简开发工作流系统。角色串行(PM→Architect→Dev→QA) + L0~L4 文件分层的状态机循环。/cc-code:init 三轨初始化（新建/已最新/旧版升级迁移，全程零删除），13 skill + 3 配套 agent，含 /cc-code:plan-prd-feature 增量迭代规划、/cc-code:whole-qa 全量验收修复闭环与 /cc-code:experience-summary 项目级经验沉淀（references 按需读取）。⭐0.10.0 codegraph 全静默深度集成（15/15 能力：静默建索引 + affected 精准回归 + impact 真爆炸半径 + 角色权限矩阵，人零心智负担）。无 Hook，所有状态由 AI 顺手写。",
   "author": {
     "name": "cc-code"

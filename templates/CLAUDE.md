@@ -39,14 +39,14 @@ PM ──► Architect ──► Dev ──► QA
 | 层 | 文件 | 用途 | 维护者 |
 | :-- | :--- | :--- | :--- |
 | **L0** | `active/Agent.md` | 最高宪法：角色 + 权限路由表 | 人 |
-| | `active/status.md` | 当前坐标 + 下一步 + 里程碑 | 当前角色 AI |
+| | `active/status.md` | 当前坐标 + 卡点 + 下一步（里程碑不落此文件） | 当前角色 AI |
 | **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | PM / plan-prd-mvp / plan-prd-feature |
 | **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM / plan-prd-feature |
 | **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录） | Architect / plan-prd-feature |
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect / plan-prd-feature |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect / plan-prd-feature |
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
-| — | `backup/` | 冷数据归档（溯源才翻，默认不入库） | — |
+| — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） | 各写者追加 |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读） | experience-summary |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） | init |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |

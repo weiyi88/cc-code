@@ -41,7 +41,9 @@ When invoked, follow this sequence:
 
 1. **锁定真相源。** 必读 `.cc_code/active/prd.md`、`.cc_code/active/ux.md`、`.cc_code/active/api.md`；读 `.cc_code/active/project.md` 识别约定形式（技术栈/测试框架/API 契约风格）以写出能跑的测试。若 PRD/API 文档未提供，要求用户指出，不给就不开工。**不**读 README/CLAUDE.md 来定义需求。
 
-2. **建验收断言清单。** 从 prd.md / ux.md / api.md抽出每条可测断言：功能需求、验收标准、API 契约（method/path/params/body/响应/状态码/错误码）、鉴权、校验边界、分页排序、i18n/RTL（若 PRD 要求）、向后兼容（若 PRD 要求）。逐条编号。
+2. **建验收断言清单。** 从 prd.md / ux.md / api.md抽出每条可测断言：功能需求、验收标准、API 契约（method/path/params/body/响应/状态码/错误码）、鉴权、校验边界、分页排序、i18n/RTL（若 PRD 要求）、向后兼容（若 PRD 要求）。逐条编号，并同步记录每条的**中文模块名 + 功能描述**（从 prd.md 模块清单/断言原文提炼）。
+
+   > 📢 **输出可读铁律**：报告与对话中引用断言一律双标识「编号｜中文模块-功能」（如 `A12｜登录-会话过期登出 → ❌ FAIL`、`U2.1｜看板页-卡片拖拽 → ✅`）。⛔ 禁止只甩裸编号（`A12`）或裸代号（`M1`）—— 用户不查表就该看懂结果。
 
 3. **读本阶段实现 + 写三类测试。** 识别本阶段 dev 改动文件，为每条断言落地对应层测试（逻辑单元 / 接口请求 / 浏览器交互），镜像改动文件结构。无代码覆盖的断言直接 FAIL（"No implementation found"）。
 
@@ -60,13 +62,13 @@ When invoked, follow this sequence:
    - ux.md: <路径>
 
    ## 断言追溯矩阵
-   | # | 断言（原文） | Verdict | 测试位置 | 实测结果 |
-   |---|---|---|---|---|
-   | 1 | "..." | ✅ PASS | `tests/api/xxx.test.ts::用例名` | 1/1 pass |
-   | 2 | "..." | ❌ FAIL | `tests/e2e/xxx.spec.ts` | "VIP yearly 降级按钮未禁用" |
+   | # | 模块·功能（中文） | 断言（原文） | Verdict | 测试位置 | 实测结果 |
+   |---|---|---|---|---|---|
+   | 1 | 登录 · 会话过期登出 | "..." | ✅ PASS | `tests/api/xxx.test.ts::用例名` | 1/1 pass |
+   | 2 | 看板 · 卡片拖拽入待做 | "..." | ❌ FAIL | `tests/e2e/xxx.spec.ts` | "拖入后列表未持久化" |
 
    ## Critical Failures（回 dev 必修）
-   1. **[断言 #N]** <精确描述>
+   1. **[A2｜登录-重复提交]** <精确描述>
       - Required: <原文>
       - Actual: <代码实际行为 / 测试失败信息>
       - Repro: `<失败的测试命令或步骤>`
