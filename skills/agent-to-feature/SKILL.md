@@ -1,12 +1,12 @@
 ---
 name: agent-to-feature
 description: cc-code + 双 agent（dev/qa）驱动的功能增量执行编排器（纯执行，不规划）。前置：/cc-code:plan-prd-feature 已落盘定稿且 status.md「下一步」点名 F-n 批次。用户显式调用 /cc-code:agent-to-feature 触发；入口先做增量定位（status.md 点名断言 − gates.md 已 PASS = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，无全量清算。未规划拒跑。中途零确认。手动触发，不自动加载。
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_callers
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
+disable-model-invocation: true
 ---
 
 # agent-to-feature — 双 agent × cc-code 驱动功能增量执行编排器
 
-> **手动触发**：仅由用户显式输入 `/cc-code:agent-to-feature` 调用，不在会话中自动加载。
 > **纯执行器**：只执行增量需求，**不规划**。需求与契约由 `/cc-code:plan-prd-feature` 商讨定稿落盘，本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
 > **增量铁律**：只做「规划了但还没验过」的断言，绝不重推存量需求、绝不重做已 PASS 项。
 > **与 agent-to-mvp 的分工**：mvp 是「盖整栋楼」（含 whole-qa 全量清算收口）；feature 是「在楼里加一个房间」（affected 精准回归，无全量清算）。
@@ -76,7 +76,6 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准（静默） |
 
 > ⛔ **QA 用 codegraph 的双重限制**：只许用 `node` / `callers` / `affected`。**需求永远只来自 `prd.md` / `ux.md` / `api.md`** —— codegraph 绝不是需求的尺子。
-> ⛔ **输出可读铁律**：断言引用一律双标识「编号｜中文模块-功能」（如 `A28.3｜素材队列-429 退避 → ✅`），禁止裸编号。
 
 **三层测试矩阵：** 同 `agent-to-mvp`（逻辑 / 接口 / 交互三层，vitest + fetch + Playwright）。
 

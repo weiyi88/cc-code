@@ -1,13 +1,12 @@
 ---
 name: debug-qa-dev
 description: cc-code + 双 agent（dev/qa）驱动的 bug 修复执行编排器（纯执行，不诊断）。前置：/cc-code:debug-plan 已落盘 B-n 且 status.md「下一步」点名 B-n。用户显式调用 /cc-code:debug-qa-dev 触发；入口先做增量定位（status.md 点名 B-n − bugs.md OPEN 条目 = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过。无全量清算。未诊断拒跑。中途零确认。手动触发，不自动加载。
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_callers
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
 # debug-qa-dev — 双 agent × cc-code 驱动 bug 修复执行编排器
 
-> **手动触发**：仅由用户显式输入 `/cc-code:debug-qa-dev` 调用，不在会话中自动加载。
 > **纯执行器**：只修已诊断的 bug，**不诊断**。根因与方案由 `/cc-code:debug-plan` 落盘到 `active/bugs.md` 的 B-n 条目，本命令读 B-n 直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
 > **与 agent-to-feature 的分工**：feature 是「加一个房间」（执行 F-n 需求增量）；本命令是「修房子里的漏水点」（执行 B-n bug 修复）。执行循环、回归策略、结算纪律全部同构。
 > **初衷铁律**：完整地修复 bug —— 修复面 = B-n 用例 + affected 影响面，⛔ 无 whole-qa、无全量回归。
@@ -59,8 +58,6 @@ disable-model-invocation: true
 | 写 | `src/`, `project.md` §六 声明的测试根 |
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准（静默） |
 
-> Dev **禁读 gates.md**（防被既定答案带偏）。
-
 ### ② QA 段（agent: qa，灰盒）
 | 项 | 内容 |
 | --- | --- |
@@ -73,7 +70,6 @@ disable-model-invocation: true
 
 > **⭐ 修复 PASS 硬条件**：回归测试存在且通过才许把 gates 记 ✅。没有测试的修复不算修完 —— 没有回归测试，gates 的 ✅ 就是假账，下次这段代码被改动没人兜底。
 > ⛔ **QA 用 codegraph 的双重限制**：只许用 `node` / `callers` / `affected`。**期望行为永远只来自 B-n 条目（其出处为主人原话或 prd/ux 既有断言）** —— codegraph 绝不是期望的尺子。
-> ⛔ **输出可读铁律**：断言引用一律双标识「编号｜中文模块-功能」（如 `B-3｜登录-重复提交 401 → ✅`），禁止裸编号。
 
 ## qa → dev 循环（QA 段内）
 

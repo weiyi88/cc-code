@@ -1,7 +1,7 @@
 ---
 name: plan-prd-feature
 description: ⭐显式触发的【增量需求规划器】（MVP 已交付后做功能迭代用）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：规范体检 → 锁基线（status/gates/prd 历史）→ codegraph 四路侦察（explore 读现状 + impact 算传递闭包半径 + files 对账目录 + affected 算测试面，前置新鲜度保险）→ 需求逐点三态判定（已实现/无冲突/有冲突）→ 冲突逐条硬门控裁决 → 输出三件套（逻辑图+原型双联+带落盘路由的差异表）→ 逐点循环至通顺 → ExitPlanMode → 按层路由分批切角色落盘（切角色免请示，落盘即定稿）。落盘后 status.md 点名 F-n + 新断言号，供 /cc-code:agent-to-feature 增量执行。⛔禁批量决策清单、禁塞单一文件、禁用 codegraph 生成 L1/L2/L4、禁碰 gates.md 与代码。不找 bug、不写代码。
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_callers
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 

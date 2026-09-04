@@ -28,6 +28,61 @@ templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ re
 
 详见 `skills/cc-code/SKILL.md`。核心：所有 `.cc_code/` 文件都由 AI 在对话内顺手写（需理解力），无自动化机械活。`status.md` 长度由 AI 自管（里程碑保留最近 10 条）。
 
+## 规则归属：单一出处（SSOT）分层 — 0.13.1 立规
+
+> **铁律：规则只写在「受众的必经之路」上，且只写一次。**
+> 副本是漂移的必要条件 —— 同一条规则一旦存在 N 份，改的时候必然漏改几份，
+> 而提示词库**没有测试也没有 CI**，漂移不会报错，只能靠人肉 grep 发现。
+> 所以治理方向永远是**删副本**，不是**补副本**。
+
+一条新规则诞生时，按三问定位唯一出处：
+
+```
+   ① 换个角色还成立吗？
+        ├─ 成立   ──────► templates/Agent.md §四 强制执行协议（全员通用区）
+        └─ 不成立 ──────► templates/Agent.md §三 对应那张角色卡
+   ② dev / qa / prd-plan 这三个 subagent 需要吗？
+        └─ 需要   ──────► 追加写进 agents/{dev,qa,prd-plan}.md
+                          （subagent 独立上下文，读不到 Agent.md，
+                            自带系统提示词才是它的必经之路 → 不算副本）
+   ③ 约束的是「产物长什么样」吗？
+        └─ 是     ──────► 写进该文件的模板头部（gates.md / prd.md 等）
+   ⛔ 任何情况都不写进 skills/*/SKILL.md 正文
+```
+
+| 规则性质 | 唯一出处 | 覆盖谁 | 传导机制 |
+| :--- | :--- | :--- | :--- |
+| 全员行为 / 输出条款 | `templates/Agent.md` §四 | 所有角色 + 编排器主控 | 校准协议必读 `Agent.md` |
+| 角色专属权限 / 能力 | `templates/Agent.md` §三 角色卡 | 该角色 | 「当前激活角色」开关只加载那一张 |
+| subagent 自带纪律 | `agents/{dev,qa,prd-plan}.md` | 该 subagent | 系统提示词 |
+| 产物格式纪律 | 该文件模板头部 | 写它的角色 | 写前必读该文件 |
+| 编排纪律（串行 / ≤3 轮 / 拒跑 / 增量定位） | `skills/*/SKILL.md` 正文 | 编排器主控自己 | 命令本体 |
+| 触发闸门 | frontmatter `disable-model-invocation` | Claude Code 引擎 | 引擎强制 |
+
+**角色隔离靠「当前激活角色」开关，不靠拆文件** —— 未激活角色的规则物理上在同一文件，
+但被开关挡在外面，一个字都不会污染当前角色。
+
+### 触发闸门只认 frontmatter
+
+`disable-model-invocation: true` 是唯一有效的「禁止模型自动调用」闸门。
+正文里写「本命令仅由用户显式触发」**零作用** —— 正文的读者是**已经被调用起来的模型**，
+它都跑起来了，再告诉它「你只能被手动调用」毫无意义。
+⛔ 故正文不复述触发方式；闸门只在 frontmatter 声明一次。
+
+### codegraph 的两条通道（别再往 allowed-tools 里加不存在的名字）
+
+```
+   codegraph status --json / affected / node / callers / impact / files
+        └──► CLI 子命令，走 Bash ──► allowed-tools 只需 Bash
+
+   自然语言问「X 怎么工作」
+        └──► MCP 工具 ──────────► mcp__codegraph__codegraph_explore
+```
+
+codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
+`codegraph_search` / `codegraph_node` / `codegraph_callers` **不是 MCP 工具**，
+写进 `allowed-tools` 是死声明：不报错、不生效、只误导后续读者。
+
 ## 散落物迁移（init.sh 的判定链）
 
 ```

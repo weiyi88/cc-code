@@ -11,7 +11,7 @@
     {
       "name": "cc-code",
       "source": "./",
-      "description": "极简开发工作流系统。角色串行(PM→Architect→Dev→QA) + L0~L4 文件分层的状态机循环。/cc-code:init 三轨初始化（新建/已最新/旧版升级迁移，全程零删除），16 skill + 3 配套 agent，含规划与执行三对配对（plan-prd-mvp→agent-to-mvp，plan-prd-feature→agent-to-feature，debug-plan→debug-qa-dev bug 诊断与修复闭环：B-n 施工便签 bugs.md + affected 精准回归 + 回归测试留守）、/cc-code:whole-qa 全量验收修复闭环与 /cc-code:experience-summary 项目级经验沉淀（references 按需读取）。⭐0.10.0 codegraph 全静默深度集成（15/15 能力：静默建索引 + affected 精准回归 + impact 真爆炸半径 + 角色权限矩阵，人零心智负担）。无 Hook，所有状态由 AI 顺手写。",
+      "description": "极简开发工作流系统。角色串行(PM→Architect→Dev→QA) + L0~L4 文件分层的状态机循环。/cc-code:init 三轨初始化（新建/已最新/旧版升级迁移，全程零删除），16 skill + 3 配套 agent，含规划与执行三对配对（plan-prd-mvp→agent-to-mvp，plan-prd-feature→agent-to-feature，debug-plan→debug-qa-dev bug 诊断与修复闭环：B-n 施工便签 bugs.md + affected 精准回归 + 回归测试留守）、/cc-code:whole-qa 全量验收修复闭环与 /cc-code:experience-summary 项目级经验沉淀（references 按需读取）。⭐0.10.0 codegraph 全静默深度集成（15/15 能力：静默建索引 + affected 精准回归 + impact 真爆炸半径 + 角色权限矩阵，人零心智负担）。⭐0.13.1 规则单一出处（SSOT）治理：输出可读铁律上提为全员条款 + 执行器正文零复述 + 触发闸门只认 frontmatter。无 Hook，所有状态由 AI 顺手写。",
       "author": {
         "name": "cc-code"
       },

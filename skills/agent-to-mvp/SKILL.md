@@ -1,12 +1,12 @@
 ---
 name: agent-to-mvp
 description: cc-code + 双 agent（dev/qa）驱动的 MVP 执行编排器（纯执行，不规划）。前置：/cc-code:plan-prd-mvp 已定稿 prd/ux/project/data/api。用户显式调用 /cc-code:agent-to-mvp 触发；按 Dev→QA 串行 + qa→dev 循环（≤3 轮）逐阶段推进，全 PASS 后 whole-qa 全量清算收口。中途零确认。手动触发，不自动加载。
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_callers
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
+disable-model-invocation: true
 ---
 
 # agent-to-mvp — 双 agent × cc-code 驱动 MVP 执行编排器
 
-> **手动触发**：仅由用户显式输入 `/cc-code:agent-to-mvp` 调用，不在会话中自动加载。
 > **纯执行器**：需求与契约**只读不产**——一切规划产物（prd / ux / project / data / api）由 `/cc-code:plan-prd-mvp` 商讨定稿。本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
 > **校准铁律**：每一个阶段完成后，**必须**先执行 `/cc-code:cc-code` 校准当前状态（重读 `Agent.md`/`status.md`，重锁角色与坐标），确认无误后再进入下一阶段。未校准禁止推进。校准是机器自检，**静默进行，不以「请确认」的姿态打扰人**。
 > **串行铁律**：严守 Dev → QA 顺序，由 `.cc_code/active/Agent.md` 锁定当前角色，禁止跨角色思考与跳序。

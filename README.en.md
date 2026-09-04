@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.13.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **0.13.1** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -37,11 +37,17 @@ cc-code's prescription: **externalize all memory, state, and rules into `.cc_cod
 ① Memory/log/state fully externalized ── not in the agent, in .cc_code/ static files
 ② Responsibility verticalized ── each role owns one layer, clean context, no overreach
 ③ active three criteria ── latest + most complete + purest (hard iron rule)
-④ Anti-vibecoding three diseases:
+④ Single source of truth for rules ── each rule is written exactly once, on its
+   audience's mandatory path; restating it elsewhere is forbidden
+   (copies are the precondition for drift; a prompt library has no tests and no CI,
+    so drift never raises an error)
+⑤ Anti-vibecoding three diseases:
    logic drift → one-way info flow + codegraph never generates intent layer
    redundancy piling → in-place convergent writes + whole-qa redundancy detection
    arrogant skipping → multi-role + separate test/fix contexts
 ```
+
+Which layer a rule belongs to is settled by three questions (still true for another role → shared section / role-specific → that role's card / a subagent needs it → its own system prompt / it constrains artifact format → that template's header). Decision table in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md#规则归属单一出处ssot分层--0131-立规).
 
 ## Core Logic
 

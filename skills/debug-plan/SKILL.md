@@ -1,7 +1,7 @@
 ---
 name: debug-plan
 description: ⭐显式触发的【bug 诊断器】（不是需求规划器）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：把 bug 问清楚（逐点提问）→ codegraph 四路调查脉络（explore 读现状 + node/callers 追链路 + impact 算传递闭包半径 + affected 算测试面）→ 裁决门（期望无出处/修复需动契约 → 拒修指路 plan-prd-feature）→ 输出三件套（逻辑图 + 差异表格 + 涉前端时 ASCII 原型）→ ExitPlanMode 主人确认 → 落盘 active/bugs.md 新条目 B-n + status.md 指向。⛔禁改 prd/ux/api/data、禁生成新需求断言、禁写代码、禁碰 gates.md。三件套本体不落盘。
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore, mcp__codegraph__codegraph_search, mcp__codegraph__codegraph_node, mcp__codegraph__codegraph_callers
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
