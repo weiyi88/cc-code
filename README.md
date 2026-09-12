@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.13.1** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.0.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
@@ -15,8 +15,8 @@
 - [完整生命周期](#完整生命周期)
 - [快速开始](#快速开始)
 - [可选增强：codegraph](#可选增强codegraph)
-- [Skill 一览（16 个）](#skill-一览16-个)
-- [Agent（3 个）](#agent3-个)
+- [Skill 一览（17 个）](#skill-一览17-个)
+- [Agent（4 个）](#agent4-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
 - [角色串行](#角色串行)
@@ -41,7 +41,7 @@ cc-code 的处方：**把记忆、状态、规则全部外部寄存到 `.cc_code
                    （副本是漂移的必要条件；提示词库无测试无 CI，漂移不报错）
 ⑤ 防 vibecoding 三病：
    逻辑偏离 → 信息流单向 + codegraph 不生成意图层
-   冗余堆积 → 就地收敛写入 + whole-qa 冗余检测
+   冗余堆积 → 就地收敛写入 + agent-whole-qa 冗余检测
    自傲跳过 → 多角色 + 测修独立上下文
 ```
 
@@ -118,7 +118,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 4 个配套 agent。
 
 ## 完整生命周期
 
@@ -129,33 +129,37 @@ PM ──► Architect ──► Dev ──► QA
        ↓
 会话开启(2步)          Read Agent.md(锁角色) → status.md(定坐标)
        ↓
-/cc-code:plan-prd-mvp  ⭐第一动作 call EnterPlanMode → plan 内探测+三件套
+/cc-code:plan-mvp  ⭐第一动作 call EnterPlanMode → plan 内探测+三件套
                        +逐点交谈至通顺 → 落盘五件（prd/ux/project/data/api）
                        （落盘即定稿，无二次验收）
        ↓
-/cc-code:agent-to-mvp  纯执行（读定稿文档，Dev→QA，FAIL≤3轮回环，中途零确认）
+/cc-code:plan-uiux   （可选，前端项目）ux.md 页面清单 → design.pen 可视化
+                       原型真图；风格叠加：plan-uiux gpt-taste；AI 自动保存落盘
        ↓
-/cc-code:whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
+/cc-code:agent-mvp  纯执行（读定稿文档，Dev→QA，FAIL≤3轮回环，中途零确认；
+                       有 pen 则 Dev 先走底稿三步：Export html-tailwind → 薄装配 → 截图比对）
        ↓
-部署                   /cc-code:vercel_supabase 或 /cc-code:cf_online
+/cc-code:agent-whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
+       ↓
+部署                   /cc-code:deploy-vercel-supabase 或 /cc-code:deploy-cf
 
 ────────── MVP 交付后，功能迭代走这条支线 ──────────
 
-/cc-code:plan-prd-feature  ⭐第一动作 call EnterPlanMode → 规范体检+锁基线
+/cc-code:plan-feature  ⭐第一动作 call EnterPlanMode → 规范体检+锁基线
                            +codegraph 算爆炸半径 → 冲突逐条硬门控裁决
                            +三件套交谈至通顺 → 就地收敛落盘（落盘即定稿）
                            +status.md 点名 F-n 与新断言号
        ↓
-/cc-code:agent-to-feature  增量纯执行（增量定位 → Dev→QA，affected 精准回归）
+/cc-code:agent-feature  增量纯执行（增量定位 → Dev→QA，affected 精准回归）
 
 ────────── 任意时刻修 bug 走这条支线（需求明确但实现错了）──────────
 
-/cc-code:debug-plan          ⭐第一动作 call EnterPlanMode → 问诊把 bug 问清楚
+/cc-code:plan-debug          ⭐第一动作 call EnterPlanMode → 问诊把 bug 问清楚
                              +codegraph 查脉络（链路/半径/测试面）+ 裁决门
                              （动契约/动需求 → 拒修指路规划）+ 三件套确认
                              → 落盘 B-n 到 active/bugs.md（施工便签，修完即删）
        ↓
-/cc-code:debug-qa-dev        bug 修复纯执行（定位 B-n → Dev→QA，affected 精准回归
+/cc-code:agent-debug        bug 修复纯执行（定位 B-n → Dev→QA，affected 精准回归
                              + 回归测试留守，无全量清算）
 
 ────────── 任意时刻 ──────────
@@ -188,7 +192,7 @@ PM ──► Architect ──► Dev ──► QA
 | 能力 | 装了 | 不装（降级形态） |
 | --- | --- | --- |
 | 增量规划爆炸半径 | `impact` 算传递闭包，改一处知道炸到哪 | Glob/Grep 表层猜测，半径估偏 |
-| 冗余检测 | 自动扫死代码 / 孤儿文件 / 重复实现 | `whole-qa` 冗余项基本瞎 |
+| 冗余检测 | 自动扫死代码 / 孤儿文件 / 重复实现 | `agent-whole-qa` 冗余项基本瞎 |
 | 精准回归 | `affected` 沿 import 图算出只需跑的测试 | 全量跑，QA 时间成本高 |
 | 契约校准 | Architect 自动核对 `api.md` / `data.md` 实现状态 | 手工 Grep 核对，易漏 |
 
@@ -222,7 +226,7 @@ PM ──► Architect ──► Dev ──► QA
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill 一览（16 个）
+## Skill 一览（17 个）
 
 **框架核心（管流程）**
 
@@ -230,13 +234,14 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- | --- |
 | `init` | `/cc-code:init` | **入场 + 升级** 三轨初始化（新建/已最新/旧版升级迁移）；判定链迁移散落物；升级走「归档→清点→迁移→校验→归位」，**全程零删除** |
 | `cc-code` | 自动 | **运行时协议** 角色路由 + 文件分层 + 状态机约束 |
-| `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | **MVP 规划器**（第一动作 EnterPlanMode，plan 模式逐点交谈至逻辑通顺；产出五件 prd/ux/project/data/api，落盘即定稿） |
-| `plan-prd-feature` | `/cc-code:plan-prd-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 就地收敛落 L1/L2/L3，落盘即定稿 + status.md 点名 F-n） |
-| `agent-to-mvp` | `/cc-code:agent-to-mvp` | **MVP 纯执行编排**（读定稿文档，Dev→QA + qa→dev 循环，中途零确认，whole-qa 收口） |
-| `agent-to-feature` | `/cc-code:agent-to-feature` | **增量纯执行编排**（增量定位 → Dev→QA + qa→dev 循环，affected 精准回归，无全量清算） |
-| `debug-plan` | `/cc-code:debug-plan` | **bug 诊断器**（第一动作 EnterPlanMode，plan 内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认 → 落盘 B-n 到 `bugs.md`；禁改需求禁写代码） |
-| `debug-qa-dev` | `/cc-code:debug-qa-dev` | **bug 修复纯执行编排**（定位 B-n → Dev→QA + qa→dev 循环，affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过，无全量清算） |
-| `whole-qa` | `/cc-code:whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口 + 冗余检测，FAIL≤3轮回环） |
+| `plan-mvp` | `/cc-code:plan-mvp` | **MVP 规划器**（第一动作 EnterPlanMode，plan 模式逐点交谈至逻辑通顺；产出五件 prd/ux/project/data/api，落盘即定稿） |
+| `plan-feature` | `/cc-code:plan-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 就地收敛落 L1/L2/L3，落盘即定稿 + status.md 点名 F-n） |
+| `plan-uiux` | `/cc-code:plan-uiux` | **前端原型绘制器**（ux.md 页面清单 → 根目录 design.pen 可视化真图；风格叠加 `/cc-code:plan-uiux gpt-taste`；⭐pen 加密文件只准 pencil MCP 读写） |
+| `agent-mvp` | `/cc-code:agent-mvp` | **MVP 纯执行编排**（读定稿文档，Dev→QA + qa→dev 循环，中途零确认，agent-whole-qa 收口） |
+| `agent-feature` | `/cc-code:agent-feature` | **增量纯执行编排**（增量定位 → Dev→QA + qa→dev 循环，affected 精准回归，无全量清算） |
+| `plan-debug` | `/cc-code:plan-debug` | **bug 诊断器**（第一动作 EnterPlanMode，plan 内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认 → 落盘 B-n 到 `bugs.md`；禁改需求禁写代码） |
+| `agent-debug` | `/cc-code:agent-debug` | **bug 修复纯执行编排**（定位 B-n → Dev→QA + qa→dev 循环，affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过，无全量清算） |
+| `agent-whole-qa` | `/cc-code:agent-whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口 + 冗余检测，FAIL≤3轮回环） |
 | `experience-summary` | `/cc-code:experience-summary` | **项目级经验沉淀器**（踩坑/复盘 → 提炼准则 → 主人过目 → 落 `references/[角色]-[事件域]-references.md` + INDEX 按需读取） |
 | `short` | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
 
@@ -246,19 +251,19 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- |
 | `project_resume` | 读取真实技术栈生成标准化项目介绍文案 |
 | `login_auto` | Supabase Auth + Resend 通用登录系统 |
-| `vercel_supabase_deployment` | Vercel + Supabase 一键部署 |
-| `cf_online` | Next.js 部署到 Cloudflare Pages (Edge) |
-| `next2taro` | Next.js UI → Taro 小程序转换 |
+| `deploy-vercel-supabase` | Vercel + Supabase 一键部署 |
+| `deploy-cf` | Next.js 部署到 Cloudflare Pages (Edge) |
 
-## Agent（3 个）
+## Agent（4 个）
 
 三 agent 与 cc-code 角色串行绑定，**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`：
 
 | agent | 模型 | cc-code 角色 | 职责 |
 | --- | --- | --- | --- |
-| `prd-plan` | opus | PM + Architect | 需求→规范→技术方案；产出 prd/ux/project/data/api（阶段拆分并入 project.md，服务 plan-prd-mvp / plan-prd-feature） |
+| `prd-plan` | opus | PM + Architect | 需求→规范→技术方案；产出 prd/ux/project/data/api（阶段拆分并入 project.md，服务 plan-mvp / plan-feature） |
 | `dev` | haiku | Dev | 按规格实现代码 + 三层测试；自检 lint/tsc/test/e2e |
 | `qa` | sonnet | QA（灰盒） | 写+跑三层测试（逻辑/接口/浏览器），结构化 FAIL 清单回 dev，≤3 轮循环 |
+| `uiux` | haiku | UIUX（原型工人） | 收单页任务单 → pencil MCP 画 P-n/M-n 帧 → 截图自检 → 报 frameId；服务 plan-uiux |
 
 > agent 定义「怎么干」，cc-code 定义「干什么+在哪干」，`.cc_code/active/` 是唯一耦合接口。
 
@@ -296,7 +301,7 @@ PM ──► Architect ──► Dev ──► QA
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
 ├── skills/           16 个 skill 目录
-├── agents/           3 个 agent（prd-plan / dev / qa）
+├── agents/           4 个 agent（prd-plan / dev / qa / uiux）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）
 ├── docs/             ARCHITECTURE.md
@@ -319,8 +324,8 @@ cc-code/
     │   ├── data.md        L3 数据契约 interface ↔ DB 列（Architect）
     │   ├── api.md         L3 接口契约 method/path/入参/出参/错误码（Architect）
     │   ├── gates.md       L4 A+U 验收追溯矩阵 + 未关闭 FAIL（QA，Dev 禁读）
-    │   └── bugs.md        🐛 未修复 bug 工作上下文 B-n（debug-plan 写，修完即删，常态为空）
-    ├── docs/qa/         🔵 全量验收报告 + 元素清单（whole-qa 产出）
+    │   └── bugs.md        🐛 未修复 bug 工作上下文 B-n（plan-debug 写，修完即删，常态为空）
+    ├── docs/qa/         🔵 全量验收报告 + 元素清单（agent-whole-qa 产出）
     ├── test/           ⭐ 测试代码（源码，必须入库；affected 精准回归的索引基础）
     ├── images/          🔵 截图（init 迁移，扁平存放）
     ├── scripts/         🔵 散落脚本归档

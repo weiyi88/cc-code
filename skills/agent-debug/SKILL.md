@@ -1,15 +1,15 @@
 ---
-name: debug-qa-dev
-description: cc-code + 双 agent（dev/qa）驱动的 bug 修复执行编排器（纯执行，不诊断）。前置：/cc-code:debug-plan 已落盘 B-n 且 status.md「下一步」点名 B-n。用户显式调用 /cc-code:debug-qa-dev 触发；入口先做增量定位（status.md 点名 B-n − bugs.md OPEN 条目 = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过。无全量清算。未诊断拒跑。中途零确认。手动触发，不自动加载。
+name: agent-debug
+description: cc-code + 双 agent（dev/qa）驱动的 bug 修复执行编排器（纯执行，不诊断）。前置：/cc-code:plan-debug 已落盘 B-n 且 status.md「下一步」点名 B-n。用户显式调用 /cc-code:agent-debug 触发；入口先做增量定位（status.md 点名 B-n − bugs.md OPEN 条目 = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过。无全量清算。未诊断拒跑。中途零确认。手动触发，不自动加载。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
-# debug-qa-dev — 双 agent × cc-code 驱动 bug 修复执行编排器
+# agent-debug — 双 agent × cc-code 驱动 bug 修复执行编排器
 
-> **纯执行器**：只修已诊断的 bug，**不诊断**。根因与方案由 `/cc-code:debug-plan` 落盘到 `active/bugs.md` 的 B-n 条目，本命令读 B-n 直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
-> **与 agent-to-feature 的分工**：feature 是「加一个房间」（执行 F-n 需求增量）；本命令是「修房子里的漏水点」（执行 B-n bug 修复）。执行循环、回归策略、结算纪律全部同构。
-> **初衷铁律**：完整地修复 bug —— 修复面 = B-n 用例 + affected 影响面，⛔ 无 whole-qa、无全量回归。
+> **纯执行器**：只修已诊断的 bug，**不诊断**。根因与方案由 `/cc-code:plan-debug` 落盘到 `active/bugs.md` 的 B-n 条目，本命令读 B-n 直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
+> **与 agent-feature 的分工**：feature 是「加一个房间」（执行 F-n 需求增量）；本命令是「修房子里的漏水点」（执行 B-n bug 修复）。执行循环、回归策略、结算纪律全部同构。
+> **初衷铁律**：完整地修复 bug —— 修复面 = B-n 用例 + affected 影响面，⛔ 无 agent-whole-qa、无全量回归。
 
 ## 前置检查（启动时一次性）
 1. 确认项目根存在 `.cc_code/`（否则提示先 `/cc-code:init`）。
@@ -25,7 +25,7 @@ disable-model-invocation: true
  ① 读 status.md「下一步」
       └─ 期望形态：「B-n 待修复」+（bugs.md 里有对应 OPEN 条目）
            ├─ 没有 B-n / 写的是「未诊断」/ 下一步是别的事
-           │     → ⛔ 拒跑：「bug 未诊断，请先走 /cc-code:debug-plan」
+           │     → ⛔ 拒跑：「bug 未诊断，请先走 /cc-code:plan-debug」
            │       （本命令绝不现场诊断根因——根因唯一来源 = B-n 条目）
            └─ 拿到 B 号 + 条目内容（复现/期望出处/根因/方案/影响面）
  ② 读 gates.md → 查该 B-n 是否已有 PASS 记录
@@ -88,12 +88,12 @@ disable-model-invocation: true
 3. **bugs.md 删该条目**（施工便签用完即撕；历史由 git 提交 + milestone-log + 留守的回归测试承载，⛔ 不另建 bug 归档）。
 4. **status.md** 顺手更新（下一步清空 B-n 指向，或指向遗留待办）。
 5. 报告：B-n 修复交付（用例 PASS + 回归范围 + 回归测试位置）。
-6. **不跑 whole-qa、不做全量回归** —— bug 修复的验收面就是 B-n 用例 + affected 精准回归面；全量清算只属于 MVP 收口或主人显式调用 `/cc-code:whole-qa`。
+6. **不跑 agent-whole-qa、不做全量回归** —— bug 修复的验收面就是 B-n 用例 + affected 精准回归面；全量清算只属于 MVP 收口或主人显式调用 `/cc-code:agent-whole-qa`。
 
 ## 编排器行为准则
 
 - **你是编排器**：按阶段调对应 agent，不在主控里替角色思考。
-- **纯执行定位**：发现 B-n 条目缺漏（方案说不清 / 影响面为空 / 根因存疑）→ 停下报告交人，⛔ 绝不现场重新诊断（那是 `/cc-code:debug-plan` 的职责）。
+- **纯执行定位**：发现 B-n 条目缺漏（方案说不清 / 影响面为空 / 根因存疑）→ 停下报告交人，⛔ 绝不现场重新诊断（那是 `/cc-code:plan-debug` 的职责）。
 - **每次切阶段/切角色前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进；校准静默，不打扰人。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准、待修 bug 以 `bugs.md` 为准。

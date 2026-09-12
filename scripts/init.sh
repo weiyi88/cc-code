@@ -53,7 +53,7 @@ ALLCAPS_MD='^[A-Z0-9_]+\.md$'
 SHOT_RE='(screenshot|screen-shot|screen_shot|snap|capture|Snipaste|CleanShot|图片|截图)'
 
 # ══════════════════════════════════════════════════════════════════════════
-# bugs.md 补建（0.13.0 新增）—— debug 链（debug-plan / debug-qa-dev）的施工便签。
+# bugs.md 补建（0.13.0 新增）—— debug 链（plan-debug / agent-debug）的施工便签。
 # 只补建缺失，绝无脑覆盖（里面可能有 OPEN 状态的 B-n 条目）。
 # ══════════════════════════════════════════════════════════════════════════
 ensure_bugs() {
@@ -81,6 +81,23 @@ refresh_handbook() {
       cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
     log "已补 references/INDEX.md（0.8.0 新增）"
   fi
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# design.pen 前端原型锚点（0.15.0 新增）—— pen 可视化原型链的落盘锚。
+# 只在 AI 问询主人「要 pen 原型吗」并得到肯定答复后创建（本函数不主动跑）。
+# 位置：项目根目录（与 CLAUDE.md 同级）—— .cc_code/ 是点开头隐藏目录，
+#       pen 客户端的文件选择器打不开；且 design.pen 是交付物不是内部状态，应进 git。
+# 形态：0 字节空文件。pen 应用打开它后首次保存（osascript Cmd+S）才写入真身。
+# ⛔ 绝不覆盖已存在的 design.pen（里面可能有主人 5 天没落盘的心血）。
+# ══════════════════════════════════════════════════════════════════════════
+ensure_design_pen() {
+  if [ -e "$PROJECT_ROOT/design.pen" ]; then
+    log "根目录已存在 design.pen，跳过（不覆盖）"
+    return 0
+  fi
+  touch "$PROJECT_ROOT/design.pen"
+  log "已创建根目录 design.pen（0 字节锚点，pen 应用首存后生效）"
 }
 
 IS_GIT_REPO=0
@@ -407,7 +424,8 @@ relocate_superseded() {
 # ══════════════════════════════════════════════════════════════════════════
 # 子命令入口（供 AI 在升级 D6 / D7 阶段调用）
 #   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
-#   bash init.sh --stamp                    盖版本戳（迁移+校验全通过才盖）
+#   bash init.sh --stamp                    盖场域版本戳
+#   bash init.sh --design-pen               建根目录 design.pen 锚点（0.15.0 pen 链）
 # ══════════════════════════════════════════════════════════════════════════
 case "$SUBCMD" in
   --relocate)
@@ -418,6 +436,9 @@ case "$SUBCMD" in
   --stamp)
     [ -d "$TARGET" ] || { warn "无 .cc_code/，无处盖戳"; exit 1; }
     stamp_version
+    exit 0 ;;
+  --design-pen)
+    ensure_design_pen
     exit 0 ;;
 esac
 
@@ -509,7 +530,7 @@ stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
 log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
-log "  docs/qa/     全量验收报告（whole-qa 产出）"
+log "  docs/qa/     全量验收报告（agent-whole-qa 产出）"
 log "  test/     ⭐测试代码（源码，必须入库；affected 精准回归的索引基础）"
 log "  images/ scripts/  截图归档 + 散落脚本"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"

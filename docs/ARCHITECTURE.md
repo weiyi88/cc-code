@@ -22,7 +22,7 @@ templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ re
 ## 寻址约定
 
 - 插件内文件引用统一用 `$CLAUDE_PLUGIN_ROOT/...`。
-- skill 内部配套文件用相对路径（如 `whole-qa` 的 `references/*.md`）。
+- skill 内部配套文件用相对路径（如 `agent-whole-qa` 的 `references/*.md`）。
 
 ## 状态机
 

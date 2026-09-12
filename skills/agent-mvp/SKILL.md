@@ -1,28 +1,28 @@
 ---
-name: agent-to-mvp
-description: cc-code + 双 agent（dev/qa）驱动的 MVP 执行编排器（纯执行，不规划）。前置：/cc-code:plan-prd-mvp 已定稿 prd/ux/project/data/api。用户显式调用 /cc-code:agent-to-mvp 触发；按 Dev→QA 串行 + qa→dev 循环（≤3 轮）逐阶段推进，全 PASS 后 whole-qa 全量清算收口。中途零确认。手动触发，不自动加载。
+name: agent-mvp
+description: cc-code + 双 agent（dev/qa）驱动的 MVP 执行编排器（纯执行，不规划）。前置：/cc-code:plan-mvp 已定稿 prd/ux/project/data/api。用户显式调用 /cc-code:agent-mvp 触发；按 Dev→QA 串行 + qa→dev 循环（≤3 轮）逐阶段推进，全 PASS 后 agent-whole-qa 全量清算收口。中途零确认。手动触发，不自动加载。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
-# agent-to-mvp — 双 agent × cc-code 驱动 MVP 执行编排器
+# agent-mvp — 双 agent × cc-code 驱动 MVP 执行编排器
 
-> **纯执行器**：需求与契约**只读不产**——一切规划产物（prd / ux / project / data / api）由 `/cc-code:plan-prd-mvp` 商讨定稿。本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
+> **纯执行器**：需求与契约**只读不产**——一切规划产物（prd / ux / project / data / api）由 `/cc-code:plan-mvp` 商讨定稿。本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
 > **校准铁律**：每一个阶段完成后，**必须**先执行 `/cc-code:cc-code` 校准当前状态（重读 `Agent.md`/`status.md`，重锁角色与坐标），确认无误后再进入下一阶段。未校准禁止推进。校准是机器自检，**静默进行，不以「请确认」的姿态打扰人**。
 > **串行铁律**：严守 Dev → QA 顺序，由 `.cc_code/active/Agent.md` 锁定当前角色，禁止跨角色思考与跳序。
 
 ## 与规划命令的分工（两两配对，单一职责）
 
 ```
- plan-prd-mvp（人参与）              agent-to-mvp（本命令，纯机器）
+ plan-mvp（人参与）              agent-mvp（本命令，纯机器）
  商讨 → 逐点循环至通顺               读定稿文档
  落盘 prd/ux/project/data/api  ──►  Dev 编码 → QA 验收（≤3 轮回环）
- 对话内确认，落盘即定稿               阶段全 PASS → whole-qa 收口
+ 对话内确认，落盘即定稿               阶段全 PASS → agent-whole-qa 收口
 ```
 
 ## 前置检查（启动时一次性）
 1. 确认项目根存在 `.cc_code/`（否则提示先 `/cc-code:init`）。
-2. **定稿体检**：`active/prd.md` 有 §1.5 验收断言主表，且 `ux.md` / `project.md` / `data.md` / `api.md` 齐备。缺任一 → ⛔ 拒跑，报「规划产物未定稿，请先走 `/cc-code:plan-prd-mvp`」，**绝不现场补需求**。
+2. **定稿体检**：`active/prd.md` 有 §1.5 验收断言主表，且 `ux.md` / `project.md` / `data.md` / `api.md` 齐备。缺任一 → ⛔ 拒跑，报「规划产物未定稿，请先走 `/cc-code:plan-mvp`」，**绝不现场补需求**。
 3. 确认双 agent 可用：`dev` / `qa`。
 4. 确认测试基建：读 `project.md` §六「测试基建契约」取测试根 / glob / 运行命令。缺失或未填实则把「补齐测试基建 + 回填 `project.md` §六」作为 Dev 阶段首个任务。
 5. **索引体检（静默）**：`codegraph status --json` 读三字段 —— `initialized:false` → 报一行（⛔ 不自动重建）；`pendingChanges` 非 0 → 静默 `codegraph sync`；`reindexRecommended:true` → 报一行建议。CLI 未装则静默跳过，全流程照跑（精准回归降级为全量）。⛔ 健康时一个字都不提。
@@ -107,7 +107,7 @@ disable-model-invocation: true
 ## MVP 收口（全部阶段 PASS）
 
 1. 执行 `/cc-code:cc-code` 校准，确认 N/N 阶段 PASS、`gates.md` 全关卡通过。
-2. **执行 `/cc-code:whole-qa` 做一次全量清算** —— 阶段验收只覆盖各阶段增量，收口前必须逐页逐按钮逐接口穷尽一遍，并跑完修复回环。未过不得收口。
+2. **执行 `/cc-code:agent-whole-qa` 做一次全量清算** —— 阶段验收只覆盖各阶段增量，收口前必须逐页逐按钮逐接口穷尽一遍，并跑完修复回环。未过不得收口。
 3. **索引体检（静默）**：`codegraph status --json` 确认索引健康 —— 收口报告里的冗余清单与回归范围都建立在索引之上，索引坏了这两项结论不可信。⛔ 只体检不重建，健康时不提。
 4. 全量回归：`pnpm build` + `pnpm test` + `pnpm test:e2e` + `scripts/smoke-test.sh`（收口必须全量，不用 `affected` 裁剪 —— 收口的意义就是穷尽）。
 5. 产出 `SETUP.md` / 部署清单。
@@ -117,7 +117,7 @@ disable-model-invocation: true
 ## 编排器行为准则
 
 - **你是编排器**：按当前阶段调对应 agent，不在主控里替角色思考。
-- **纯执行定位**：发现需求/契约缺漏或自相矛盾 → 停下报告交人，⛔ 绝不现场发明需求补洞（那是 `/cc-code:plan-prd-mvp` 的职责）。
+- **纯执行定位**：发现需求/契约缺漏或自相矛盾 → 停下报告交人，⛔ 绝不现场发明需求补洞（那是 `/cc-code:plan-mvp` 的职责）。
 - **每次切阶段/切角色前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准。

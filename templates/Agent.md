@@ -21,7 +21,8 @@
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单 | QA |
-| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n：复现/期望出处/根因/方案/影响面）；施工便签，修完即删，常态为空 | `/cc-code:debug-plan` 写入 · `/cc-code:debug-qa-dev` 结算删除 |
+| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n：复现/期望出处/根因/方案/影响面）；施工便签，修完即删，常态为空 | `/cc-code:plan-debug` 写入 · `/cc-code:agent-debug` 结算删除 |
+| — | 根目录 `design.pen` | 前端可视化原型（P-n/M-n 帧 + reusable 组件 + design tokens）；⭐加密文件**只准 pencil MCP 读写，⛔ 禁 Read/Grep**。视觉事实唯一出处（pen 模式下 ux.md 不重复记色值/像素） | `/cc-code:plan-uiux`（编排）+ `uiux` agent（逐帧绘制）· Dev 只读参考（pen 底稿） |
 | — | `backup/**` | 冷数据归档（人看历史，AI 工作时禁读；格式见下方归档规范） | 各写者追加 |
 | — | `references/**` | 项目级经验资料库（`/cc-code:experience-summary` 产出，INDEX 按需读） | — |
 
@@ -44,7 +45,7 @@
 示例（milestone-log.md）：
 | 日期 | 模块 | 里程碑 | 关联 |
 | :-- | :-- | :-- | :-- |
-| 2026-09-03 | 登录 | whole-qa 第2轮 PASS，覆盖率 11/12 | F-3 |
+| 2026-09-03 | 登录 | agent-whole-qa 第2轮 PASS，覆盖率 11/12 | F-3 |
 | 2026-09-04 | 登录 | B-3 重复提交修复 PASS | A12.4 |
 ```
 
@@ -122,8 +123,8 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
     *   `prd.md` = 分模块业务逻辑 + 规则 + 验收断言（规则是什么）；不写 UI、不写接口
     *   `ux.md` = 视觉规格 + 交互五态（长什么样、点了怎么变）；不写业务规则
     *   判据：**能脱离界面存在的 → `prd.md`；离开界面就没意义的 → `ux.md`**
-    *   `prd.md` 也可由 `/cc-code:plan-prd-mvp` 支线命令产出（独立 agent，内部 Architect→PM 串行切角色）
-    *   MVP 交付后的**增量迭代**走 `/cc-code:plan-prd-feature` 支线命令：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色**就地收敛改写** L1 / L2 / L3 对应小节（免请示，落盘即定稿，绝不碰 L4 与代码）；落盘后 status.md 点名 F-n + 新断言号，执行走 `/cc-code:agent-to-feature`（增量定位 → Dev → QA）
+    *   `prd.md` 也可由 `/cc-code:plan-mvp` 支线命令产出（独立 agent，内部 Architect→PM 串行切角色）
+    *   MVP 交付后的**增量迭代**走 `/cc-code:plan-feature` 支线命令：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色**就地收敛改写** L1 / L2 / L3 对应小节（免请示，落盘即定稿，绝不碰 L4 与代码）；落盘后 status.md 点名 F-n + 新断言号，执行走 `/cc-code:agent-feature`（增量定位 → Dev → QA）
     *   ⛔ `ux.md` 五态矩阵的 `U` 编号（`U<页>.<元素>.<态>`）与 `prd.md` 的 `A` 编号同规格：**永久稳定**，作废只加删除线，绝不重排
     *   ⛔ `prd.md` 的验收断言编号（A1..An）**永久稳定**，作废只加删除线，绝不重排
 
@@ -142,6 +143,7 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
 *   **视角特征：** 严谨，注重细节，遵循规范，关注性能。
 *   **文件权限：**
     *   `[必读]` `active/status.md`, `active/prd.md`, `active/ux.md`, `active/project.md`, `active/data.md`, `active/api.md`
+    *   `[按需读]` 根目录 `design.pen`（pen 模式时视觉唯一依据，经 pencil MCP 读；pen 底稿流程见 dev agent 规范）
     *   `[可写]` `src/`, 项目测试目录
     *   `[禁读]` `active/gates.md`（QA 验收关卡，防被既定答案带偏）；无关业务模块代码（避免上下文污染）
 *   **⛔ 绝对禁止：** 为了让测试通过而修改 `prd.md` / `ux.md`。修不动就上报，绝不改需求迁就实现。

@@ -1,24 +1,24 @@
 ---
-name: whole-qa
-description: cc-code 全量验收 + 修复闭环编排器。MVP 收口前使用：穷尽测试所有页面/所有可交互元素/所有接口，按 prd.md 模块分组 fan-out 到 qa subagent，FAIL 清单自动回环给 dev subagent 修复，≤3 轮收敛。本 skill 自身是编排器 —— 不碰代码、不碰需求，只做清点/分发/汇总/循环控制。手动触发 /cc-code:whole-qa，不自动加载。
+name: agent-whole-qa
+description: cc-code 全量验收 + 修复闭环编排器。MVP 收口前使用：穷尽测试所有页面/所有可交互元素/所有接口，按 prd.md 模块分组 fan-out 到 qa subagent，FAIL 清单自动回环给 dev subagent 修复，≤3 轮收敛。本 skill 自身是编排器 —— 不碰代码、不碰需求，只做清点/分发/汇总/循环控制。手动触发 /cc-code:agent-whole-qa，不自动加载。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
-# whole-qa — 全量验收 + 修复闭环编排器
+# agent-whole-qa — 全量验收 + 修复闭环编排器
 
 > **与 `qa` agent 的关系**：`qa` 是「单模块测一次」的原子能力；本 skill 是「全模块 × 多轮 + 修复回环」的编排层，**复用 `qa`，不重写测试逻辑**。
-> **与 `agent-to-mvp` 的关系**：`agent-to-mvp` 每阶段用 `qa` 做增量验收；本 skill 用于 **MVP 收口前的一次性全量清算**。
+> **与 `agent-mvp` 的关系**：`agent-mvp` 每阶段用 `qa` 做增量验收；本 skill 用于 **MVP 收口前的一次性全量清算**。
 
 ## ⛔ 六条硬约束（违反任一即本次验收无效）
 
 ### 1. 你是编排器，不是执行者
 ```
-❌ 错：whole-qa 自己测、自己修
+❌ 错：agent-whole-qa 自己测、自己修
         → 测的人知道修的人怎么想，修的人知道测的人怎么测 → 互相糊弄
-✅ 对：whole-qa 只做 清点 / 分发 / 汇总 / 循环控制
+✅ 对：agent-whole-qa 只做 清点 / 分发 / 汇总 / 循环控制
 
-    whole-qa（不碰代码，不碰需求）
+    agent-whole-qa（不碰代码，不碰需求）
        ├─ Agent(subagent_type=qa)  ──► 测（只拿到断言，不知道谁会修）
        └─ Agent(subagent_type=dev) ──► 修（只拿到 FAIL 清单，不知道怎么测的）
 ```
@@ -122,7 +122,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 | # | 检查 | 不满足时 |
 | --- | --- | --- |
 | 1 | `.cc_code/active/` 存在 | 提示先 `/cc-code:init`，中止 |
-| 2 | `prd.md` 有「模块清单」表 | 提示先 `/cc-code:plan-prd-mvp` 或切 PM 补，中止 |
+| 2 | `prd.md` 有「模块清单」表 | 提示先 `/cc-code:plan-mvp` 或切 PM 补，中止 |
 | 3 | `prd.md` 各模块有 §1.5 验收断言（编号 A1..An） | **中止** —— 没有尺子不能验收，绝不自己编断言 |
 | 3b | `ux.md` §2.3 有 `U` 编号五态矩阵（0.9.0 起） | UI 侧无尺子 —— 报主人：切 PM 补 `U` 编号，或本轮 UI/五态维度标 `SKIPPED(缺U编号规格)`，⛔ 不许自己编 |
 | 3c | `gates.md` 有「§二 验收追溯矩阵」骨架 | 格式落后 —— 提示 `/cc-code:init` 走 D4 格式体检归位，或本轮按新模板重建骨架（旧内容零删除迁 `docs/qa/`） |
@@ -265,7 +265,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
               │
               ├─ 新增 FAIL？ ──► 停止。报告震荡点 + 建议回滚本轮，交人
               ├─ FAIL 数未递减？ ──► 停止。报告「未收敛」，交人
-              ├─ 轮次 > 3？ ──► 停止。标记升级：回 plan-prd-mvp 重规划 或 交人
+              ├─ 轮次 > 3？ ──► 停止。标记升级：回 plan-mvp 重规划 或 交人
               └─ 递减且 ≤3 轮 ──► 回 ❸ 汇总，继续下一轮
 ```
 
@@ -276,7 +276,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 | 步骤 | 动作 |
 | --- | --- |
 | 1 | `gates.md` **就地更新**：§一 Verdict + §二 矩阵全行 + §六 四分母覆盖率 + §三~五 只留未关闭项。⛔ 禁新开轮次章节、禁加附录索引 |
-| 2 | `back_up/milestone-log.md` 追加一行：`<日期> ｜ <模块> ｜ whole-qa 全量验收 第N轮 PASS，覆盖率 x/y ｜ <F号/->`；`status.md` 只刷新坐标/卡点/下一步，⛔ 里程碑不落 status.md |
+| 2 | `back_up/milestone-log.md` 追加一行：`<日期> ｜ <模块> ｜ agent-whole-qa 全量验收 第N轮 PASS，覆盖率 x/y ｜ <F号/->`；`status.md` 只刷新坐标/卡点/下一步，⛔ 里程碑不落 status.md |
 | 3 | 向用户报告：四个覆盖率（A / U / 元素 / 接口）、SKIPPED 清单、ESCALATE 清单、轮次消耗 |
 | 4 | ⛔ **不报告归档细节**（Hook 静默） |
 

@@ -1,16 +1,16 @@
 ---
-name: debug-plan
-description: ⭐显式触发的【bug 诊断器】（不是需求规划器）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：把 bug 问清楚（逐点提问）→ codegraph 四路调查脉络（explore 读现状 + node/callers 追链路 + impact 算传递闭包半径 + affected 算测试面）→ 裁决门（期望无出处/修复需动契约 → 拒修指路 plan-prd-feature）→ 输出三件套（逻辑图 + 差异表格 + 涉前端时 ASCII 原型）→ ExitPlanMode 主人确认 → 落盘 active/bugs.md 新条目 B-n + status.md 指向。⛔禁改 prd/ux/api/data、禁生成新需求断言、禁写代码、禁碰 gates.md。三件套本体不落盘。
+name: plan-debug
+description: ⭐显式触发的【bug 诊断器】（不是需求规划器）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：把 bug 问清楚（逐点提问）→ codegraph 四路调查脉络（explore 读现状 + node/callers 追链路 + impact 算传递闭包半径 + affected 算测试面）→ 裁决门（期望无出处/修复需动契约 → 拒修指路 plan-feature）→ 输出三件套（逻辑图 + 差异表格 + 涉前端时 ASCII 原型）→ ExitPlanMode 主人确认 → 落盘 active/bugs.md 新条目 B-n + status.md 指向。⛔禁改 prd/ux/api/data、禁生成新需求断言、禁写代码、禁碰 gates.md。三件套本体不落盘。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
-# /cc-code:debug-plan — bug 诊断器（第一动作即 plan 模式）
+# /cc-code:plan-debug — bug 诊断器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
 > 所有问诊 / 侦察 / 三件套 / 交谈都在 plan 模式内做，**没有 plan 外窗口**。
-> **定位：技术诊断器，不是需求规划器。** 与 `/cc-code:plan-prd-feature` 的分界：那个处理「需求模糊」，本命令处理「需求明确但实现错了」—— bug 本身就是需求，期望行为要么主人说了、要么 prd.md 已有断言。
-> **配对**：本命令落盘 B-n 后，修复执行走 `/cc-code:debug-qa-dev`（增量定位 B-n → Dev→QA → affected 精准回归）。
+> **定位：技术诊断器，不是需求规划器。** 与 `/cc-code:plan-feature` 的分界：那个处理「需求模糊」，本命令处理「需求明确但实现错了」—— bug 本身就是需求，期望行为要么主人说了、要么 prd.md 已有断言。
+> **配对**：本命令落盘 B-n 后，修复执行走 `/cc-code:agent-debug`（增量定位 B-n → Dev→QA → affected 精准回归）。
 
 ## ⛔ 六条铁律（违反任一即本次诊断无效）
 
@@ -23,7 +23,7 @@ disable-model-invocation: true
 - ✅ 唯一允许的第一动作：call `EnterPlanMode` 工具
 
 ### 铁律 2：期望行为唯一来源 = 主人原话 + 既有 A/U 断言
-这是 plan-prd-feature 铁律 2 在 debug 线的移植 —— **诊断时最容易犯的错就是拿实现当期望**。
+这是 plan-feature 铁律 2 在 debug 线的移植 —— **诊断时最容易犯的错就是拿实现当期望**。
 
 ```
 期望行为的合法出处：
@@ -36,7 +36,7 @@ disable-model-invocation: true
 ```
 
 ### 铁律 3：裁决门（bug ↔ 迭代的分界）
-满足任一即**拒修**，指路 `/cc-code:plan-prd-feature`，本命令到此为止：
+满足任一即**拒修**，指路 `/cc-code:plan-feature`，本命令到此为止：
 
 ```
 ① 修复需要改 api.md / data.md 契约
@@ -65,7 +65,7 @@ disable-model-invocation: true
 ## 一、生命周期总览
 
 ```
-触发 /cc-code:debug-plan "<bug 描述>"
+触发 /cc-code:plan-debug "<bug 描述>"
   │
 Step0 ⭐ call EnterPlanMode（第一动作，Write/Edit 当场锁死）
   │ ══════════════ 以下全程 plan 模式内（只读 + 文字输出）══════════════
@@ -83,7 +83,7 @@ Step2 codegraph 四路调查脉络（只取事实）
 Step3 根因定位（根因 = 一句话说得清的因果链；说不清 → 回 Step1 继续问）
   │
 Step4 裁决门（铁律 3 三条逐一检查）
-  │   ├─ 命中任一 → ⛔ 拒修：「这不是 bug 修复，是迭代，请走 /cc-code:plan-prd-feature」
+  │   ├─ 命中任一 → ⛔ 拒修：「这不是 bug 修复，是迭代，请走 /cc-code:plan-feature」
   │   └─ 全过 → Step5
   │
 Step5 输出三件套（bug 版，ascii）
@@ -98,7 +98,7 @@ Step7 call ExitPlanMode → 主人确认三件套
 Step8 落盘（确认即授权）
   │   bugs.md 新条目 B-n（复现/期望出处/根因/方案/影响面，≈15 行）
   │   status.md「下一步」→ B-n 待修复（一行指针）
-  │   提示主人走 /cc-code:debug-qa-dev
+  │   提示主人走 /cc-code:agent-debug
 ```
 
 ---
@@ -120,7 +120,7 @@ Step8 落盘（确认即授权）
 
 ## 三、Step2 codegraph 侦察规格（只取事实）
 
-与 plan-prd-feature Step2 同构，产出只许流向三处：根因定位的判据 / 影响半径的陈述 / affected 测试面清单。**一个字都不许流向「期望应该是什么」**（铁律 2）。
+与 plan-feature Step2 同构，产出只许流向三处：根因定位的判据 / 影响半径的陈述 / affected 测试面清单。**一个字都不许流向「期望应该是什么」**（铁律 2）。
 
 | 序 | 能力 | 回答什么 | 产出流向 |
 | :-- | :-- | :-- | :--- |
@@ -174,7 +174,7 @@ Step8 落盘（确认即授权）
 | 动作 | 文件 | 内容 |
 | --- | --- | --- |
 | 1 | `active/bugs.md` | 追加 B-n 条目（读已有最大 B 号取下一个） |
-| 2 | `active/status.md` | 「下一步」改写为「B-n 待修复，走 /cc-code:debug-qa-dev」 |
+| 2 | `active/status.md` | 「下一步」改写为「B-n 待修复，走 /cc-code:agent-debug」 |
 
 ⛔ 三件套本体、侦察记录、问诊过程**均不落盘**。
 
@@ -187,7 +187,7 @@ Step8 落盘（确认即授权）
 | ⭐ 第一动作 call EnterPlanMode | 触发后不许先做别的 |
 | 无 plan 外窗口 | 问诊/侦察/三件套/交谈全在 plan 内 |
 | 期望唯一来源 | 主人原话 + 既有 A/U 断言；⛔ 禁 codegraph 反推 |
-| 裁决门三条 | 动契约 / 动需求 / 期望无出处 → 拒修转 plan-prd-feature |
+| 裁决门三条 | 动契约 / 动需求 / 期望无出处 → 拒修转 plan-feature |
 | 深层不是拒修理由 | 影响面由 impact/affected 算，不由规划仪式回答 |
 | 三件套只确认不落盘 | 落盘物仅 B-n 条目 + status 指针 |
 | B 序列独立 | 不复用 A/U；修完条目即删 |
@@ -199,9 +199,9 @@ Step8 落盘（确认即授权）
 
 | 场景 | 规划 | 执行 |
 | --- | --- | --- |
-| 0→1 全量 | plan-prd-mvp | agent-to-mvp |
-| 增量功能 | plan-prd-feature | agent-to-feature |
-| **bug 修复** | **debug-plan（本命令）** | debug-qa-dev |
+| 0→1 全量 | plan-mvp | agent-mvp |
+| 增量功能 | plan-feature | agent-feature |
+| **bug 修复** | **plan-debug（本命令）** | agent-debug |
 
 ---
 

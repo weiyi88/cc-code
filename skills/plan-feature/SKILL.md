@@ -1,15 +1,15 @@
 ---
-name: plan-prd-feature
-description: ⭐显式触发的【增量需求规划器】（MVP 已交付后做功能迭代用）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：规范体检 → 锁基线（status/gates/prd 历史）→ codegraph 四路侦察（explore 读现状 + impact 算传递闭包半径 + files 对账目录 + affected 算测试面，前置新鲜度保险）→ 需求逐点三态判定（已实现/无冲突/有冲突）→ 冲突逐条硬门控裁决 → 输出三件套（逻辑图+原型双联+带落盘路由的差异表）→ 逐点循环至通顺 → ExitPlanMode → 按层路由分批切角色落盘（切角色免请示，落盘即定稿）。落盘后 status.md 点名 F-n + 新断言号，供 /cc-code:agent-to-feature 增量执行。⛔禁批量决策清单、禁塞单一文件、禁用 codegraph 生成 L1/L2/L4、禁碰 gates.md 与代码。不找 bug、不写代码。
+name: plan-feature
+description: ⭐显式触发的【增量需求规划器】（MVP 已交付后做功能迭代用）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。plan 内：规范体检 → 锁基线（status/gates/prd 历史）→ codegraph 四路侦察（explore 读现状 + impact 算传递闭包半径 + files 对账目录 + affected 算测试面，前置新鲜度保险）→ 需求逐点三态判定（已实现/无冲突/有冲突）→ 冲突逐条硬门控裁决 → 输出三件套（逻辑图+原型双联+带落盘路由的差异表）→ 逐点循环至通顺 → ExitPlanMode → 按层路由分批切角色落盘（切角色免请示，落盘即定稿）。落盘后 status.md 点名 F-n + 新断言号，供 /cc-code:agent-feature 增量执行。⛔禁批量决策清单、禁塞单一文件、禁用 codegraph 生成 L1/L2/L4、禁碰 gates.md 与代码。不找 bug、不写代码。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, ToolSearch, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
-# /cc-code:plan-prd-feature — 增量需求规划器（第一动作即 plan 模式）
+# /cc-code:plan-feature — 增量需求规划器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
 > 所有体检 / 侦察 / 三件套 / 交谈都在 plan 模式内做，**没有 plan 外窗口**。
-> **适用场景：MVP 已交付，在既有实现上做功能迭代。** 0→1 定全量请用 `/cc-code:plan-prd-mvp`。
+> **适用场景：MVP 已交付，在既有实现上做功能迭代。** 0→1 定全量请用 `/cc-code:plan-mvp`。
 
 ## ⛔ 六条铁律（违反任一即本次规划无效）
 
@@ -62,7 +62,7 @@ codegraph 撞出「代码 ≠ `active/api.md` / `active/data.md` 契约」时，
 ## 一、生命周期总览
 
 ```
-触发 /cc-code:plan-prd-feature "<新需求>"
+触发 /cc-code:plan-feature "<新需求>"
   │
 Step0 ⭐ call EnterPlanMode（第一动作，Write/Edit 当场锁死）
   │ ══════════════ 以下全程 plan 模式内（只读 + 文字输出）══════════════
@@ -102,7 +102,7 @@ Step7 两门齐开才 call ExitPlanMode
 Step8 按层分批切角色落盘（PM 批 → Architect 批，免请示）
   │
 Step9 顺手更新 status.md 坐标（点名 F-n + 新断言号）
-  │      → 提示走 /cc-code:agent-to-feature
+  │      → 提示走 /cc-code:agent-feature
 ```
 
 ---
@@ -265,7 +265,7 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 | **L3** | `active/project.md` | Architect | 架构决策 · 技术选型 · 目录（改写对应章节） | 需求、线框、**增量章节** |
 | **L3** | `active/data.md` | Architect | 数据契约（改写该 interface / 该表小节） | 需求、线框、**增量章节** |
 | **L3** | `active/api.md` | Architect | method / path / 入参 / 出参 / 错误码（改写该 path 小节） | 需求、线框、验收断言、**增量章节** |
-| L0 | `active/status.md` | 当前角色 AI | 坐标 + 下一步（**点名 F-n + 新断言号**，agent-to-feature 的增量定位入口；规范协议第 4 条授权顺手写） | 里程碑（落 `back_up/milestone-log.md`，QA PASS 后才写） |
+| L0 | `active/status.md` | 当前角色 AI | 坐标 + 下一步（**点名 F-n + 新断言号**，agent-feature 的增量定位入口；规范协议第 4 条授权顺手写） | 里程碑（落 `back_up/milestone-log.md`，QA PASS 后才写） |
 | L0 | `active/Agent.md` | **人** | ⛔ 仅代笔改「当前激活角色」一行 | 权限路由表任何一字 |
 | L4 | `active/gates.md` | QA | ⛔ **绝不碰** | — |
 | — | `src/` + 测试目录 | Dev | ⛔ **绝不碰** | — |
@@ -320,7 +320,7 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
      │    └─ ⛔ 禁新开「## 增量 F-n」章节
      ├─ `back_up/change-log.md` 追加 1 行（F 号 / 日期 / 层 / 文件 / 模块 / 改了什么 / 裁决 / 详情）
      └─ 报本批产物清单（含「改写了哪些小节」明细，便于主人核对）
-8.3 落完报「Dev / QA 域未动」，提示主人走 /cc-code:agent-to-feature
+8.3 落完报「Dev / QA 域未动」，提示主人走 /cc-code:agent-feature
 ```
 
 > ⭐ **就地改写 ≠ 丢历史**：`.cc_code` 在 git 内，`git log -p active/prd.md` 即完整变更史。`back_up/change-log.md` 提供语义级追溯（F 号 + 裁决摘要）。两者叠加，比堆积增量章节更完整且不污染 active。
@@ -329,9 +329,9 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 
 ---
 
-## 八、与 `plan-prd-mvp` 的分工
+## 八、与 `plan-mvp` 的分工
 
-| 维度 | `plan-prd-mvp` | `plan-prd-feature`（本 skill） |
+| 维度 | `plan-mvp` | `plan-feature`（本 skill） |
 | --- | --- | --- |
 | 场景 | 0→1 定 MVP 全量 | MVP 已交付，功能迭代 |
 | 基线 | 粗探项目 | 硬锁 status + gates + prd 历史 + 断言最大号 |
@@ -369,15 +369,15 @@ impact   回答「改它的传递影响面」    —— 闭包（depth 默认 2�
 ## 十、与主线的关系
 
 ```
-plan-prd-feature（规划支线）              cc-code 主线
+plan-feature（规划支线）              cc-code 主线
 ──────────────────────               ──────────────────────
-Step0   EnterPlanMode                /cc-code:plan-prd-mvp（0→1 规划）
-Step0.5 规范体检                        /cc-code:agent-to-mvp（0→1 执行）
+Step0   EnterPlanMode                /cc-code:plan-mvp（0→1 规划）
+Step0.5 规范体检                        /cc-code:agent-mvp（0→1 执行）
 Step1-2 基线 + codegraph 侦察            ├─ Dev（编码）
 Step3-4 三态判定 + 冲突裁决               └─ QA（验收 → gates.md）
-Step5-6 三件套 + 逐点交谈                  → whole-qa（收口全量验收）
+Step5-6 三件套 + 逐点交谈                  → agent-whole-qa（收口全量验收）
 Step7   ExitPlanMode approve
-Step8   分批切角色落 L1/L2/L3 ────►  /cc-code:agent-to-feature（增量执行：
+Step8   分批切角色落 L1/L2/L3 ────►  /cc-code:agent-feature（增量执行：
 Step9   status.md 点名 F-n + 断言        增量定位 → Dev → QA，精准回归）
 ```
 
