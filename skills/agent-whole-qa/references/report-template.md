@@ -1,6 +1,6 @@
 # 报告模板
 
-> 被 `whole-qa` 的 ❸ 阶段引用。落盘 `.cc_code/docs/qa/<YYYY-MM-DD>-round-N.md`（温数据，完整版）；
+> 被 `agent-whole-qa` 的 ❸ 阶段引用。落盘 `.cc_code/docs/qa/<YYYY-MM-DD>-round-N.md`（温数据，完整版）；
 > `gates.md` 只写「本轮结论 + Critical + 覆盖率」三段摘要（热数据保持精简）。
 
 ---

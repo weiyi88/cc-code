@@ -41,7 +41,7 @@ PM ──► Architect ──► Dev ──► QA
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
-| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删） | debug-plan 写 / debug-qa-dev 结算删 |
+| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删） | plan-debug 写 / agent-debug 结算删 |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读；含 bull-redis-queue 示例） | experience-summary |
 | — | `docs/qa/` | QA 全量报告 | QA |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读） | 各写者追加 |
@@ -59,13 +59,13 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- | --- |
 | `init` | `/cc-code:init` | **入场**。新项目搭场域 / 旧项目接管 / 旧版升级（全程零删除）。装完插件第一件事 |
 | `cc-code` | 自动 | 运行时协议（角色路由 + 分层约束），不用手动调 |
-| `plan-prd-mvp` | `/cc-code:plan-prd-mvp` | **0→1 定全量需求**。plan 模式内逐点交谈至逻辑通顺，产出 prd/ux/project/data/api 五件（落盘即定稿） |
-| `plan-prd-feature` | `/cc-code:plan-prd-feature` | **MVP 交付后的功能迭代**。锁基线 + codegraph 算爆炸半径 + 冲突逐条裁决，落盘即定稿 |
-| `agent-to-mvp` | `/cc-code:agent-to-mvp` | **纯执行**。读定稿文档，Dev→QA 串行推进，FAIL≤3 轮回环，whole-qa 收口 |
-| `agent-to-feature` | `/cc-code:agent-to-feature` | **增量纯执行**。增量定位（status.md 点名断言 − gates 已 PASS）→ Dev→QA，精准回归，无全量清算 |
-| `whole-qa` | `/cc-code:whole-qa` | **全量验收**。逐页逐按钮逐接口 + 冗余检测，FAIL≤3 轮修到 PASS |
-| `debug-plan` | `/cc-code:debug-plan` | **bug 诊断**。plan 模式内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认，落盘 B-n 到 `bugs.md` |
-| `debug-qa-dev` | `/cc-code:debug-qa-dev` | **bug 修复纯执行**。增量定位 B-n → Dev→QA + affected 精准回归，回归测试留守 |
+| `plan-mvp` | `/cc-code:plan-mvp` | **0→1 定全量需求**。plan 模式内逐点交谈至逻辑通顺，产出 prd/ux/project/data/api 五件（落盘即定稿） |
+| `plan-feature` | `/cc-code:plan-feature` | **MVP 交付后的功能迭代**。锁基线 + codegraph 算爆炸半径 + 冲突逐条裁决，落盘即定稿 |
+| `agent-mvp` | `/cc-code:agent-mvp` | **纯执行**。读定稿文档，Dev→QA 串行推进，FAIL≤3 轮回环，agent-whole-qa 收口 |
+| `agent-feature` | `/cc-code:agent-feature` | **增量纯执行**。增量定位（status.md 点名断言 − gates 已 PASS）→ Dev→QA，精准回归，无全量清算 |
+| `agent-whole-qa` | `/cc-code:agent-whole-qa` | **全量验收**。逐页逐按钮逐接口 + 冗余检测，FAIL≤3 轮修到 PASS |
+| `plan-debug` | `/cc-code:plan-debug` | **bug 诊断**。plan 模式内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认，落盘 B-n 到 `bugs.md` |
+| `agent-debug` | `/cc-code:agent-debug` | **bug 修复纯执行**。增量定位 B-n → Dev→QA + affected 精准回归，回归测试留守 |
 | `experience-summary` | `/cc-code:experience-summary` | **经验沉淀**。踩坑复盘 → 提炼准则 → 落 `references/` 资料库 |
 | `short` | `/cc-code:short` | 极简回复模式（≤50 字符） |
 
@@ -87,24 +87,24 @@ PM ──► Architect ──► Dev ──► QA
 
 ```
 /cc-code:init            ← ① 搭场域（1 分钟）
-/cc-code:plan-prd-mvp    ← ② 跟 AI 聊需求，产出五件规划文档（最重要的投入）
-/cc-code:agent-to-mvp    ← ③ 纯执行：Dev→QA 到收口（中途零确认）
-/cc-code:whole-qa        ← ④ 全量验收 + 修复闭环
+/cc-code:plan-mvp    ← ② 跟 AI 聊需求，产出五件规划文档（最重要的投入）
+/cc-code:agent-mvp    ← ③ 纯执行：Dev→QA 到收口（中途零确认）
+/cc-code:agent-whole-qa        ← ④ 全量验收 + 修复闭环
 ```
 
 ### 路线 B：MVP 已交付，加新功能
 
 ```
-/cc-code:plan-prd-feature  ← ① 增量规划（冲突逐条裁决，落盘即定稿）
-/cc-code:agent-to-feature  ← ② 增量纯执行：定位 → Dev→QA（精准回归）
+/cc-code:plan-feature  ← ① 增量规划（冲突逐条裁决，落盘即定稿）
+/cc-code:agent-feature  ← ② 增量纯执行：定位 → Dev→QA（精准回归）
 ```
 
 ### 路线 C：修 bug（需求明确，只是实现错了）
 
 ```
-/cc-code:debug-plan        ← ① 诊断（plan 模式问诊 + codegraph 查脉络
+/cc-code:plan-debug        ← ① 诊断（plan 模式问诊 + codegraph 查脉络
                                + 三件套确认 → 落盘 B-n 到 active/bugs.md）
-/cc-code:debug-qa-dev      ← ② 修复纯执行：定位 B-n → Dev→QA
+/cc-code:agent-debug      ← ② 修复纯执行：定位 B-n → Dev→QA
                                （B-n 用例 + affected 精准回归 + 回归测试留守）
 ```
 
@@ -112,8 +112,8 @@ PM ──► Architect ──► Dev ──► QA
 
 | 你的情况 | 走 | 不走 |
 | --- | --- | --- |
-| 需求模糊，要新增/改动功能 | 路线 B（plan-prd-feature） | debug 链（bug 不发明需求） |
-| 行为错了，期望行为说得清（或有既有断言） | 路线 C（debug-plan） | 路线 B（别用 30 分钟需求仪式修 bug） |
+| 需求模糊，要新增/改动功能 | 路线 B（plan-feature） | debug 链（bug 不发明需求） |
+| 行为错了，期望行为说得清（或有既有断言） | 路线 C（plan-debug） | 路线 B（别用 30 分钟需求仪式修 bug） |
 | 修复需要改契约/改需求 | 路线 B | debug 链会拒修并指路 |
 
 ### 任意时刻
@@ -132,7 +132,7 @@ PM ──► Architect ──► Dev ──► QA
 ```
 你：/cc-code:init
 AI：检测到旧项目（Track A）→ 备份旧 CLAUDE.md → 搭场域 → 请你补需求
-你：/cc-code:plan-prd-mvp 我要做一个「上传产品图自动生成小红书种草图」的工具
+你：/cc-code:plan-mvp 我要做一个「上传产品图自动生成小红书种草图」的工具
 AI：（plan 模式内逐点提问：一套几张？要不要文案？……直到逻辑通顺）
 AI：产出五件规划文档（prd 含验收断言 A1..A12 / ux / project / data / api），落盘即定稿
 ```
@@ -140,23 +140,23 @@ AI：产出五件规划文档（prd 含验收断言 A1..A12 / ux / project / dat
 ### 示例 2：功能迭代
 
 ```
-你：/cc-code:plan-prd-feature 加一个「429 限流自动退避重试」
+你：/cc-code:plan-feature 加一个「429 限流自动退避重试」
 AI：codegraph 侦察现状 → 判定需求三态 → 有冲突逐条请你裁决
 AI：就地收敛落盘（prd.md 改写模块小节 + 断言进 §1.5 主表 / api.md 改写该 path 小节）
     过程不落盘　back_up/change-log.md 追加 1 行　status.md 点名 F-n + 新断言号
-你：/cc-code:agent-to-feature
+你：/cc-code:agent-feature
 AI：增量定位 → Dev 实现 → QA 验收断言 A12.21~A12.24（affected 精准回归）
 ```
 
 ### 示例 3：修 bug
 
 ```
-你：/cc-code:debug-plan 登录连点两次，第二次 401
+你：/cc-code:plan-debug 登录连点两次，第二次 401
 AI：（plan 模式内）问复现 → codegraph 追链路算影响半径 → 定位根因
     → 出三件套（逻辑图 + 差异表）请你确认
 你：确认
 AI：落盘 active/bugs.md 的 B-1 条目（复现/期望出处 A12.4/根因/方案/影响面）
-你：/cc-code:debug-qa-dev
+你：/cc-code:agent-debug
 AI：定位 B-1 → Dev 修 → QA 复验（B-1 用例 + affected 回归 + 留一个回归测试）
     → gates 记 ✅ → bugs.md 删条目 → milestone-log 一行
 ```

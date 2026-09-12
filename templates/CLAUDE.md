@@ -40,13 +40,13 @@ PM ──► Architect ──► Dev ──► QA
 | :-- | :--- | :--- | :--- |
 | **L0** | `active/Agent.md` | 最高宪法：角色 + 权限路由表 | 人 |
 | | `active/status.md` | 当前坐标 + 卡点 + 下一步（里程碑不落此文件） | 当前角色 AI |
-| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | PM / plan-prd-mvp / plan-prd-feature |
-| **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM / plan-prd-feature |
-| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录） | Architect / plan-prd-feature |
-| | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect / plan-prd-feature |
-| | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect / plan-prd-feature |
+| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | PM / plan-mvp / plan-feature |
+| **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | PM / plan-feature |
+| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录） | Architect / plan-feature |
+| | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect / plan-feature |
+| | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect / plan-feature |
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
-| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删，常态为空） | debug-plan 写 / debug-qa-dev 结算删 |
+| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删，常态为空） | plan-debug 写 / agent-debug 结算删 |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） | 各写者追加 |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读） | experience-summary |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） | init |
@@ -55,9 +55,9 @@ PM ──► Architect ──► Dev ──► QA
 | — | `scripts/` | 散落脚本归档 | init |
 | — | `.cc_code_version` | 场域版本戳（决定 init 是否升级迁移） | init |
 
-> ⭐ `plan-prd-feature` 是 MVP 交付后的**增量迭代支线**：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色**就地收敛改写** L1 / L2 / L3 对应小节（逐批请示，绝不碰 L4 与代码）。
+> ⭐ `plan-feature` 是 MVP 交付后的**增量迭代支线**：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色**就地收敛改写** L1 / L2 / L3 对应小节（逐批请示，绝不碰 L4 与代码）。
 >
-> 🐛 **debug 链路（bug 修复支线，需求明确但实现错了时用）**：`/cc-code:debug-plan`（plan 模式诊断：问诊 → codegraph 查脉络 → 裁决门 → 三件套确认 → 落盘 B-n 到 `bugs.md`）→ `/cc-code:debug-qa-dev`（增量定位 B-n → Dev→QA + affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过）。与 `plan-prd-feature` 的分界：那个处理**需求模糊**，debug 处理**需求明确但实现错了**；修复需动契约/动需求 → 拒修转规划。
+> 🐛 **debug 链路（bug 修复支线，需求明确但实现错了时用）**：`/cc-code:plan-debug`（plan 模式诊断：问诊 → codegraph 查脉络 → 裁决门 → 三件套确认 → 落盘 B-n 到 `bugs.md`）→ `/cc-code:agent-debug`（增量定位 B-n → Dev→QA + affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过）。与 `plan-feature` 的分界：那个处理**需求模糊**，debug 处理**需求明确但实现错了**；修复需动契约/动需求 → 拒修转规划。
 
 ### 信息流铁律
 
@@ -79,7 +79,7 @@ PM ──► Architect ──► Dev ──► QA
 | `ux.md` | 视觉规格 + 交互五态（长什么样、点了怎么变） | 业务规则、字段类型 |
 
 判据：**能脱离界面存在的 → `prd.md`；离开界面就没意义的 → `ux.md`**。
-`prd.md` 由 `/cc-code:plan-prd-mvp` 或 PM 维护，单文件动态更新，重大变更归档 `backup/`。
+`prd.md` 由 `/cc-code:plan-mvp` 或 PM 维护，单文件动态更新，重大变更归档 `backup/`。
 
 ## ⚙️ 角色切换
 

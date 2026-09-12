@@ -78,12 +78,12 @@ description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的
 
 | 场景 | 规划命令（人参与，落盘即定稿） | 执行命令（纯机器，中途零确认） |
 | --- | --- | --- |
-| 0→1 MVP | `/cc-code:plan-prd-mvp` | `/cc-code:agent-to-mvp`（Dev→QA→whole-qa 收口） |
-| 功能迭代 | `/cc-code:plan-prd-feature` | `/cc-code:agent-to-feature`（增量定位→Dev→QA，精准回归） |
-| bug 修复 | `/cc-code:debug-plan`（诊断→三件套确认→落盘 B-n 到 `bugs.md`） | `/cc-code:debug-qa-dev`（定位 B-n→Dev→QA，affected 精准回归 + 回归测试留守） |
+| 0→1 MVP | `/cc-code:plan-mvp` | `/cc-code:agent-mvp`（Dev→QA→agent-whole-qa 收口） |
+| 功能迭代 | `/cc-code:plan-feature` | `/cc-code:agent-feature`（增量定位→Dev→QA，精准回归） |
+| bug 修复 | `/cc-code:plan-debug`（诊断→三件套确认→落盘 B-n 到 `bugs.md`） | `/cc-code:agent-debug`（定位 B-n→Dev→QA，affected 精准回归 + 回归测试留守） |
 
-> debug 链的分界：**需求模糊**走 plan-prd-feature；**需求明确但实现错了**走 debug 链。修复需动契约/动需求 → debug-plan 拒修并指路规划。`bugs.md` 是施工便签（B-n 独立序列，修完即删，常态为空）。
+> debug 链的分界：**需求模糊**走 plan-feature；**需求明确但实现错了**走 debug 链。修复需动契约/动需求 → plan-debug 拒修并指路规划。`bugs.md` 是施工便签（B-n 独立序列，修完即删，常态为空）。
 
 `prd-plan` agent（PM+Architect）服务规划命令；`dev` / `qa` agent 服务执行命令。不用 agent 时，主控直接扮演各角色亦可。
 
-阶段性增量验收用 `qa`；**MVP 收口前的全量验收 + 修复闭环用 `/cc-code:whole-qa`**（编排器：逐页逐按钮逐接口穷尽测试，分模块 fan-out，FAIL 自动回环给 dev，≤3 轮）。
+阶段性增量验收用 `qa`；**MVP 收口前的全量验收 + 修复闭环用 `/cc-code:agent-whole-qa`**（编排器：逐页逐按钮逐接口穷尽测试，分模块 fan-out，FAIL 自动回环给 dev，≤3 轮）。

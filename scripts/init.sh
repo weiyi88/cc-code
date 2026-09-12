@@ -53,7 +53,7 @@ ALLCAPS_MD='^[A-Z0-9_]+\.md$'
 SHOT_RE='(screenshot|screen-shot|screen_shot|snap|capture|Snipaste|CleanShot|图片|截图)'
 
 # ══════════════════════════════════════════════════════════════════════════
-# bugs.md 补建（0.13.0 新增）—— debug 链（debug-plan / debug-qa-dev）的施工便签。
+# bugs.md 补建（0.13.0 新增）—— debug 链（plan-debug / agent-debug）的施工便签。
 # 只补建缺失，绝无脑覆盖（里面可能有 OPEN 状态的 B-n 条目）。
 # ══════════════════════════════════════════════════════════════════════════
 ensure_bugs() {
@@ -509,7 +509,7 @@ stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
 log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
-log "  docs/qa/     全量验收报告（whole-qa 产出）"
+log "  docs/qa/     全量验收报告（agent-whole-qa 产出）"
 log "  test/     ⭐测试代码（源码，必须入库；affected 精准回归的索引基础）"
 log "  images/ scripts/  截图归档 + 散落脚本"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"

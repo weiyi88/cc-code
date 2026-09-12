@@ -1,15 +1,15 @@
 ---
-name: agent-to-feature
-description: cc-code + 双 agent（dev/qa）驱动的功能增量执行编排器（纯执行，不规划）。前置：/cc-code:plan-prd-feature 已落盘定稿且 status.md「下一步」点名 F-n 批次。用户显式调用 /cc-code:agent-to-feature 触发；入口先做增量定位（status.md 点名断言 − gates.md 已 PASS = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，无全量清算。未规划拒跑。中途零确认。手动触发，不自动加载。
+name: agent-feature
+description: cc-code + 双 agent（dev/qa）驱动的功能增量执行编排器（纯执行，不规划）。前置：/cc-code:plan-feature 已落盘定稿且 status.md「下一步」点名 F-n 批次。用户显式调用 /cc-code:agent-feature 触发；入口先做增量定位（status.md 点名断言 − gates.md 已 PASS = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，无全量清算。未规划拒跑。中途零确认。手动触发，不自动加载。
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
-# agent-to-feature — 双 agent × cc-code 驱动功能增量执行编排器
+# agent-feature — 双 agent × cc-code 驱动功能增量执行编排器
 
-> **纯执行器**：只执行增量需求，**不规划**。需求与契约由 `/cc-code:plan-prd-feature` 商讨定稿落盘，本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
+> **纯执行器**：只执行增量需求，**不规划**。需求与契约由 `/cc-code:plan-feature` 商讨定稿落盘，本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
 > **增量铁律**：只做「规划了但还没验过」的断言，绝不重推存量需求、绝不重做已 PASS 项。
-> **与 agent-to-mvp 的分工**：mvp 是「盖整栋楼」（含 whole-qa 全量清算收口）；feature 是「在楼里加一个房间」（affected 精准回归，无全量清算）。
+> **与 agent-mvp 的分工**：mvp 是「盖整栋楼」（含 agent-whole-qa 全量清算收口）；feature 是「在楼里加一个房间」（affected 精准回归，无全量清算）。
 
 ## 前置检查（启动时一次性）
 1. 确认项目根存在 `.cc_code/`（否则提示先 `/cc-code:init`）。
@@ -25,7 +25,7 @@ disable-model-invocation: true
  ① 读 status.md「下一步」
       └─ 期望形态：「F-n <需求名>，已规划未开发」+ 点名断言号（如 A28.1~A28.10 / U23）
            ├─ 没有 F-n / 写的是「未规划」/ 下一步是别的事
-           │     → ⛔ 拒跑：「增量未规划，请先走 /cc-code:plan-prd-feature」
+           │     → ⛔ 拒跑：「增量未规划，请先走 /cc-code:plan-feature」
            │       （本命令绝不现场推需求——需求唯一来源 = 定稿文档）
            └─ 拿到 F 号 + 新断言清单
  ② 读 prd.md §1.5 主表 / ux.md §2.3 矩阵 → 取这些断言号的具体内容
@@ -77,7 +77,7 @@ disable-model-invocation: true
 
 > ⛔ **QA 用 codegraph 的双重限制**：只许用 `node` / `callers` / `affected`。**需求永远只来自 `prd.md` / `ux.md` / `api.md`** —— codegraph 绝不是需求的尺子。
 
-**三层测试矩阵：** 同 `agent-to-mvp`（逻辑 / 接口 / 交互三层，vitest + fetch + Playwright）。
+**三层测试矩阵：** 同 `agent-mvp`（逻辑 / 接口 / 交互三层，vitest + fetch + Playwright）。
 
 ## qa → dev 循环（QA 段内）
 
@@ -92,12 +92,12 @@ disable-model-invocation: true
 - **AI** 在 `back_up/milestone-log.md` 追加一行（格式见 `active/Agent.md` 归档规范），⛔ 不写进 `status.md`。
 - AI 顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」（下一步清空 F-n 指向，或指向遗留待办）。
 - 报告：F-n 增量交付（断言 PASS 清单 + 回归范围）。
-- **不跑 whole-qa、不做全量回归** —— 增量的验收面就是 affected 精准回归面；全量清算只属于 MVP 收口（`/cc-code:agent-to-mvp`）或主人显式调用 `/cc-code:whole-qa`。
+- **不跑 agent-whole-qa、不做全量回归** —— 增量的验收面就是 affected 精准回归面；全量清算只属于 MVP 收口（`/cc-code:agent-mvp`）或主人显式调用 `/cc-code:agent-whole-qa`。
 
 ## 编排器行为准则
 
 - **你是编排器**：按阶段调对应 agent，不在主控里替角色思考。
-- **纯执行定位**：发现增量文档缺漏 / 自相矛盾 / 断言查无内容 → 停下报告交人，⛔ 绝不现场发明需求（那是 `/cc-code:plan-prd-feature` 的职责）。
+- **纯执行定位**：发现增量文档缺漏 / 自相矛盾 / 断言查无内容 → 停下报告交人，⛔ 绝不现场发明需求（那是 `/cc-code:plan-feature` 的职责）。
 - **每次切阶段/切角色前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进；校准静默，不打扰人。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准。
