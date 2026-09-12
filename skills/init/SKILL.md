@@ -94,7 +94,7 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
 `init.sh` 新建 `.cc_code/test/`，且 `update_gitignore()` 只 ignore `backup/`，并写入注释警告。**测试代码是源码，被 ignore 就不进 codegraph 索引 → `affected` 永久失效**。该 ignore 的是测试产物（`coverage/` / `*.png`），不是测试代码。测试 glob 由 Architect 登记在 `project.md` §六。
 
-## 第 2B' 步：design.pen 原型意向问询（⭐0.15.0 新增，前端项目专属）
+## 第 2B' 步：design.pen 原型意向问询（⭐1.0.0 新增，前端项目专属）
 
 脚本跑完后，AI 判定项目是否含前端（`package.json` 有 `react` / `vue` / `next` / `nuxt` / `taro` / `uni-app` 等依赖，或 `src/` 存在页面组件）。是前端项目且根目录**尚无** `design.pen` 时，用 `AskUserQuestion` 问一次：
 

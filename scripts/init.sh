@@ -84,7 +84,7 @@ refresh_handbook() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
-# design.pen 前端原型锚点（0.15.0 新增）—— pen 可视化原型链的落盘锚。
+# design.pen 前端原型锚点（1.0.0 新增）—— pen 可视化原型链的落盘锚。
 # 只在 AI 问询主人「要 pen 原型吗」并得到肯定答复后创建（本函数不主动跑）。
 # 位置：项目根目录（与 CLAUDE.md 同级）—— .cc_code/ 是点开头隐藏目录，
 #       pen 客户端的文件选择器打不开；且 design.pen 是交付物不是内部状态，应进 git。
@@ -425,7 +425,7 @@ relocate_superseded() {
 # 子命令入口（供 AI 在升级 D6 / D7 阶段调用）
 #   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
 #   bash init.sh --stamp                    盖场域版本戳
-#   bash init.sh --design-pen               建根目录 design.pen 锚点（0.15.0 pen 链）
+#   bash init.sh --design-pen               建根目录 design.pen 锚点（1.0.0 pen 链）
 # ══════════════════════════════════════════════════════════════════════════
 case "$SUBCMD" in
   --relocate)

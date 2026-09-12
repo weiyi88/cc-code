@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # /cc-code:plan-uiux — 前端原型绘制器
 
-> **状态：占位骨架（0.15.0）。** 本 skill 已定方向但施工规格未定稿，多个前端风格 skill 尚在并行调试中。
+> **状态：占位骨架（1.0.0）。** 本 skill 已定方向但施工规格未定稿，多个前端风格 skill 尚在并行调试中。
 > 在正式定稿前，本文件只锁边界与铁律，具体阶段流程由 uiux subagent 调试结论回填。
 
 ## 一、定位
