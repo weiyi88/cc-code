@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.14.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.0.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -15,8 +15,8 @@
 - [Full Lifecycle](#full-lifecycle)
 - [Quick Start](#quick-start)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
-- [Skill List (16)](#skill-list-16)
-- [Agents (3)](#agents-3)
+- [Skill List (17)](#skill-list-17)
+- [Agents (4)](#agents-4)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
 - [Role Serialization](#role-serialization)
@@ -120,7 +120,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 15 skills, and 3 companion agents.
+After install you get the `/cc-code:*` command family, 16 skills, and 4 companion agents.
 
 ## Full Lifecycle
 
@@ -135,7 +135,11 @@ Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
                        + per-point conversation until smooth → land five docs (prd/ux/project/data/api)
                        (landing = final, no second review)
        ↓
-/cc-code:agent-mvp  Pure execution (read final docs, Dev→QA, FAIL≤3-round loop, zero mid-run confirmation)
+/cc-code:plan-uiux   (optional, frontend projects) ux.md page list → design.pen visual
+                       prototype frames; style stacking: plan-uiux gpt-taste; AI auto-saves
+       ↓
+/cc-code:agent-mvp  Pure execution (read final docs, Dev→QA, FAIL≤3-round loop, zero mid-run confirmation;
+                       with pen, Dev runs bottom-up three steps: Export html-tailwind → thin assembly → screenshot diff)
        ↓
 /cc-code:agent-whole-qa      Full acceptance (function + redundancy, FAIL≤3-round loop)
        ↓
@@ -225,7 +229,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 2. **Tests must import the source under test** — static `import` ✅ dynamic `await import()` ✅ pure HTTP-interface scripts ⛔ (no import edge to trace).
 3. **Non-standard names must register a glob** — defaults match `*.spec.*` / `*.test.*` / `__tests__/`; others need `--filter`.
 
-## Skill List (16)
+## Skill List (17)
 
 **Framework Core (manages flow)**
 
@@ -235,6 +239,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `cc-code` | auto | **Runtime protocol** role routing + file layering + state-machine constraints |
 | `plan-mvp` | `/cc-code:plan-mvp` | **MVP planner** (first action EnterPlanMode, per-point conversation in plan mode until logic is smooth; produces five docs prd/ux/project/data/api, landing = final) |
 | `plan-feature` | `/cc-code:plan-feature` | **Incremental requirement planner** (post-MVP iteration: spec checkup + codegraph blast radius + per-conflict hard gate + converge in place into L1/L2/L3, landing = final + status.md names F-n) |
+| `plan-uiux` | `/cc-code:plan-uiux` | **Frontend prototype painter** (ux.md page list → root `design.pen` visual frames; style stacking e.g. `/cc-code:plan-uiux gpt-taste`; ⭐ encrypted .pen — pencil MCP only, no Read/Grep) |
 | `agent-mvp` | `/cc-code:agent-mvp` | **MVP pure-execution orchestration** (read final docs, Dev→QA + qa→dev loop, zero mid-run confirmation, agent-whole-qa wrap-up) |
 | `agent-feature` | `/cc-code:agent-feature` | **Incremental pure-execution orchestration** (increment locate → Dev→QA + qa→dev loop, affected precise regression, no full sweep) |
 | `plan-debug` | `/cc-code:plan-debug` | **Bug diagnostician** (first action EnterPlanMode; in plan mode: interrogate + codegraph trace + ruling gate + three-piece-set confirmation → land B-n into `bugs.md`; never edits requirements, never writes code) |
@@ -252,7 +257,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `deploy-vercel-supabase` | Vercel + Supabase one-click deploy |
 | `deploy-cf` | Deploy Next.js to Cloudflare Pages (Edge) |
 
-## Agents (3)
+## Agents (4)
 
 Three agents bind to cc-code role serialization, **independent of any specific project**; all project conventions defer to `.cc_code/active/project.md`:
 
@@ -261,6 +266,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 | `prd-plan` | opus | PM + Architect | Requirements→spec→tech plan; produces prd/ux/project/data/api (phase plans live inside project.md, serving plan-mvp / plan-feature) |
 | `dev` | haiku | Dev | Implement code per spec + three-layer tests; self-check lint/tsc/test/e2e |
 | `qa` | sonnet | QA (gray box) | Write+run three-layer tests (logic/api/browser), structured FAIL list back to dev, ≤3-round loop |
+| `uiux` | haiku | UIUX (prototype worker) | Receives a single-page task order → paints P-n/M-n frames via pencil MCP → screenshot self-check → reports frameId; serves plan-uiux |
 
 > Agents define "how to do"; cc-code defines "what to do + where"; `.cc_code/active/` is the only coupling interface.
 
@@ -297,8 +303,8 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           15 skill directories
-├── agents/           3 agents (prd-plan / dev / qa)
+├── skills/           16 skill directories
+├── agents/           4 agents (prd-plan / dev / qa / uiux)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)
 ├── docs/             ARCHITECTURE.md

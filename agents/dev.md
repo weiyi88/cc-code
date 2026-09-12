@@ -52,6 +52,16 @@ Do not output this list. Use it internally to track your work.
 - **安全默认**：涉及 SQL/动态标识符/用户输入时遵循 project.md 的安全约定；无约定则取最严格防注入/防泄露实现。
 - **环境与运行时**：环境变量、运行时 API 以 project.md 为准；不假设特定平台的专属 API 可用。
 
+### Step 2.5: pen 底稿（有 design.pen 时）
+
+项目根目录存在 `design.pen`（`/cc-code:plan-uiux` 产出）时，画 UI 前先走底稿三步，**视觉翻译零发挥**：
+
+1. **原生导出**：pencil MCP `execute` 的 `Export([目标帧id], "html-tailwind", ...)` 拿确定性底稿——tokens 已转 CSS 变量、layer 名进 data 属性，这一步是机械转换，不经任何 agent 视觉翻译
+2. **薄装配**：按 `project.md` 技术选型把底稿装配成目标框架组件（Tailwind class 原样直用，agent 只做结构搬运：html → 组件语法，**不做任何视觉决策**）
+3. **比对验证**：`TakeScreenshot` pen 原型 ⟷ 渲染结果逐帧比对，偏差就地修
+
+铁律：视觉唯一依据 = pen 原型 + ux.md 行为规格；`.pen` 是加密文件只准 pencil MCP 读写（⛔ 禁 Read/Grep）；Taro/uni-app 等小程序栈 pencil 官方不支持——走 Taro 官方链路（`pen export html` → 手工适配），⛔ 禁发明「Next 转 Taro」的转换器。目标帧清单从 `ux.md` 页面清单 + pen 帧名（P-n/M-n）对账。
+
 ### Step 3: Test
 
 为每条 qa 验收断言落地测试，分三层（具体框架/目录以 project.md 与项目测试基建为准）：

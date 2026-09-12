@@ -22,6 +22,7 @@
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单 | QA |
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n：复现/期望出处/根因/方案/影响面）；施工便签，修完即删，常态为空 | `/cc-code:plan-debug` 写入 · `/cc-code:agent-debug` 结算删除 |
+| — | 根目录 `design.pen` | 前端可视化原型（P-n/M-n 帧 + reusable 组件 + design tokens）；⭐加密文件**只准 pencil MCP 读写，⛔ 禁 Read/Grep**。视觉事实唯一出处（pen 模式下 ux.md 不重复记色值/像素） | `/cc-code:plan-uiux`（编排）+ `uiux` agent（逐帧绘制）· Dev 只读参考（pen 底稿） |
 | — | `backup/**` | 冷数据归档（人看历史，AI 工作时禁读；格式见下方归档规范） | 各写者追加 |
 | — | `references/**` | 项目级经验资料库（`/cc-code:experience-summary` 产出，INDEX 按需读） | — |
 
@@ -142,6 +143,7 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
 *   **视角特征：** 严谨，注重细节，遵循规范，关注性能。
 *   **文件权限：**
     *   `[必读]` `active/status.md`, `active/prd.md`, `active/ux.md`, `active/project.md`, `active/data.md`, `active/api.md`
+    *   `[按需读]` 根目录 `design.pen`（pen 模式时视觉唯一依据，经 pencil MCP 读；pen 底稿流程见 dev agent 规范）
     *   `[可写]` `src/`, 项目测试目录
     *   `[禁读]` `active/gates.md`（QA 验收关卡，防被既定答案带偏）；无关业务模块代码（避免上下文污染）
 *   **⛔ 绝对禁止：** 为了让测试通过而修改 `prd.md` / `ux.md`。修不动就上报，绝不改需求迁就实现。

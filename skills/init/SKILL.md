@@ -94,6 +94,23 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
 `init.sh` 新建 `.cc_code/test/`，且 `update_gitignore()` 只 ignore `backup/`，并写入注释警告。**测试代码是源码，被 ignore 就不进 codegraph 索引 → `affected` 永久失效**。该 ignore 的是测试产物（`coverage/` / `*.png`），不是测试代码。测试 glob 由 Architect 登记在 `project.md` §六。
 
+## 第 2B' 步：design.pen 原型意向问询（⭐0.15.0 新增，前端项目专属）
+
+脚本跑完后，AI 判定项目是否含前端（`package.json` 有 `react` / `vue` / `next` / `nuxt` / `taro` / `uni-app` 等依赖，或 `src/` 存在页面组件）。是前端项目且根目录**尚无** `design.pen` 时，用 `AskUserQuestion` 问一次：
+
+| 选项 | 后续 |
+| :--- | :--- |
+| 要 pen 原型 | 跑 `bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --design-pen` 建根目录 0 字节锚点；`ux.md` §一登记 pen 模式；后续画图走 `/cc-code:plan-uiux` |
+| 不要 | 什么都不做，`ux.md` 维持文字模式；本次会话不再问 |
+
+问询铁律：
+- ⛔ 禁静默跳过（前端项目主人可能永远不知道有这条路）
+- ⛔ 禁对**非前端项目**弹问（后端/CLI 项目问了就是打扰）
+- ⛔ 已有 `design.pen` 的项目**不问**（已在链上）
+- 决策落 `ux.md` §一一行（pen 模式登记），不落 status.md 卡点
+
+> `.pen` 是加密文件：只准 pencil MCP 读写，⛔ 禁 Read/Grep。锚点在 pen 应用首次保存（`osascript` Cmd+S，见 plan-uiux）前是 0 字节——这不是 bug，是预期形态。
+
 ## 第 2A 步：Track A 旧 CLAUDE.md 分拆协议（理解力活，由 AI 完成）
 
 仅 Track A 执行。读取 `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，按下表把旧内容**只搬运不丢失**地归并到对应文件：

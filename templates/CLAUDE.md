@@ -47,6 +47,7 @@ PM ──► Architect ──► Dev ──► QA
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect / plan-feature |
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删，常态为空） | plan-debug 写 / agent-debug 结算删 |
+| — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） | plan-uiux 编排 / uiux agent 绘制 |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） | 各写者追加 |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读） | experience-summary |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） | init |
@@ -56,6 +57,8 @@ PM ──► Architect ──► Dev ──► QA
 | — | `.cc_code_version` | 场域版本戳（决定 init 是否升级迁移） | init |
 
 > ⭐ `plan-feature` 是 MVP 交付后的**增量迭代支线**：plan 模式内锁基线 + 冲突逐条裁决，出关后按层分批切角色**就地收敛改写** L1 / L2 / L3 对应小节（逐批请示，绝不碰 L4 与代码）。
+>
+> 🖌️ **uiux 支线（前端可视化原型，可选）**：`/cc-code:plan-uiux`（风格锁 → 串行逐页派 uiux agent 画 design.pen → 主人逐页确认 → AI 自动保存）。分工：`ux.md` 是行为半边（清单/testid/流转/五态），`design.pen` 是视觉半边（布局/色值/组件长相），同一事实只落一处。
 >
 > 🐛 **debug 链路（bug 修复支线，需求明确但实现错了时用）**：`/cc-code:plan-debug`（plan 模式诊断：问诊 → codegraph 查脉络 → 裁决门 → 三件套确认 → 落盘 B-n 到 `bugs.md`）→ `/cc-code:agent-debug`（增量定位 B-n → Dev→QA + affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过）。与 `plan-feature` 的分界：那个处理**需求模糊**，debug 处理**需求明确但实现错了**；修复需动契约/动需求 → 拒修转规划。
 

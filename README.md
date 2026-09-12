@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **0.14.0** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.0.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
@@ -15,8 +15,8 @@
 - [完整生命周期](#完整生命周期)
 - [快速开始](#快速开始)
 - [可选增强：codegraph](#可选增强codegraph)
-- [Skill 一览（16 个）](#skill-一览16-个)
-- [Agent（3 个）](#agent3-个)
+- [Skill 一览（17 个）](#skill-一览17-个)
+- [Agent（4 个）](#agent4-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
 - [角色串行](#角色串行)
@@ -118,7 +118,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、15 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 4 个配套 agent。
 
 ## 完整生命周期
 
@@ -133,7 +133,11 @@ PM ──► Architect ──► Dev ──► QA
                        +逐点交谈至通顺 → 落盘五件（prd/ux/project/data/api）
                        （落盘即定稿，无二次验收）
        ↓
-/cc-code:agent-mvp  纯执行（读定稿文档，Dev→QA，FAIL≤3轮回环，中途零确认）
+/cc-code:plan-uiux   （可选，前端项目）ux.md 页面清单 → design.pen 可视化
+                       原型真图；风格叠加：plan-uiux gpt-taste；AI 自动保存落盘
+       ↓
+/cc-code:agent-mvp  纯执行（读定稿文档，Dev→QA，FAIL≤3轮回环，中途零确认；
+                       有 pen 则 Dev 先走底稿三步：Export html-tailwind → 薄装配 → 截图比对）
        ↓
 /cc-code:agent-whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
        ↓
@@ -222,7 +226,7 @@ PM ──► Architect ──► Dev ──► QA
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill 一览（16 个）
+## Skill 一览（17 个）
 
 **框架核心（管流程）**
 
@@ -232,6 +236,7 @@ PM ──► Architect ──► Dev ──► QA
 | `cc-code` | 自动 | **运行时协议** 角色路由 + 文件分层 + 状态机约束 |
 | `plan-mvp` | `/cc-code:plan-mvp` | **MVP 规划器**（第一动作 EnterPlanMode，plan 模式逐点交谈至逻辑通顺；产出五件 prd/ux/project/data/api，落盘即定稿） |
 | `plan-feature` | `/cc-code:plan-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 就地收敛落 L1/L2/L3，落盘即定稿 + status.md 点名 F-n） |
+| `plan-uiux` | `/cc-code:plan-uiux` | **前端原型绘制器**（ux.md 页面清单 → 根目录 design.pen 可视化真图；风格叠加 `/cc-code:plan-uiux gpt-taste`；⭐pen 加密文件只准 pencil MCP 读写） |
 | `agent-mvp` | `/cc-code:agent-mvp` | **MVP 纯执行编排**（读定稿文档，Dev→QA + qa→dev 循环，中途零确认，agent-whole-qa 收口） |
 | `agent-feature` | `/cc-code:agent-feature` | **增量纯执行编排**（增量定位 → Dev→QA + qa→dev 循环，affected 精准回归，无全量清算） |
 | `plan-debug` | `/cc-code:plan-debug` | **bug 诊断器**（第一动作 EnterPlanMode，plan 内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认 → 落盘 B-n 到 `bugs.md`；禁改需求禁写代码） |
@@ -249,7 +254,7 @@ PM ──► Architect ──► Dev ──► QA
 | `deploy-vercel-supabase` | Vercel + Supabase 一键部署 |
 | `deploy-cf` | Next.js 部署到 Cloudflare Pages (Edge) |
 
-## Agent（3 个）
+## Agent（4 个）
 
 三 agent 与 cc-code 角色串行绑定，**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`：
 
@@ -258,6 +263,7 @@ PM ──► Architect ──► Dev ──► QA
 | `prd-plan` | opus | PM + Architect | 需求→规范→技术方案；产出 prd/ux/project/data/api（阶段拆分并入 project.md，服务 plan-mvp / plan-feature） |
 | `dev` | haiku | Dev | 按规格实现代码 + 三层测试；自检 lint/tsc/test/e2e |
 | `qa` | sonnet | QA（灰盒） | 写+跑三层测试（逻辑/接口/浏览器），结构化 FAIL 清单回 dev，≤3 轮循环 |
+| `uiux` | haiku | UIUX（原型工人） | 收单页任务单 → pencil MCP 画 P-n/M-n 帧 → 截图自检 → 报 frameId；服务 plan-uiux |
 
 > agent 定义「怎么干」，cc-code 定义「干什么+在哪干」，`.cc_code/active/` 是唯一耦合接口。
 
@@ -294,8 +300,8 @@ PM ──► Architect ──► Dev ──► QA
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           15 个 skill 目录
-├── agents/           3 个 agent（prd-plan / dev / qa）
+├── skills/           16 个 skill 目录
+├── agents/           4 个 agent（prd-plan / dev / qa / uiux）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）
 ├── docs/             ARCHITECTURE.md

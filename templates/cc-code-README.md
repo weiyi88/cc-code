@@ -1,4 +1,4 @@
-# 🧭 .cc_code 使用手册（cc-code 0.14.0）
+# 🧭 .cc_code 使用手册（cc-code 1.0.0）
 
 > 本文件由 `/cc-code:init` 生成并随插件版本刷新，是**给「不熟悉 cc-code 的人」的上手说明书**。
 > 项目业务状态永远在 `active/`；本手册只讲「这套系统怎么用」。
@@ -42,6 +42,7 @@ PM ──► Architect ──► Dev ──► QA
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删） | plan-debug 写 / agent-debug 结算删 |
+| — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） | plan-uiux / uiux agent |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读；含 bull-redis-queue 示例） | experience-summary |
 | — | `docs/qa/` | QA 全量报告 | QA |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读） | 各写者追加 |
@@ -51,16 +52,17 @@ PM ──► Architect ──► Dev ──► QA
 
 ---
 
-## 三、Skill 一览（16 个）
+## 三、Skill 一览（17 个）
 
 ### 框架核心（管流程）
 
 | skill | 触发 | 什么时候用 |
 | --- | --- | --- |
-| `init` | `/cc-code:init` | **入场**。新项目搭场域 / 旧项目接管 / 旧版升级（全程零删除）。装完插件第一件事 |
+| `init` | `/cc-code:init` | **入场**。新项目搭场域 / 旧项目接管 / 旧版升级（全程零删除）。前端项目会问「要 pen 原型吗」。装完插件第一件事 |
 | `cc-code` | 自动 | 运行时协议（角色路由 + 分层约束），不用手动调 |
 | `plan-mvp` | `/cc-code:plan-mvp` | **0→1 定全量需求**。plan 模式内逐点交谈至逻辑通顺，产出 prd/ux/project/data/api 五件（落盘即定稿） |
 | `plan-feature` | `/cc-code:plan-feature` | **MVP 交付后的功能迭代**。锁基线 + codegraph 算爆炸半径 + 冲突逐条裁决，落盘即定稿 |
+| `plan-uiux` | `/cc-code:plan-uiux` | **前端可视化原型**。ux.md 页面清单 → design.pen 真图；支持风格叠加（如 `/cc-code:plan-uiux gpt-taste`） |
 | `agent-mvp` | `/cc-code:agent-mvp` | **纯执行**。读定稿文档，Dev→QA 串行推进，FAIL≤3 轮回环，agent-whole-qa 收口 |
 | `agent-feature` | `/cc-code:agent-feature` | **增量纯执行**。增量定位（status.md 点名断言 − gates 已 PASS）→ Dev→QA，精准回归，无全量清算 |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | **全量验收**。逐页逐按钮逐接口 + 冗余检测，FAIL≤3 轮修到 PASS |
@@ -85,9 +87,11 @@ PM ──► Architect ──► Dev ──► QA
 ### 路线 A：全新项目（0 → MVP）
 
 ```
-/cc-code:init            ← ① 搭场域（1 分钟）
+/cc-code:init            ← ① 搭场域（1 分钟；前端项目可选 pen 原型）
 /cc-code:plan-mvp    ← ② 跟 AI 聊需求，产出五件规划文档（最重要的投入）
-/cc-code:agent-mvp    ← ③ 纯执行：Dev→QA 到收口（中途零确认）
+/cc-code:plan-uiux   ← ②'（可选）前端原型：ux.md 页面清单 → design.pen 真图
+                            可叠加风格：/cc-code:plan-uiux gpt-taste
+/cc-code:agent-mvp    ← ③ 纯执行：Dev→QA 到收口（有 pen 则 Dev 走底稿三步）
 /cc-code:agent-whole-qa        ← ④ 全量验收 + 修复闭环
 ```
 
