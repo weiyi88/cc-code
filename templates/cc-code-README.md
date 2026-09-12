@@ -75,9 +75,8 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- |
 | `project_resume` | 读真实技术栈生成项目介绍文案 |
 | `login_auto` | Supabase Auth + Resend 通用登录 |
-| `vercel_supabase_deployment` | Vercel + Supabase 一键部署 |
-| `cf_online` | Next.js 部署到 Cloudflare Pages |
-| `next2taro` | Next.js UI → Taro 小程序 |
+| `deploy-vercel-supabase` | Vercel + Supabase 一键部署 |
+| `deploy-cf` | Next.js 部署到 Cloudflare Pages |
 
 ---
 

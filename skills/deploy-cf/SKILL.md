@@ -1,6 +1,6 @@
 ---
-name: cf_online
-description: 将 Next.js 项目部署到 Cloudflare Pages（Edge Runtime）。当用户说"cf_online"、"上线cloudflare"、"部署cloudflare"、"CF部署" 时触发。
+name: deploy-cf
+description: 将 Next.js 项目部署到 Cloudflare Pages（Edge Runtime）。当用户说"deploy-cf"、"上线cloudflare"、"部署cloudflare"、"CF部署" 时触发。
 disable-model-invocation: true
 ---
 

@@ -120,7 +120,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 16 skills, and 3 companion agents.
+After install you get the `/cc-code:*` command family, 15 skills, and 3 companion agents.
 
 ## Full Lifecycle
 
@@ -139,7 +139,7 @@ Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
        ↓
 /cc-code:agent-whole-qa      Full acceptance (function + redundancy, FAIL≤3-round loop)
        ↓
-Deploy                 /cc-code:vercel_supabase or /cc-code:cf_online
+Deploy                 /cc-code:deploy-vercel-supabase or /cc-code:deploy-cf
 
 ────────── After MVP delivered, feature iteration takes this branch ──────────
 
@@ -249,9 +249,8 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | --- | --- |
 | `project_resume` | Read real tech stack, generate standardized project intro copy |
 | `login_auto` | Supabase Auth + Resend universal login system |
-| `vercel_supabase_deployment` | Vercel + Supabase one-click deploy |
-| `cf_online` | Deploy Next.js to Cloudflare Pages (Edge) |
-| `next2taro` | Next.js UI → Taro mini-program conversion |
+| `deploy-vercel-supabase` | Vercel + Supabase one-click deploy |
+| `deploy-cf` | Deploy Next.js to Cloudflare Pages (Edge) |
 
 ## Agents (3)
 
@@ -298,7 +297,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 skill directories
+├── skills/           15 skill directories
 ├── agents/           3 agents (prd-plan / dev / qa)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)

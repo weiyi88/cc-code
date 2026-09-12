@@ -118,7 +118,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 3 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、15 个 skill 与 3 个配套 agent。
 
 ## 完整生命周期
 
@@ -137,7 +137,7 @@ PM ──► Architect ──► Dev ──► QA
        ↓
 /cc-code:agent-whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
        ↓
-部署                   /cc-code:vercel_supabase 或 /cc-code:cf_online
+部署                   /cc-code:deploy-vercel-supabase 或 /cc-code:deploy-cf
 
 ────────── MVP 交付后，功能迭代走这条支线 ──────────
 
@@ -246,9 +246,8 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- |
 | `project_resume` | 读取真实技术栈生成标准化项目介绍文案 |
 | `login_auto` | Supabase Auth + Resend 通用登录系统 |
-| `vercel_supabase_deployment` | Vercel + Supabase 一键部署 |
-| `cf_online` | Next.js 部署到 Cloudflare Pages (Edge) |
-| `next2taro` | Next.js UI → Taro 小程序转换 |
+| `deploy-vercel-supabase` | Vercel + Supabase 一键部署 |
+| `deploy-cf` | Next.js 部署到 Cloudflare Pages (Edge) |
 
 ## Agent（3 个）
 
@@ -295,7 +294,7 @@ PM ──► Architect ──► Dev ──► QA
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 个 skill 目录
+├── skills/           15 个 skill 目录
 ├── agents/           3 个 agent（prd-plan / dev / qa）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）
