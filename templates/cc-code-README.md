@@ -58,27 +58,27 @@ PM ──► Architect ──► Dev ──► QA
 
 | skill | 触发 | 什么时候用 |
 | --- | --- | --- |
-| `init` | `/cc-code:init` | **入场**。新项目搭场域 / 旧项目接管 / 旧版升级（全程零删除）。前端项目会问「要 pen 原型吗」。装完插件第一件事 |
-| `cc-code` | 自动 | 运行时协议（角色路由 + 分层约束），不用手动调 |
-| `plan-mvp` | `/cc-code:plan-mvp` | **0→1 定全量需求**。plan 模式内逐点交谈至逻辑通顺，产出 prd/ux/project/data/api 五件（落盘即定稿） |
-| `plan-feature` | `/cc-code:plan-feature` | **MVP 交付后的功能迭代**。锁基线 + codegraph 算爆炸半径 + 冲突逐条裁决，落盘即定稿 |
-| `plan-uiux` | `/cc-code:plan-uiux` | **前端可视化原型**。ux.md 页面清单 → design.pen 真图；支持风格叠加（如 `/cc-code:plan-uiux gpt-taste`） |
-| `agent-mvp` | `/cc-code:agent-mvp` | **纯执行**。读定稿文档，Dev→QA 串行推进，FAIL≤3 轮回环，agent-whole-qa 收口 |
-| `agent-feature` | `/cc-code:agent-feature` | **增量纯执行**。增量定位（status.md 点名断言 − gates 已 PASS）→ Dev→QA，精准回归，无全量清算 |
-| `agent-whole-qa` | `/cc-code:agent-whole-qa` | **全量验收**。逐页逐按钮逐接口 + 冗余检测，FAIL≤3 轮修到 PASS |
-| `plan-debug` | `/cc-code:plan-debug` | **bug 诊断**。plan 模式内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认，落盘 B-n 到 `bugs.md` |
-| `agent-debug` | `/cc-code:agent-debug` | **bug 修复纯执行**。增量定位 B-n → Dev→QA + affected 精准回归，回归测试留守 |
-| `experience-summary` | `/cc-code:experience-summary` | **经验沉淀**。踩坑复盘 → 提炼准则 → 落 `references/` 资料库 |
-| `short` | `/cc-code:short` | 极简回复模式（≤50 字符） |
+| `init` | `/cc-code:init` | 首次使用建好整个管理文件夹和核心文档；已有项目自动升级，全程零删除 |
+| `cc-code` | 自动 | 含 `.cc_code/` 的项目自动加载的流程管家：规划→开发→测试→验收，四步走完才准上线 |
+| `plan-mvp` | `/cc-code:plan-mvp` | 做新项目前逐条问清需求，画流程图和页面草图，确认后写成方案文档 |
+| `plan-feature` | `/cc-code:plan-feature` | 加新功能前先扫现有代码查冲突，列出改哪建哪，写成方案文档 |
+| `plan-uiux` | `/cc-code:plan-uiux` | 先试画 2 页定风格，再逐页画进 `design.pen` 设计稿，每页经你确认才保存 |
+| `agent-mvp` | `/cc-code:agent-mvp` | 按定好的方案写码，写完自动测试，不过就改到过（最多 3 轮） |
+| `agent-feature` | `/cc-code:agent-feature` | 只写新功能涉及的代码，只跑相关测试，又快又稳 |
+| `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
+| `plan-debug` | `/cc-code:plan-debug` | 出 bug 后顺着代码调用链查到根因，定好修复方案不写码 |
+| `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
+| `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
+| `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 
 ### 工具外挂（干活的，与状态机无关）
 
 | skill | 用途 |
 | --- | --- |
-| `project_resume` | 读真实技术栈生成项目介绍文案 |
-| `login_auto` | Supabase Auth + Resend 通用登录 |
-| `deploy-vercel-supabase` | Vercel + Supabase 一键部署 |
-| `deploy-cf` | Next.js 部署到 Cloudflare Pages |
+| `project_resume` | 扫描代码库，替你写一段项目介绍文案 |
+| `login_auto` | 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密 |
+| `deploy-vercel-supabase` | 一键上线：数据库搬上云、代码传 GitHub、自动部署 |
+| `deploy-cf` | 三分钟把 Next.js 网站发布到 Cloudflare 全球节点 |
 
 ---
 

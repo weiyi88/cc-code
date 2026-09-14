@@ -1,6 +1,6 @@
 ---
 name: experience-summary
-description: ⭐显式触发的【项目级开发经验沉淀器】。把本次开发中踩坑/排障/方案复盘中暴露的「设计经验」提炼成 references 文件，落项目级 .cc_code/references/，并登记 INDEX.md 实现按需读取。命名规范 [角色]-[具体事件域]-references.md。当主人说 /cc-code:experience-summary 或「沉淀经验」「总结成 references」时触发。不写代码、不动 active/ 状态机。
+description: 把踩过的坑写成经验笔记并编号索引，下次直接翻
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, ToolSearch
 disable-model-invocation: true
 ---

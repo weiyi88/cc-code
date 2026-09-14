@@ -1,6 +1,6 @@
 ---
 name: agent-feature
-description: cc-code + 双 agent（dev/qa）驱动的功能增量执行编排器（纯执行，不规划）。前置：/cc-code:plan-feature 已落盘定稿且 status.md「下一步」点名 F-n 批次。用户显式调用 /cc-code:agent-feature 触发；入口先做增量定位（status.md 点名断言 − gates.md 已 PASS = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，无全量清算。未规划拒跑。中途零确认。手动触发，不自动加载。
+description: 只写新功能涉及的代码，只跑相关测试，又快又稳
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---

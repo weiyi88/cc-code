@@ -1,6 +1,6 @@
 ---
 name: agent-whole-qa
-description: cc-code 全量验收 + 修复闭环编排器。MVP 收口前使用：穷尽测试所有页面/所有可交互元素/所有接口，按 prd.md 模块分组 fan-out 到 qa subagent，FAIL 清单自动回环给 dev subagent 修复，≤3 轮收敛。本 skill 自身是编排器 —— 不碰代码、不碰需求，只做清点/分发/汇总/循环控制。手动触发 /cc-code:agent-whole-qa，不自动加载。
+description: 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---

@@ -1,5 +1,5 @@
 ---
-description: 简短回复模式。判断用户问题是否需要思考，若需明确答案则简短回复（不超过50字符），不加解释。当用户说"short"、"简短回复"时触发。
+description: 简单问题只回一句话（≤50 字），绝不啰嗦
 disable-model-invocation: true
 ---
 

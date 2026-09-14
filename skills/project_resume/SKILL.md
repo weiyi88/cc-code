@@ -1,6 +1,6 @@
 ---
 name: project_resume
-description: 快速读取当前项目真实技术栈和功能，生成标准化项目介绍文案（纯文本，无 markdown）。当用户说"介绍项目"、"项目文案"、"project resume"、"项目简介"、"写项目介绍"、"project_resume" 时触发。
+description: 扫描代码库，替你写一段项目介绍文案
 disable-model-invocation: true
 ---
 

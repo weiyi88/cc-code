@@ -1,6 +1,6 @@
 ---
 name: plan-uiux
-description: ⭐显式触发的【前端原型绘制器】（可视化原型支线，人参与）。在 plan-mvp/plan-feature 落盘 ux.md 之后调用，或存量项目逆向建基线；把 ux.md 页面清单画成根目录 design.pen 的可视化原型。支持风格叠加：/cc-code:plan-uiux [风格skill名...]（args 里每个名字经 Skill 工具加载，如 gpt-taste、minimalist-ui）。流程：风格锁（画 1~2 页样板→主人看→改→锁 tokens）→ 串行批量逐页派 uiux subagent → 主人逐页确认 → AI 自动保存落盘 + git commit。⛔ 禁改 prd/api/data、禁生成 A/U 断言、禁碰 gates.md 与业务代码。design.pen 是加密文件，只准 pencil MCP 读写，禁 Read/Grep。
+description: 先试画 2 页定风格，再逐页画进设计稿，每页经你确认才保存
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, ToolSearch, Skill, mcp__pencil__execute, mcp__pencil__get_app_state, mcp__pencil__get_style, mcp__pencil__read_skill
 disable-model-invocation: true
 ---

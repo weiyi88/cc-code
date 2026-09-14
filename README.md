@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.0.0** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.0.2** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
@@ -232,27 +232,27 @@ PM ──► Architect ──► Dev ──► QA
 
 | skill | 触发 | 用途 |
 | --- | --- | --- |
-| `init` | `/cc-code:init` | **入场 + 升级** 三轨初始化（新建/已最新/旧版升级迁移）；判定链迁移散落物；升级走「归档→清点→迁移→校验→归位」，**全程零删除** |
-| `cc-code` | 自动 | **运行时协议** 角色路由 + 文件分层 + 状态机约束 |
-| `plan-mvp` | `/cc-code:plan-mvp` | **MVP 规划器**（第一动作 EnterPlanMode，plan 模式逐点交谈至逻辑通顺；产出五件 prd/ux/project/data/api，落盘即定稿） |
-| `plan-feature` | `/cc-code:plan-feature` | **增量需求规划器**（MVP 后迭代：规范体检 + codegraph 算爆炸半径 + 冲突逐条硬门控 + 就地收敛落 L1/L2/L3，落盘即定稿 + status.md 点名 F-n） |
-| `plan-uiux` | `/cc-code:plan-uiux` | **前端原型绘制器**（ux.md 页面清单 → 根目录 design.pen 可视化真图；风格叠加 `/cc-code:plan-uiux gpt-taste`；⭐pen 加密文件只准 pencil MCP 读写） |
-| `agent-mvp` | `/cc-code:agent-mvp` | **MVP 纯执行编排**（读定稿文档，Dev→QA + qa→dev 循环，中途零确认，agent-whole-qa 收口） |
-| `agent-feature` | `/cc-code:agent-feature` | **增量纯执行编排**（增量定位 → Dev→QA + qa→dev 循环，affected 精准回归，无全量清算） |
-| `plan-debug` | `/cc-code:plan-debug` | **bug 诊断器**（第一动作 EnterPlanMode，plan 内问诊 + codegraph 查脉络 + 裁决门 + 三件套确认 → 落盘 B-n 到 `bugs.md`；禁改需求禁写代码） |
-| `agent-debug` | `/cc-code:agent-debug` | **bug 修复纯执行编排**（定位 B-n → Dev→QA + qa→dev 循环，affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过，无全量清算） |
-| `agent-whole-qa` | `/cc-code:agent-whole-qa` | **全量验收 + 修复闭环**（逐页逐按钮逐接口 + 冗余检测，FAIL≤3轮回环） |
-| `experience-summary` | `/cc-code:experience-summary` | **项目级经验沉淀器**（踩坑/复盘 → 提炼准则 → 主人过目 → 落 `references/[角色]-[事件域]-references.md` + INDEX 按需读取） |
-| `short` | `/cc-code:short` | 极简回复（不需要思考时，≤50 字符） |
+| `init` | `/cc-code:init` | 首次使用建好整个管理文件夹和核心文档；已有项目自动升级，全程零删除 |
+| `cc-code` | 自动 | 含 `.cc_code/` 的项目自动加载的流程管家：规划→开发→测试→验收，四步走完才准上线 |
+| `plan-mvp` | `/cc-code:plan-mvp` | 做新项目前逐条问清需求，画流程图和页面草图，确认后写成方案文档 |
+| `plan-feature` | `/cc-code:plan-feature` | 加新功能前先扫现有代码查冲突，列出改哪建哪，写成方案文档 |
+| `plan-uiux` | `/cc-code:plan-uiux` | 先试画 2 页定风格，再逐页画进 `design.pen` 设计稿，每页经你确认才保存 |
+| `agent-mvp` | `/cc-code:agent-mvp` | 按定好的方案写码，写完自动测试，不过就改到过（最多 3 轮） |
+| `agent-feature` | `/cc-code:agent-feature` | 只写新功能涉及的代码，只跑相关测试，又快又稳 |
+| `plan-debug` | `/cc-code:plan-debug` | 出 bug 后顺着代码调用链查到根因，定好修复方案不写码 |
+| `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
+| `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
+| `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
+| `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 
 **工具外挂（干活的，与状态机无关）**
 
 | skill | 用途 |
 | --- | --- |
-| `project_resume` | 读取真实技术栈生成标准化项目介绍文案 |
-| `login_auto` | Supabase Auth + Resend 通用登录系统 |
-| `deploy-vercel-supabase` | Vercel + Supabase 一键部署 |
-| `deploy-cf` | Next.js 部署到 Cloudflare Pages (Edge) |
+| `project_resume` | 扫描代码库，替你写一段项目介绍文案 |
+| `login_auto` | 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密 |
+| `deploy-vercel-supabase` | 一键上线：数据库搬上云、代码传 GitHub、自动部署 |
+| `deploy-cf` | 三分钟把 Next.js 网站发布到 Cloudflare 全球节点 |
 
 ## Agent（4 个）
 

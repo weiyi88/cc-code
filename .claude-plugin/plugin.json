@@ -1,7 +1,7 @@
 {
   "name": "cc-code",
-  "version": "1.0.1",
-  "description": "极简开发工作流系统。角色串行(PM→Architect→Dev→QA/UIUX) + L0~L4 文件分层的状态机循环。/cc-code:init 三轨初始化（新建/已最新/旧版升级迁移，全程零删除；前端项目可问询 pen 原型意向），16 skill + 4 配套 agent，规划与执行四对配对（plan-mvp→agent-mvp，plan-feature→agent-feature，plan-debug→agent-debug，plan-uiux→uiux agent 前端可视化原型：design.pen + 风格叠加 + pencil MCP 串行绘制 + osascript 自动保存）、/cc-code:agent-whole-qa 全量验收修复闭环与 /cc-code:experience-summary 项目级经验沉淀（references 按需读取）。⭐1.0.1 active 纯净双向治理：plan-feature 落盘剥残留（写侧）+ QA 收口纯净自查（验收侧）。⭐1.0.0 pen 可视化原型链：ux.md 行为半边 + design.pen 视觉半边零重叠，pen 加密文件只准 pencil MCP 读写。⭐0.13.1 规则单一出处（SSOT）治理。无 Hook，所有状态由 AI 顺手写。",
+  "version": "1.0.2",
+  "description": "给 AI 立规矩的开发工作流：规划→开发→测试→验收步步把关，16 skill + 4 agent 全程管到底，无 Hook 状态全落文件。",
   "author": {
     "name": "cc-code"
   },

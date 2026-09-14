@@ -1,6 +1,6 @@
 ---
 name: cc-code
-description: cc-code 极简开发工作流系统。当用户在含 .cc_code/ 的项目中工作，或提到"角色串行"、"文件路由"、"状态机循环"、"PM/Architect/Dev/QA"、"上下文最小化"时自动加载。强制按 active/Agent.md 的角色路由表约束 AI 行为。
+description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开发→测试→验收，四步走完才准上线
 ---
 
 # cc-code 极简开发工作流协议

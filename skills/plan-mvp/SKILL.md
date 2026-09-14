@@ -1,6 +1,6 @@
 ---
 name: plan-mvp
-description: ⭐显式触发的 MVP 规划器（商讨+落盘定稿，0→1 全量）。触发后【第一动作必须 call EnterPlanMode 工具】（不许先做任何其他动作）。进入 plan 模式后在其中探测项目、输出 ascii 三件套（逻辑图+原型图+差异表）、逐点循环提问直至所有逻辑与配置通顺，才 ExitPlanMode 落盘。落盘按 PM 批 → Architect 批切角色（免请示）：prd/ux（PM）+ project/data/api 含阶段拆分（Architect）。落盘即定稿，无二次验收；产出供 /cc-code:agent-mvp 纯执行。⛔禁批量决策清单。不找 bug、不写代码。
+description: 做新项目前逐条问清需求，画流程图和页面草图，确认后写成方案文档
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode
 disable-model-invocation: true
 ---

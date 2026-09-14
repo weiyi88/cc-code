@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.0.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.0.2** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -235,27 +235,27 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 
 | skill | Trigger | Purpose |
 | --- | --- | --- |
-| `init` | `/cc-code:init` | **Entry + upgrade** three-track init (new/latest/old-upgrade-migrate); judgment-chain migrates scattered files; upgrade runs "archive→audit→migrate→verify→relocate", **zero deletion** |
-| `cc-code` | auto | **Runtime protocol** role routing + file layering + state-machine constraints |
-| `plan-mvp` | `/cc-code:plan-mvp` | **MVP planner** (first action EnterPlanMode, per-point conversation in plan mode until logic is smooth; produces five docs prd/ux/project/data/api, landing = final) |
-| `plan-feature` | `/cc-code:plan-feature` | **Incremental requirement planner** (post-MVP iteration: spec checkup + codegraph blast radius + per-conflict hard gate + converge in place into L1/L2/L3, landing = final + status.md names F-n) |
-| `plan-uiux` | `/cc-code:plan-uiux` | **Frontend prototype painter** (ux.md page list → root `design.pen` visual frames; style stacking e.g. `/cc-code:plan-uiux gpt-taste`; ⭐ encrypted .pen — pencil MCP only, no Read/Grep) |
-| `agent-mvp` | `/cc-code:agent-mvp` | **MVP pure-execution orchestration** (read final docs, Dev→QA + qa→dev loop, zero mid-run confirmation, agent-whole-qa wrap-up) |
-| `agent-feature` | `/cc-code:agent-feature` | **Incremental pure-execution orchestration** (increment locate → Dev→QA + qa→dev loop, affected precise regression, no full sweep) |
-| `plan-debug` | `/cc-code:plan-debug` | **Bug diagnostician** (first action EnterPlanMode; in plan mode: interrogate + codegraph trace + ruling gate + three-piece-set confirmation → land B-n into `bugs.md`; never edits requirements, never writes code) |
-| `agent-debug` | `/cc-code:agent-debug` | **Bug-fix pure-execution orchestration** (locate B-n → Dev→QA + qa→dev loop, affected precise regression, PASS hard condition = regression test exists and passes, no full sweep) |
-| `agent-whole-qa` | `/cc-code:agent-whole-qa` | **Full acceptance + fix loop** (per-page/button/interface + redundancy detection, FAIL≤3-round loop) |
-| `experience-summary` | `/cc-code:experience-summary` | **Project-level experience sediment** (pitfalls/retros → distill rules → user review → land `references/[role]-[domain]-references.md` + INDEX on-demand) |
-| `short` | `/cc-code:short` | Minimal reply (when no thinking needed, ≤50 chars) |
+| `init` | `/cc-code:init` | First run scaffolds the management folder and core docs; existing projects auto-upgrade, zero deletion |
+| `cc-code` | auto | Flow steward auto-loaded in projects with `.cc_code/`: plan→dev→test→accept, no shipping until all four steps pass |
+| `plan-mvp` | `/cc-code:plan-mvp` | Ask through every requirement, sketch flows and pages, write the spec docs after your OK |
+| `plan-feature` | `/cc-code:plan-feature` | Scan existing code for conflicts before adding a feature, list what to change/build, write the plan |
+| `plan-uiux` | `/cc-code:plan-uiux` | Paint 2 sample pages to lock style, then paint page by page into `design.pen`, save each after your OK |
+| `agent-mvp` | `/cc-code:agent-mvp` | Write code per the approved plan, auto-test, fix until green (max 3 rounds) |
+| `agent-feature` | `/cc-code:agent-feature` | Only write code the feature touches, only run the related tests — fast and safe |
+| `plan-debug` | `/cc-code:plan-debug` | Trace the bug through the call chain to the root cause, write the fix plan, no code changes |
+| `agent-debug` | `/cc-code:agent-debug` | Fix per the plan, run affected tests, all green = fixed |
+| `agent-whole-qa` | `/cc-code:agent-whole-qa` | Before launch, drive a browser to click every page and button; FAILs auto-fixed |
+| `experience-summary` | `/cc-code:experience-summary` | Turn pitfalls into indexed experience notes you can look up next time |
+| `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
 
 **Tool Attachments (do work, unrelated to state machine)**
 
 | skill | Purpose |
 | --- | --- |
-| `project_resume` | Read real tech stack, generate standardized project intro copy |
-| `login_auto` | Supabase Auth + Resend universal login system |
-| `deploy-vercel-supabase` | Vercel + Supabase one-click deploy |
-| `deploy-cf` | Deploy Next.js to Cloudflare Pages (Edge) |
+| `project_resume` | Scan the codebase and write the project intro copy for you |
+| `login_auto` | A ready-made login suite: password / Google / email code + password reset |
+| `deploy-vercel-supabase` | One-click launch: DB to Supabase, code to GitHub, auto-deploy |
+| `deploy-cf` | Publish your Next.js site to Cloudflare's global edge in minutes |
 
 ## Agents (4)
 

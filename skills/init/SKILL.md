@@ -1,5 +1,5 @@
 ---
-description: 初始化 cc-code 极简开发工作流场域。三轨判定(新建/已最新/升级迁移) → 生成 .cc_code/ 黑匣子目录树与模板骨架 → 旧版场域按「归档→清点→迁移→校验→归位」升级到当前插件规范(全程零删除) → 进入角色串行状态机循环。
+description: 首次使用建好整个管理文件夹和核心文档；已有项目自动升级，全程零删除
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 disable-model-invocation: true
 ---

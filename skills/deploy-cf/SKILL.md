@@ -1,6 +1,6 @@
 ---
 name: deploy-cf
-description: 将 Next.js 项目部署到 Cloudflare Pages（Edge Runtime）。当用户说"deploy-cf"、"上线cloudflare"、"部署cloudflare"、"CF部署" 时触发。
+description: 三分钟把 Next.js 网站发布到 Cloudflare 全球节点
 disable-model-invocation: true
 ---
 

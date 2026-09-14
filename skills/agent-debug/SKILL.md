@@ -1,6 +1,6 @@
 ---
 name: agent-debug
-description: cc-code + 双 agent（dev/qa）驱动的 bug 修复执行编排器（纯执行，不诊断）。前置：/cc-code:plan-debug 已落盘 B-n 且 status.md「下一步」点名 B-n。用户显式调用 /cc-code:agent-debug 触发；入口先做增量定位（status.md 点名 B-n − bugs.md OPEN 条目 = 执行范围），再 Dev→QA 串行 + qa→dev 循环（≤3 轮），affected 精准回归，修复 PASS 硬条件 = 回归测试存在且通过。无全量清算。未诊断拒跑。中途零确认。手动触发，不自动加载。
+description: 按修复方案改代码，跑相关测试全绿才算修好
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---

@@ -1,6 +1,6 @@
 ---
 name: agent-mvp
-description: cc-code + 双 agent（dev/qa）驱动的 MVP 执行编排器（纯执行，不规划）。前置：/cc-code:plan-mvp 已定稿 prd/ux/project/data/api。用户显式调用 /cc-code:agent-mvp 触发；按 Dev→QA 串行 + qa→dev 循环（≤3 轮）逐阶段推进，全 PASS 后 agent-whole-qa 全量清算收口。中途零确认。手动触发，不自动加载。
+description: 按定好的方案写码，写完自动测试，不过就改到过（最多 3 轮）
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---

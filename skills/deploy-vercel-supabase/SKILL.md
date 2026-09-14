@@ -1,5 +1,5 @@
 ---
-description: 一键将 Next.js 项目部署到 Vercel + Supabase。自动完成：读取本地 .env、提取本地 PostgreSQL schema、创建/导入 Supabase 数据库、推送 GitHub、配置 Vercel 环境变量、触发生产部署。当用户说"帮我部署"、"deploy"、"部署项目"、"上线"时触发。
+description: 一键上线：数据库搬上云、代码传 GitHub、自动部署
 disable-model-invocation: true
 ---
 

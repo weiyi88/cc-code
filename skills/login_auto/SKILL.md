@@ -1,5 +1,5 @@
 ---
-description: 基于 Supabase Auth + Resend SMTP 实现通用登录系统，零新依赖。覆盖邮箱密码登录、OAuth(google/github)、邮箱验证码注册、邮箱验证码改密。验证码邮件经 Supabase 自定义 SMTP 接入 Resend 投递。当用户说"login_auto"、"登录实现"、"Supabase登录"、"通用登录"时触发。
+description: 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密
 disable-model-invocation: true
 ---
 
