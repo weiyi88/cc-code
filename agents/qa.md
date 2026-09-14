@@ -102,6 +102,7 @@ When invoked, follow this sequence:
 - qa 复测只重跑上轮 FAIL 项 + 受影响回归项，不重写全量（除非 dev 改动波及面广）。
 - **最多 N=3 轮**：3 轮仍 FAIL → qa 标记「升级」，主控回退 prd-plan 重新规划或交人决策，禁止无限循环。
 - PASS 判定：所有断言 ✅ PASS，三类测试全绿。
+- **收口轮纯净自查**（active = 最新 + 最完整 + 最纯净的验收侧出径）：全 PASS 出报告前，`grep -nE "★ F-|（F-[0-9]|触发根因|主人裁决|编号续编" .cc_code/active/*.md` —— 命中即 Minor FAIL（「active 残留过程戳记」），指明文件:行回写者剥除；规则本体、断言编号、表格取值划线不算残留，禁连带误删。
 
 ## Update your agent memory
 
