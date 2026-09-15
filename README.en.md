@@ -210,11 +210,21 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # or point at scripts/init.
 
 ### The plan cage on Codex
 
+Users type exactly one command (e.g. `$cc-code:plan-mvp build a pomodoro web app`) — arming is done by the AI's engine self-check, zero extra steps:
+
+```
+$cc-code:plan-mvp fires
+   └─ AI first action self-check: is EnterPlanMode available?
+       ├─ Claude Code ──► call EnterPlanMode (unchanged)
+       └─ Codex      ──► Bash touch plan-lock itself (guard arms automatically)
+                           exit is also AI-run rm; the owner only approves the write list
+```
+
 | Layer | Mechanism | Strength |
 | :--- | :--- | :--- |
-| Recommended | Run built-in `/plan` first, then `$cc-code:plan-mvp` | Engine-level read-only |
-| Fallback | `touch .cc_code/.runtime/plan-lock` arms the guard; the hook blocks all Edit/Write/apply_patch | Engine-level block |
-| Exit | Confirm the write list with the owner → `rm .cc_code/.runtime/plan-lock` | In-conversation consent |
+| Automatic | plan-* arming is AI-run on trigger; the hook blocks all Edit/Write/apply_patch | Engine-level block |
+| Hardening | Optionally run built-in `/plan` first (engine-level read-only, double layer) | Engine-level read-only |
+| Exit | AI presents write list → owner approves → AI `rm .cc_code/.runtime/plan-lock` | In-conversation consent |
 
 ### Known residual gaps (honest list)
 

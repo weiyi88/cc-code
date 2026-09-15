@@ -1,6 +1,6 @@
 {
   "name": "cc-code",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "给 AI 立规矩的开发工作流：规划→开发→测试→验收步步把关，16 skill + 4 agent 全程管到底，无 Hook 状态全落文件。双端支持 Claude Code / Codex。",
   "skills": "./skills/",
   "author": {

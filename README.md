@@ -207,11 +207,21 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # 或指向本仓库 script
 
 ### Codex 侧的 plan 笼子
 
+用户永远只敲一条命令（如 `$cc-code:plan-mvp 做一个番茄钟网页`）——开锁由 AI 自查引擎完成，零额外操作：
+
+```
+$cc-code:plan-mvp 触发
+   └─ AI 第一动作自查: 有 EnterPlanMode 工具?
+       ├─ Claude Code ──► call EnterPlanMode（原路不变）
+       └─ Codex      ──► 自己 Bash touch plan-lock（护栏自动成立）
+                           出关也是 AI 自己 rm，人只点头确认落盘清单
+```
+
 | 层 | 机制 | 强度 |
 | :--- | :--- | :--- |
-| 推荐 | 人先敲内建 `/plan` 再 `$cc-code:plan-mvp` | 引擎级只读 |
-| 兜底 | `touch .cc_code/.runtime/plan-lock` 开启护栏，hook 拦下一切 Edit/Write/apply_patch | 引擎级拦截 |
-| 出关 | 向主人确认落盘清单 → `rm .cc_code/.runtime/plan-lock` | 对话内确认 |
+| 自动 | plan-* 触发即 AI 自开 plan-lock，hook 拦下一切 Edit/Write/apply_patch | 引擎级拦截 |
+| 加固 | 人可先敲内建 `/plan`（引擎级只读，双层更硬） | 引擎级只读 |
+| 出关 | AI 呈落盘清单 → 人点头 → AI `rm .cc_code/.runtime/plan-lock` | 对话内确认 |
 
 ### 已知残余差异（诚实清单）
 

@@ -37,7 +37,7 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 
 映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)；角色沙箱 prd-plan/qa = read-only，dev/uiux = workspace-write。
 
-**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子双层：codex 内建 `/plan`（推荐，引擎级只读）+ plan-lock hook 拦 Edit/Write/apply_patch（兜底，`--yolo` 亦不可击穿，实测 0.149.0）。
+**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-* 首行「引擎分支」条款让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
 
 ## 寻址约定
 

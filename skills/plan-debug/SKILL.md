@@ -8,6 +8,7 @@ disable-model-invocation: true
 # /cc-code:plan-debug — bug 诊断器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
+> ⚙️ 引擎分支（双端同一条规则）：无 `EnterPlanMode` 工具的引擎（如 Codex）→ 第一动作改跑 Bash `mkdir -p .cc_code/.runtime && touch .cc_code/.runtime/plan-lock` 开护栏（此后写盘被 gate.sh 拦），出关经主人确认落盘清单后 `rm .cc_code/.runtime/plan-lock`。
 > 所有问诊 / 侦察 / 三件套 / 交谈都在 plan 模式内做，**没有 plan 外窗口**。
 > **定位：技术诊断器，不是需求规划器。** 与 `/cc-code:plan-feature` 的分界：那个处理「需求模糊」，本命令处理「需求明确但实现错了」—— bug 本身就是需求，期望行为要么主人说了、要么 prd.md 已有断言。
 > **配对**：本命令落盘 B-n 后，修复执行走 `/cc-code:agent-debug`（增量定位 B-n → Dev→QA → affected 精准回归）。

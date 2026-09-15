@@ -8,6 +8,7 @@ disable-model-invocation: true
 # /cc-code:plan-mvp — MVP 规划器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
+> ⚙️ 引擎分支（双端同一条规则）：无 `EnterPlanMode` 工具的引擎（如 Codex）→ 第一动作改跑 Bash `mkdir -p .cc_code/.runtime && touch .cc_code/.runtime/plan-lock` 开护栏（此后写盘被 gate.sh 拦），出关经主人确认落盘清单后 `rm .cc_code/.runtime/plan-lock`。
 > 所有探测 / 三件套 / 交谈都在 plan 模式内做，**没有 plan 外窗口**。
 > AI 从第一秒就在 plan only，Write/Edit 被锁死，无法逃避。
 > **产出全部规划产物**：prd / ux（PM 域）+ project / data / api（Architect 域）。
