@@ -14,6 +14,7 @@
 - [Installation](#installation)
 - [Full Lifecycle](#full-lifecycle)
 - [Quick Start](#quick-start)
+- [Codex CLI Support (1.1.0)](#codex-cli-support-110)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
 - [Skill List (17)](#skill-list-17)
 - [Agents (4)](#agents-4)
@@ -187,6 +188,39 @@ In any project root:
 - **Old-version field (has `.cc_code/` but version stamp missing or older)**: auto upgrade migration — **archive → audit → migrate → verify → relocate → stamp**. `init.sh` uses `rm` zero times; old files only `cp` snapshot and `mv` relocate, always recoverable. If the verify gate fails, stop, no stamp; next `init` still judges as pending-upgrade.
 
 > Root `CLAUDE.md` is a pure entry guide (session-open protocol + three iron rules + file index), no business state. Claude Code natively auto-loads it, guiding into the `.cc_code/` state machine.
+
+## Codex CLI Support (1.1.0)
+
+One repo, dual-runtime distribution: `skills/`, `agents/`, `CLAUDE.md` are the **single source** (consumed directly by Claude Code); everything Codex-side is **generated** (by `scripts/sync-codex.sh`, never hand-edit; `scripts/verify-codex.sh` reports drift).
+
+### Install (Codex CLI ≥ 0.149.0)
+
+```bash
+codex plugin marketplace add weiyi88/cc-code
+codex plugin add cc-code@cc-code-marketplace
+```
+
+Project side (run once after field init, distributes the guardrails):
+
+```bash
+bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # or point at scripts/init.sh in this repo
+```
+
+`--codex` does three things: `AGENTS.md → CLAUDE.md` symlink (one constitution for both runtimes), `.codex/hooks.json + gate.sh` (plan-mode write interception), `.codex/agents/*.toml` (four role sandboxes). **On first run codex asks you to review and trust gate.sh in `/hooks` — trust once and it takes effect.**
+
+### The plan cage on Codex
+
+| Layer | Mechanism | Strength |
+| :--- | :--- | :--- |
+| Recommended | Run built-in `/plan` first, then `$cc-code:plan-mvp` | Engine-level read-only |
+| Fallback | `touch .cc_code/.runtime/plan-lock` arms the guard; the hook blocks all Edit/Write/apply_patch | Engine-level block |
+| Exit | Confirm the write list with the owner → `rm .cc_code/.runtime/plan-lock` | In-conversation consent |
+
+### Known residual gaps (honest list)
+
+- Claude's `allowed-tools` allowlist has no Codex equivalent; role sandboxes (`sandbox_mode`) carry the main permission boundary.
+- Claude tool names like `EnterPlanMode` mentioned in skill bodies are ignored by Codex — write safety is backstopped by the guard above; flow safety relies on following the sequence.
+- The 16 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
 
 ## Optional Enhancement: codegraph
 
