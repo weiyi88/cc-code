@@ -11,13 +11,33 @@
 
 ```
 skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
-agents/       3 个 .md  → prd-plan / dev / qa
-scripts/     init.sh  (脚手架 + 散落物迁移)
+agents/       3+1 个 .md → prd-plan / dev / qa / uiux（uiux 为 pen 链绘制 agent）
+scripts/     init.sh + sync-codex.sh（codex 生成器）+ verify-codex.sh（codex 漂移校验）
 templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ references-INDEX.md → init 时 cp 进 .cc_code/
+assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→ init.sh --codex 落用户项目
 ```
 
 > 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`。
 > 0.5.0 起删除 `hooks/`（Stop Hook 机制废除）与 `templates/errors.md` —— 所有 `.cc_code/` 文件由 AI 顺手写，无自动化机械活。
+> 1.1.0 起 `assets/codex/` 回归 hooks —— 性质不同：0.5.0 删的是「自动写文件」的机械活，1.1.0 加的是「拦写操作」的守门护栏。
+
+## Codex 适配生成链（1.1.0）
+
+**SSOT 纪律**：`skills/` `agents/` `.claude-plugin/` 是唯一源；一切 codex 侧文件是生成物，禁手改。
+
+```
+   唯一源(人改)                        生成物(sync-codex.sh 产出)          校验(verify-codex.sh)
+   ────────────                        ──────────────────────────          ─────────────────────
+   .claude-plugin/plugin.json    ──► .codex-plugin/plugin.json          ┐
+   .claude-plugin/marketplace.json ► .agents/plugins/marketplace.json   │
+   skills/*/SKILL.md frontmatter ──► skills/*/agents/openai.yaml        ├─ 快照→重生成→diff,
+   agents/*.md                   ──► assets/codex/agents/*.toml         ┘   漂移即 FAIL exit 1
+   templates/CLAUDE.md           ──► templates/AGENTS.md(软链)
+```
+
+映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)；角色沙箱 prd-plan/qa = read-only，dev/uiux = workspace-write。
+
+**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-* 首行「引擎分支」条款让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
 
 ## 寻址约定
 

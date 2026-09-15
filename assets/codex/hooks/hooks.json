@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__PROJECT_ROOT__/.codex/hooks/gate.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

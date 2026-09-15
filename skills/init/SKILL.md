@@ -111,6 +111,18 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
 > `.pen` 是加密文件：只准 pencil MCP 读写，⛔ 禁 Read/Grep。锚点在 pen 应用首次保存（`osascript` Cmd+S，见 plan-uiux）前是 0 字节——这不是 bug，是预期形态。
 
+## 第 2B'' 步：codex 护栏分发（⭐1.1.0 新增，可选）
+
+主人声明用 **Codex CLI** 使用本项目时（或项目根已有 `.codex/`、主人主动提到 codex），补跑一次机械分发：
+
+```
+bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
+```
+
+产物三件：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）｜`.codex/hooks.json + hooks/gate.sh`（plan-lock 写盘拦截）｜`.codex/agents/*.toml`（dev/prd-plan/qa/uiux 角色沙箱，唯一源 `agents/*.md` 的生成物）。
+
+告知主人两件事（一次性）：① codex 首跑会在 `/hooks` 要求审查信任 gate.sh，trust 一次生效；② codex 侧 plan 笼子用法 = 先 `/plan`（内建只读），或 `touch .cc_code/.runtime/plan-lock` 开护栏、出关 `rm`。⛔ 非.codex 用户不问不做（零打扰）。
+
 ## 第 2A 步：Track A 旧 CLAUDE.md 分拆协议（理解力活，由 AI 完成）
 
 仅 Track A 执行。读取 `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，按下表把旧内容**只搬运不丢失**地归并到对应文件：

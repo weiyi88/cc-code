@@ -14,6 +14,7 @@
 - [安装](#安装)
 - [完整生命周期](#完整生命周期)
 - [快速开始](#快速开始)
+- [Codex CLI 适配（1.1.0）](#codex-cli-适配110)
 - [可选增强：codegraph](#可选增强codegraph)
 - [Skill 一览（17 个）](#skill-一览17-个)
 - [Agent（4 个）](#agent4-个)
@@ -184,6 +185,49 @@ PM ──► Architect ──► Dev ──► QA
 - **旧版场域（已有 `.cc_code/` 但版本戳缺失或更旧）**：自动走升级迁移 —— **归档 → 清点 → 迁移 → 校验 → 归位 → 盖戳**，`init.sh` 中 `rm` 出现 0 次，旧物只 `cp` 快照与 `mv` 归位，内容永远可回溯。校验门未过则停手，戳不盖，下次 `init` 仍判为待升级。
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。
+
+## Codex CLI 适配（1.1.0）
+
+同一仓库双端分发：`skills/`、`agents/`、`CLAUDE.md` 是**唯一源**（Claude Code 直接吃），Codex 侧全部是**生成物**（`scripts/sync-codex.sh` 产出，禁手改；`scripts/verify-codex.sh` 负责漂移报警）。
+
+### 安装（Codex CLI ≥ 0.149.0）
+
+```bash
+codex plugin marketplace add weiyi88/cc-code
+codex plugin add cc-code@cc-code-marketplace
+```
+
+项目侧（场域初始化后跑一次，分发护栏）：
+
+```bash
+bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # 或指向本仓库 scripts/init.sh
+```
+
+`--codex` 做三件事：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）、`.codex/hooks.json + gate.sh`（plan 写盘拦截）、`.codex/agents/*.toml`（四角色沙箱）。**首次运行 codex 会要求在 `/hooks` 里审查信任 gate.sh —— trust 一次即生效。**
+
+### Codex 侧的 plan 笼子
+
+用户永远只敲一条命令（如 `$cc-code:plan-mvp 做一个番茄钟网页`）——开锁由 AI 自查引擎完成，零额外操作：
+
+```
+$cc-code:plan-mvp 触发
+   └─ AI 第一动作自查: 有 EnterPlanMode 工具?
+       ├─ Claude Code ──► call EnterPlanMode（原路不变）
+       └─ Codex      ──► 自己 Bash touch plan-lock（护栏自动成立）
+                           出关也是 AI 自己 rm，人只点头确认落盘清单
+```
+
+| 层 | 机制 | 强度 |
+| :--- | :--- | :--- |
+| 自动 | plan-* 触发即 AI 自开 plan-lock，hook 拦下一切 Edit/Write/apply_patch | 引擎级拦截 |
+| 加固 | 人可先敲内建 `/plan`（引擎级只读，双层更硬） | 引擎级只读 |
+| 出关 | AI 呈落盘清单 → 人点头 → AI `rm .cc_code/.runtime/plan-lock` | 对话内确认 |
+
+### 已知残余差异（诚实清单）
+
+- Claude 侧 `allowed-tools` 工具白名单在 Codex 无等价物，由角色沙箱（`sandbox_mode`）承接主要权限边界。
+- skill 正文提及的 `EnterPlanMode` 等 Claude 工具名，Codex 读到时会忽略 —— 写盘安全由上表护栏兜底，流程安全靠人按序操作。
+- 16 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
 
 ## 可选增强：codegraph
 

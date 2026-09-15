@@ -3,6 +3,7 @@
 # 用法: bash init.sh [<project_root>]
 #       bash init.sh --relocate <相对路径...>   冗余归位（mv 进 backup/superseded/，零删除）
 #       bash init.sh --stamp                    盖场域版本戳
+#       bash init.sh --codex                    分发 codex 护栏（AGENTS.md + hooks + agents）
 set -euo pipefail
 
 # 参数解析：首参以 -- 开头即子命令（项目根取 cwd），否则视为项目根
@@ -426,8 +427,30 @@ relocate_superseded() {
 #   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
 #   bash init.sh --stamp                    盖场域版本戳
 #   bash init.sh --design-pen               建根目录 design.pen 锚点（1.0.0 pen 链）
+#   bash init.sh --codex                    分发 codex 护栏: AGENTS.md 软链 + hooks(plan-lock 拦截) + agents(角色沙箱)
 # ══════════════════════════════════════════════════════════════════════════
 case "$SUBCMD" in
+  --codex)
+    # ⭐codex 适配（1.1.0）: codex 插件不分发 custom agents/hooks → 由 init 落盘到用户项目 .codex/
+    [ -f "$PROJECT_ROOT/CLAUDE.md" ] || { warn "项目根无 CLAUDE.md —— 先跑 /cc-code:init 再 --codex"; exit 1; }
+    CODEX_DIR="$PROJECT_ROOT/.codex"
+    mkdir -p "$CODEX_DIR/hooks" "$CODEX_DIR/agents"
+    # ① AGENTS.md 软链 → CLAUDE.md（零副本, codex 与 claude 共读同一宪法）
+    ln -sfn CLAUDE.md "$PROJECT_ROOT/AGENTS.md"
+    # ② plan 护栏: PreToolUse 拦 Edit/Write/apply_patch（plan-lock 存在时）
+    sed "s|__PROJECT_ROOT__|$PROJECT_ROOT|g" \
+      "$PLUGIN_ROOT/assets/codex/hooks/hooks.json" > "$CODEX_DIR/hooks.json"
+    cp "$PLUGIN_ROOT/assets/codex/hooks/gate.sh" "$CODEX_DIR/hooks/gate.sh"
+    chmod +x "$CODEX_DIR/hooks/gate.sh"
+    # ③ 角色沙箱: 4 个 custom agent（生成物, 唯一源 agents/*.md）
+    cp "$PLUGIN_ROOT"/assets/codex/agents/*.toml "$CODEX_DIR/agents/"
+    log "已分发 codex 护栏:"
+    log "  AGENTS.md → CLAUDE.md 软链（宪法双端同源）"
+    log "  .codex/hooks.json + hooks/gate.sh（plan-lock 写盘拦截）"
+    log "  .codex/agents/*.toml（dev/prd-plan/qa/uiux 角色沙箱）"
+    warn "codex 首次运行会对 gate.sh 要求信任审查 —— /hooks 里 trust 一次即生效。"
+    warn "plan 模式用法: touch .cc_code/.runtime/plan-lock 开启; 出关向主人确认后 rm。"
+    exit 0 ;;
   --relocate)
     [ -d "$TARGET" ] || { warn "无 .cc_code/，无处归位"; exit 1; }
     [ "$#" -gt 0 ]   || { warn "用法: init.sh --relocate <相对路径...>"; exit 1; }
