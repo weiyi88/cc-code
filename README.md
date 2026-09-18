@@ -119,7 +119,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 4 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、17 个 skill 与 4 个配套 agent。
 
 ## 完整生命周期
 
@@ -227,7 +227,7 @@ $cc-code:plan-mvp 触发
 
 - Claude 侧 `allowed-tools` 工具白名单在 Codex 无等价物，由角色沙箱（`sandbox_mode`）承接主要权限边界。
 - skill 正文提及的 `EnterPlanMode` 等 Claude 工具名，Codex 读到时会忽略 —— 写盘安全由上表护栏兜底，流程安全靠人按序操作。
-- 16 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
+- 17 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
 
 ## 可选增强：codegraph
 
@@ -288,6 +288,7 @@ $cc-code:plan-mvp 触发
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
 | `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
+| `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
 
 **工具外挂（干活的，与状态机无关）**
 
@@ -344,7 +345,7 @@ $cc-code:plan-mvp 触发
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 个 skill 目录
+├── skills/           17 个 skill 目录
 ├── agents/           4 个 agent（prd-plan / dev / qa / uiux）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）

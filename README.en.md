@@ -121,7 +121,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 16 skills, and 4 companion agents.
+After install you get the `/cc-code:*` command family, 17 skills, and 4 companion agents.
 
 ## Full Lifecycle
 
@@ -230,7 +230,7 @@ $cc-code:plan-mvp fires
 
 - Claude's `allowed-tools` allowlist has no Codex equivalent; role sandboxes (`sandbox_mode`) carry the main permission boundary.
 - Claude tool names like `EnterPlanMode` mentioned in skill bodies are ignored by Codex — write safety is backstopped by the guard above; flow safety relies on following the sequence.
-- The 16 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
+- The 17 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
 
 ## Optional Enhancement: codegraph
 
@@ -291,6 +291,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | Before launch, drive a browser to click every page and button; FAILs auto-fixed |
 | `experience-summary` | `/cc-code:experience-summary` | Turn pitfalls into indexed experience notes you can look up next time |
 | `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
+| `just-do-it` | `/cc-code:just-do-it` | Tiny change, one sentence, done: dev writes, qa verifies, one log entry, that's it |
 
 **Tool Attachments (do work, unrelated to state machine)**
 
@@ -347,7 +348,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 skill directories
+├── skills/           17 skill directories
 ├── agents/           4 agents (prd-plan / dev / qa / uiux)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)
