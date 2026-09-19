@@ -1,6 +1,6 @@
 ---
 name: just-do-it
-description: 小改动一句话就干：dev 写完 qa 验，记一笔就完事
+description: 不问缘由，直接 dev-qa 开干，做完记录
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 disable-model-invocation: true
 ---

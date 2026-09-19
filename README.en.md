@@ -291,7 +291,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | Before launch, drive a browser to click every page and button; FAILs auto-fixed |
 | `experience-summary` | `/cc-code:experience-summary` | Turn pitfalls into indexed experience notes you can look up next time |
 | `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
-| `just-do-it` | `/cc-code:just-do-it` | Tiny change, one sentence, done: dev writes, qa verifies, one log entry, that's it |
+| `just-do-it` | `/cc-code:just-do-it` | No questions asked: dev builds, qa verifies, log it, done |
 
 **Tool Attachments (do work, unrelated to state machine)**
 
