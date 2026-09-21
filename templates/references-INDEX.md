@@ -12,6 +12,7 @@
 
 | 文件 | 何时读 |
 | --- | --- |
+| dev-tool-lookup-references.md | 查资料、选工具/应用动手前 |
 
 ## QA
 

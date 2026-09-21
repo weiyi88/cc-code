@@ -288,7 +288,7 @@ $cc-code:plan-mvp 触发
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
 | `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
-| `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
+| `just-do-it` | `/cc-code:just-do-it` | 不问缘由，直接 dev-qa 开干，做完记录 |
 
 **工具外挂（干活的，与状态机无关）**
 

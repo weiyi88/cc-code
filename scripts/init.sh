@@ -82,6 +82,15 @@ refresh_handbook() {
       cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
     log "已补 references/INDEX.md（0.8.0 新增）"
   fi
+  # 插件内置经验笔记分发（只补缺，不覆盖项目内已沉淀版本）
+  for ref in "$TEMPLATES"/references-*-references.md; do
+    [ -f "$ref" ] || continue
+    base="$(basename "$ref")"
+    if [ ! -f "$TARGET/references/$base" ]; then
+      cp "$ref" "$TARGET/references/$base"
+      log "已分发内置经验：references/$base"
+    fi
+  done
 }
 
 # ══════════════════════════════════════════════════════════════════════════
