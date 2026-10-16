@@ -25,6 +25,7 @@ disable-model-invocation: true
 2. **定稿体检**：`active/prd.md` 有 §1.5 验收断言主表，且 `ux.md` / `project.md` / `data.md` / `api.md` 齐备。缺任一 → ⛔ 拒跑，报「规划产物未定稿，请先走 `/cc-code:plan-mvp`」，**绝不现场补需求**。
 3. 确认双 agent 可用：`dev` / `qa`。
 4. 确认测试基建：读 `project.md` §六「测试基建契约」取测试根 / glob / 运行命令。缺失或未填实则把「补齐测试基建 + 回填 `project.md` §六」作为 Dev 阶段首个任务。
+   同理读 `project.md` §七「日志契约」：选库 / 配置值未填实，或门面与 requestId 入口未落地 → 把「搭日志基建 + 回填 §七」并入 Dev 首个任务。
 5. **索引体检（静默）**：`codegraph status --json` 读三字段 —— `initialized:false` → 报一行（⛔ 不自动重建）；`pendingChanges` 非 0 → 静默 `codegraph sync`；`reindexRecommended:true` → 报一行建议。CLI 未装则静默跳过，全流程照跑（精准回归降级为全量）。⛔ 健康时一个字都不提。
 6. 执行 `/cc-code:cc-code` 完成会话开启协议，锁定当前阶段与角色。
 7. **阶段来源**：读 `project.md` 的阶段拆分章节。有 → 按阶段逐段推进；无 → 整体作单阶段跑完（⛔ 不自行拆阶段，拆分是规划的职责）。

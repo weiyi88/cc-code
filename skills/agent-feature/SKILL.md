@@ -16,6 +16,7 @@ disable-model-invocation: true
 2. 确认双 agent 可用：`dev` / `qa`。
 3. **增量定位（⭐第一动作，见下节）**——定位失败即拒跑，后续检查全免。
 4. 确认测试基建：读 `project.md` §六「测试基建契约」。缺失则把「补齐测试基建」作为 Dev 段首个任务。
+   同理读 `project.md` §七「日志契约」：缺失或未填实（老项目常见）→ 把「搭日志基建 + 回填 §七」并入 Dev 段首个任务。
 5. **索引体检（静默）**：`codegraph status --json` —— `pendingChanges` 非 0 → 静默 `codegraph sync`（增量回归面建立在索引之上，旧索引 = 漏回归）；`initialized:false` → 报一行（⛔ 不自动重建）。CLI 未装则静默跳过（精准回归降级为全量）。⛔ 健康时一个字都不提。
 6. 执行 `/cc-code:cc-code` 完成会话开启协议，锁定当前阶段与角色。
 

@@ -53,6 +53,7 @@ disable-model-invocation: true
 | --- | --- |
 | 读 | status, bugs.md（仅 B-n 条目）, prd / ux（仅期望出处命中的断言/判定项）, project（含实现指引章节）, data / api（仅命中契约小节） |
 | 做 | 只按 B-n 方案修：根因处修复 + 按「影响面」清单逐文件核对连带；遵循 project.md 约定；⛔ 不重构无关代码、不改契约 |
+| 探针 | B-n「需加探针」非「无」时：先按其加临时日志，每条带标记 `CC-PROBE-B<n>`，走 `project.md` §七 门面（DEBUG 级）→ 复现取证 → 修复 → ⛔ 交 QA 前删光（`rg CC-PROBE-B<n>` 零命中） |
 | 跑 | Agent(dev) → 自检：`pnpm lint` → `tsc --noEmit` → `pnpm test` → `pnpm test:e2e` |
 | 输出 | 修复代码 + 完成报告（文件清单 + pass/fail） |
 | 写 | `src/`, `project.md` §六 声明的测试根 |
@@ -62,7 +63,7 @@ disable-model-invocation: true
 | 项 | 内容 |
 | --- | --- |
 | 读 | bugs.md（B-n 条目：复现/期望出处/影响面）, prd / ux（期望出处）, api / data（命中契约）, project(仅约定), `src/`（仅本段改动） |
-| 做 | ① 按「复现」写 bug 用例（修复前应 FAIL、修复后应 PASS）②⭐**落一个永久回归测试进测试根** ③ 完整跑一遍 B-n 用例 + 影响面回归 |
+| 做 | ① 按「复现」写 bug 用例（修复前应 FAIL、修复后应 PASS）②⭐**落一个永久回归测试进测试根** ③ 完整跑一遍 B-n 用例 + 影响面回归 ④ `rg CC-PROBE-` 全库零命中，否则 FAIL 回 Dev |
 | 跑 | Agent(qa) → Dev 段改动文件的 `affected` 回归范围优先（拿不到则全量）+ 浏览器 MCP（chrome-devtools/Playwright）驱动疑难交互 |
 | 输出 | QA 报告（Verdict + B-n 用例结果 + 回归范围来源标注） |
 | 写 | `gates.md`, 测试根（回归测试） |

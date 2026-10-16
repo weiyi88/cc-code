@@ -55,6 +55,8 @@
 *   **配置文件：** `config.json` → [待填写路径]
 *   **常量文件：** `constants` → [待填写路径，按技术栈命名，如 `src/constants.ts` / `app/constants.py`]
 *   **敏感值：** `.env` + `.env.example` → [待填写路径，默认项目根]
+*   **日志门面：** → [待填写路径，如 `src/lib/logger.ts` / `app/logger.py`]（规范见第七节）
+*   **本地日志目录：** `.logs/` → ⛔ 写进 `.gitignore`
 *   [待填写]
 
 ## 四、 数据契约 (Data Contract)
@@ -97,4 +99,66 @@
 ③ 非标准命名必须在本表登记 glob
    affected 默认只认 *.spec.* / *.test.* / __tests__/
    smoke-f5.ts 这类需显式 --filter，glob 不登记 = 无人知道怎么调
+```
+
+## 七、 日志契约 (Logging)
+
+> ⭐ 本节是 **plan-debug 取运行事实、QA 取证的前提契约**。Architect 在 MVP 前必须填实；
+> 未填实时 `agent-mvp` / `agent-feature` 把「搭日志基建 + 回填本节」作为 Dev 首个任务。
+> active 回答「应该怎样」，日志回答「实际怎样」——日志只当事实，⛔ 不当期望的尺子。
+
+### 7.1 选库（按语言，所有语言共用 7.2 字段）
+
+| 语言 / 运行时 | 库 | 说明 |
+| :--- | :--- | :--- |
+| Next.js（Node + Edge） | LogTape | Node / Edge / 浏览器通用；Pino 跑不了 Edge |
+| 纯 Node 后端 / 脚本 | LogTape（可换 Pino） | — |
+| Python | structlog | — |
+| Go | log/slog（标准库） | — |
+| **本项目选用** | [待填写] | — |
+
+### 7.2 统一字段（JSONL，一行一条）
+
+| 字段 | 必填 | 说明 |
+| :--- | :--- | :--- |
+| `ts` / `level` / `msg` / `service` / `category` | ✅ | `msg` 一句话，不拼接变量；`category` 为模块层级，如 `app.order.pay` |
+| `requestId` | ✅（请求内） | 关联主键，跨服务一致 |
+| `route` / `method` / `status` / `durationMs` / `outcome` | 宽事件必填 | `route` 写路由模板，不写原始 URL；`outcome` = success / error / denied |
+| `err` | ERROR 必填 | name / message / stack（框架错误另带 digest） |
+| `userId` | 可选 | 只记 ID |
+| `ctx` | 可选 | 业务字段一律收进此命名空间，⛔ 不平铺到顶层 |
+
+### 7.3 什么入日志
+
+| 类别 | 记什么 | 级别 |
+| :--- | :--- | :--- |
+| 请求进出 | 每个请求结束时 **1 条宽事件**（成功失败都必出） | INFO |
+| 错误异常 | 错误名、信息、堆栈、所在路由 | ERROR |
+| 外部调用 | 对象、耗时、成败（DB / 第三方 API / 队列）——并入宽事件 | 失败时另记 WARN |
+| 状态变更 | 关键数据从 A 变成 B（订单、支付、权限） | INFO |
+| 关键分支决策 | 走了哪个分支、原因（鉴权拒绝、限流、降级） | INFO / WARN |
+| 细节排查 | 中间变量、循环过程 | DEBUG（默认关） |
+| ⛔ 不记 | token、密码、cookie、完整请求体 / 响应体、手机号与邮箱原文 | — |
+
+### 7.4 输出（同一门面，按环境换出口）
+
+| 项 | 开发 | 测试 | 生产 |
+| :--- | :--- | :--- | :--- |
+| 默认级别 | DEBUG（可调） | INFO | INFO |
+| 终端 | 一行摘要；ERROR / WARN 高亮 | — | — |
+| 存储 | `.logs/` JSONL，按大小滚动，保留最近 N 个 | `.logs/` 每轮一个文件 | stdout JSON → Vercel Logs / CF Workers Logs |
+| 清理 | 滚动自动删最旧 | 按轮次 | 平台保留期自动过期 |
+| 查询 | 按 `requestId` / `level` / `route` 过滤 | 同左 | 平台面板按字段筛 |
+
+| 配置项 | 去处（遵循第二节零硬编码） | 本项目值 |
+| :--- | :--- | :--- |
+| 日志级别 | `.env`（`LOG_LEVEL`） | [待填写] |
+| 本地目录 / 单文件大小 / 保留个数 N | `config.json` | [待填写] |
+
+### ⛔ 三条铁律（违反即 Critical）
+
+```
+① 业务代码禁止直接打印（console.log / print / fmt.Println），必须走日志门面
+② 每个请求都有 requestId：入口沿用可信上游值或新生成，并写回响应头 x-request-id
+③ 7.3「⛔ 不记」的内容一律不准出现；脱敏用写死的白名单，⛔ 禁止由用户输入决定脱敏路径
 ```
