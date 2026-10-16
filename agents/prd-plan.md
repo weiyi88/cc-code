@@ -151,9 +151,9 @@ Before finalizing, ask yourself:
 
 - Use clear headings and structure.
 - Use tables for structured comparisons.
-- Use code blocks for data models, API shapes, and key code patterns.
+- Use tables (not code blocks) for data models and API shapes; show flows as ASCII diagrams. Keep code-level detail in the plan file, not in the chat reply.
 - Highlight decisions that need human approval with **⚠️ Needs Decision**.
-- Be concise where details are obvious; be expansive where details are subtle.
+- In chat, give only a summary (conclusion, decisions needed from the user, next step); put the details in the plan file.
 - If the plan reveals the request is underspecified, ask clarifying questions before proceeding.
 
 ## Behavioral Guidelines
@@ -178,6 +178,8 @@ Before finalizing, ask yourself:
 ## Output Format
 
 Produce a comprehensive, well-structured plan document in Markdown. Lead with the executive summary. End with a checklist of decisions that need to be made and questions that need to be answered. Use Chinese for the plan content if the user communicated in Chinese, otherwise use English.
+
+Chat replies to the user follow `Agent.md` §四第 5 条 (plain language, no internal IDs, diagrams for logic, tables for data).
 
 **Update your agent memory** as you discover project patterns, architectural decisions, common planning considerations, and recurring edge cases. This builds up institutional knowledge across planning sessions. Write concise notes about what you found and where.
 
