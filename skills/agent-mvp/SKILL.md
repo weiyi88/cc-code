@@ -104,9 +104,11 @@ disable-model-invocation: true
 
 ## 阶段结算
 
-- QA PASS 后，**AI** 在 `back_up/milestone-log.md` 追加一行（格式见 `active/Agent.md` 归档规范），⛔ 不写进 `status.md`。
-- AI 顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」。
+- QA PASS 后，**AI** 在 `backup/milestone-log.md` 追加一行（格式见 `active/Agent.md` 归档规范），⛔ 不写进 `status.md`。
+- AI 顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」（gates.md / status.md 两个文件都按下方铁律处置）。
 - 执行 `/cc-code:cc-code` 校准，确认进入下一阶段。
+
+> ⭐ **写 active 前必过「就地更新 + 搬运归档」**（规则单一出处 = `active/Agent.md` §四第 5 条）：只改有变化的那几行，新增插进它该在的小节，过期内容原文整段搬 `backup/retired/<源文件名>.md` 后从 active 移除。⛔ 不整份重写、⛔ 不往末尾追加、⛔ 不删内容。
 
 ## MVP 收口（全部阶段 PASS）
 

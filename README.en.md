@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.6.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.7.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -11,6 +11,7 @@
 
 - [Design Philosophy](#design-philosophy)
 - [Core Logic](#core-logic)
+- [In-place update + retire-by-move (1.7.0)](#in-place-update--retire-by-move-170)
 - [Installation](#installation)
 - [Full Lifecycle](#full-lifecycle)
 - [Quick Start](#quick-start)
@@ -103,7 +104,7 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
 ├ L2 Surface ─ ux.md (visual specs + five-state matrix, U-number issuer) ──────────── PM ───┤
 ├ L3 Impl    ─ project.md  data.md  api.md ─────────────────────────────────── Architect ─┤
 ├ L4 Accept  ─ gates.md (A+U traceability matrix, standard in prd/ux) ──────────────── QA ───┤
-└ backup/    ─ cold archive (AI moves in on demand, not in repo by default) ─────────────────┘
+└ backup/    ─ cold archive: ledgers + retired/ verbatim originals (gitignored) ────────────┘
 ```
 
 ### Information Flow Iron Rule (one-way, violation = failure)
@@ -135,8 +136,40 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
 
    Purest    ── every line answers "what is it now", not "how it was decided"
                process artifacts not persisted (change-log one line) · per-round acceptance details → docs/qa/
-               history via git (.cc_code is version-controlled, no extra snapshots)
+               retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
+
+### In-place update + retire-by-move (1.7.0)
+
+`active/` holds only the project's **latest state and content**. Before writing, triage as below; each role touches only the files it owns:
+
+```
+         about to write an active file
+                 │
+    ┌────────────┼──────────────┬────────────────┐
+    ▼            ▼              ▼                ▼
+  changed       is new        is retired       unchanged
+                           (done/fixed/voided)
+    │            │              │                │
+    ▼            ▼              ▼                ▼
+edit only     insert into    move verbatim to   touch nothing
+those lines   its section    backup/retired/    (saves tokens,
+              not EOF        then drop from      keeps cache)
+    │            │           active              │
+    └────────────┴──────┬───────┴────────────────┘
+                        ▼
+     append 1 row to backup/change-log.md (detail col = retired path)
+```
+
+| ⛔ Forbidden | Why |
+| --- | --- |
+| Rewriting the whole file | Unchanged lines rewritten = wasted tokens + cache miss |
+| Appending new content/sections at EOF | One object scattered across N patches; readers must stitch |
+| Keeping history in active (old rounds / fixed / voided / strikethrough corpses) | A fat active is re-read in full every session |
+| Deleting retired content outright | Not one word may be lost — move to `backup/retired/` first, then drop from active |
+
+> Effect: active's size is driven by **how many rules exist now**, not by how many times it was used.
+> `backup/` is gitignored, so size is a non-issue; retired content stays fully readable in `retired/`.
 
 ## Installation
 
@@ -351,7 +384,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ├ L2 Surface ─ ux.md (visual specs + five-state matrix, U-number issuer) ──────────── PM ───┤
 ├ L3 Impl    ─ project.md  data.md  api.md ─────────────────────────────────── Architect ─┤
 ├ L4 Accept  ─ gates.md (A+U traceability matrix, standard in prd/ux) ──────────────── QA ───┤
-└ backup/    ─ cold archive (AI moves in on demand, not in repo by default) ─────────────────┘
+└ backup/    ─ cold archive: ledgers + retired/ verbatim originals (gitignored) ────────────┘
 ```
 
 ### Information Flow Iron Rule (one-way, violation = failure)
@@ -406,7 +439,7 @@ project-root/
     ├── images/          🔵 Screenshots (init migrates, flat storage)
     ├── scripts/         🔵 Scattered-script archive
     ├── references/      🟢 Project-level experience library (experience-summary produces, INDEX + role on-demand)
-    ├── backup/          🧊 Cold data (CLAUDE.md.legacy / migration_manifest / needs_review; not in repo by default)
+    ├── backup/          🧊 Cold data (change-log / milestone-log / retired/ originals / CLAUDE.md.legacy; gitignored)
     │   └── YYYY-MM/     On upgrade: pre-upgrade-<old>/ read-only snapshot + upgrade_audit.md + superseded/ relocated
     └── .cc_code_version 🔖 Field version stamp (decides whether init runs upgrade migration)
 ```

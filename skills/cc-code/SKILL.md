@@ -57,7 +57,9 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 | `prd.md` / `ux.md` | PM | 定义需求时 |
 | `project.md` / `data.md` / `api.md` | Architect | 定契约时 |
 
-`status.md` 只答「坐标/卡点/下一步」；里程碑一律追加到 `back_up/milestone-log.md`（格式见 `active/Agent.md` 归档规范），⛔ 不落 `status.md`。
+`status.md` 只答「坐标/卡点/下一步」；里程碑一律追加到 `backup/milestone-log.md`（格式见 `active/Agent.md` 归档规范），⛔ 不落 `status.md`。
+
+> ⭐ **写 active 前必过「就地更新 + 搬运归档」**：只改有变化的那几行，新增插进它该在的小节，过期内容原文整段搬 `backup/retired/<源文件名>.md` 后从 active 移除。⛔ 不整份重写、⛔ 不往末尾追加、⛔ 不删内容。规则单一出处 = `active/Agent.md` §四第 5 条。
 
 ## 角色切换
 

@@ -82,6 +82,12 @@ refresh_handbook() {
       cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
     log "已补 references/INDEX.md（0.8.0 新增）"
   fi
+  # backup/retired/ 就位（1.7.0 新增退役原文区）—— active 过期内容的唯一去处，
+  # 「搬运不删除」铁律的落点。缺了这个目录，角色会退回「直接删」或「留在 active」。
+  if [ ! -d "$TARGET/backup/retired" ]; then
+    mkdir -p "$TARGET/backup/retired"
+    log "已建 backup/retired/（1.7.0 新增：active 过期内容的退役原文区）"
+  fi
 }
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -509,7 +515,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
 fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
-mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/docs/qa" \
+mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/backup/retired" "$TARGET/docs/qa" \
          "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test"
 
 # 热区骨架（8 个 active 文件，按 L0~L4 分层）

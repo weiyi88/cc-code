@@ -107,8 +107,8 @@
 ## 六、主控写回纪律
 
 - 各 qa 报告的判词**原样**写进 `gates.md`，一份写完再写下一份，⛔ 主控不改判、不合并、不补判。
-- `status.md` 的坐标 / 卡点、`back_up/milestone-log.md` 的里程碑，只在阶段结算时由主控写一次。
-- 给 dev 的回喂可以带编号；转述给用户时按 `Agent.md` §四第 5 条去编号。
+- `status.md` 的坐标 / 卡点、`backup/milestone-log.md` 的里程碑，只在阶段结算时由主控写一次。
+- 给 dev 的回喂可以带编号；转述给用户时按 `Agent.md` §四第 6 条去编号。
 
 ## 七、全量清算的修复轮（agent-whole-qa ❹）
 

@@ -86,10 +86,12 @@ disable-model-invocation: true
    - 出处 = 既有 A/U 断言 → **就地改写**该断言行为 ✅（换新测试位置，不新开行）
    - 出处 = 主人原话（无既有断言）→ 追溯矩阵 **B 段**追加一行 `B-n ✅`
 2. **milestone-log 追加一行**：`日期 ｜ 模块 ｜ B-n <简述> 修复 PASS ｜ <期望出处断言号或 B-n>`。
-3. **bugs.md 删该条目**（施工便签用完即撕；历史由 git 提交 + milestone-log + 留守的回归测试承载，⛔ 不另建 bug 归档）。
+3. **bugs.md 结算该条目**：原文整段搬 `backup/retired/bugs.md`（带日期 + 退役原因「B-n 修复 PASS」），再从 `bugs.md` 移除。⛔ 不直接删（内容一个字都不许丢）。追溯 = retired 原文 + milestone-log 一行 + 留守的回归测试。
 4. **status.md** 顺手更新（下一步清空 B-n 指向，或指向遗留待办）。
 5. 报告：B-n 修复交付（用例 PASS + 回归范围 + 回归测试位置）。
 6. **不跑 agent-whole-qa、不做全量回归** —— bug 修复的验收面就是 B-n 用例 + affected 精准回归面；全量清算只属于 MVP 收口或主人显式调用 `/cc-code:agent-whole-qa`。
+
+> ⭐ **写 active 前必过「就地更新 + 搬运归档」**（规则单一出处 = `active/Agent.md` §四第 5 条）：只改有变化的那几行，新增插进它该在的小节，过期内容原文整段搬 `backup/retired/<源文件名>.md` 后从 active 移除。⛔ 不整份重写、⛔ 不往末尾追加、⛔ 不删内容。
 
 ## 编排器行为准则
 

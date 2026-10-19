@@ -81,7 +81,7 @@ disable-model-invocation: true
 | --- | --- |
 | 尺子 | §8.1 每个组件的健康检查 + 登录流程能走通 |
 | 证据 | 健康检查实测结果 + 线上日志（按 project.md §七 去平台查发布后时段的 ERROR） |
-| 输出 | Verdict（PASS / FAIL 清单）+ 就地更新 gates.md §八 |
+| 输出 | Verdict（PASS / FAIL 清单）+ 就地更新 gates.md §八（只改该环境那一行；旧版本信息被覆盖前整行搬 `backup/retired/gates.md`，细则见 `active/Agent.md` §四第 5 条） |
 
 ### rollback 分支
 

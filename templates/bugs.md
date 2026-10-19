@@ -1,18 +1,18 @@
 # 🐛 未修复 bug 工作上下文 (bugs.md)
 
-> **施工便签** · 由 `/cc-code:plan-debug` 写入（诊断落盘），`/cc-code:agent-debug` 读取执行（QA 域结算后删除条目）。
+> **施工便签** · 由 `/cc-code:plan-debug` 写入（诊断落盘），`/cc-code:agent-debug` 读取执行（QA 域结算后把条目搬进 `backup/retired/bugs.md`）。
 > **本文件只装「正在修的 bug 的工作上下文」**：复现 / 期望出处 / 根因 / 方案 / 影响面。
-> ⛔ 不装：验收结果（→ `gates.md`）、需求断言（→ `prd.md`/`ux.md`，本文件只引用）、历史（→ `milestone-log` 一行 + git）。
+> ⛔ 不装：验收结果（→ `gates.md`）、需求断言（→ `prd.md`/`ux.md`，本文件只引用）、已修复的 bug（→ `backup/retired/bugs.md`）。
 
 ### 写入纪律
 
 | 纪律 | 说明 |
 | :-- | :--- |
-| **常态为空** | 只存 OPEN 状态的 bug；修复 PASS 后条目即删（结算见 agent-debug） |
+| **常态为空** | 只存 OPEN 状态的 bug；修复 PASS 后原文整段搬 `backup/retired/bugs.md` 再从本文件移除（结算见 agent-debug）。⛔ 不直接删 |
 | **B 序列独立** | B-1, B-2, … 独立递增，绝不复用 A/U 序列（那两个永久稳定，bug 断言生命周期是天级） |
 | **期望必须有出处** | 主人原话 or 既有 A/U 断言号；⛔ 禁止从代码现状反推期望 |
 | **单条 ≤20 行** | 只装结论（根因/方案/影响面各一两句）；侦察过程与三件套不落盘 |
-| **不落 back_up** | 历史由 git 提交 + `milestone-log` 一行 + 留守的回归测试承载，不建 bug 归档 |
+| **过期搬走不删** | 修复完的条目原文进 `backup/retired/bugs.md`（一字不丢）；语义追溯 = `milestone-log` 一行 + 留守的回归测试。⛔ 本文件内不留已修复条目 |
 
 ## 待修复清单
 

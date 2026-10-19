@@ -1,4 +1,4 @@
-# 🧭 .cc_code 使用手册（cc-code 1.6.0）
+# 🧭 .cc_code 使用手册（cc-code 1.7.0）
 
 > 本文件由 `/cc-code:init` 生成并随插件版本刷新，是**给「不熟悉 cc-code 的人」的上手说明书**。
 > 项目业务状态永远在 `active/`；本手册只讲「这套系统怎么用」。
@@ -43,14 +43,44 @@ PM ──► Architect ──► Dev ──► QA
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | Architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | Architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
-| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删） | plan-debug 写 / agent-debug 结算删 |
+| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完搬走） | plan-debug 写 / agent-debug 结算搬 |
 | — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） | plan-uiux / uiux agent |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读；含 bull-redis-queue 示例） | experience-summary |
 | — | `docs/qa/` | QA 全量报告 | QA |
-| — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读） | 各写者追加 |
+| — | `backup/` | 冷数据归档：change-log.md / milestone-log.md / `retired/` 退役原文（人看历史，AI 工作时禁读） | 各写者追加 |
 | — | `.cc_code_version` | 场域版本戳 | init |
 
 **信息流单向**：`L1 → L2 → L3 → 代码 → L4 回验`。L4 只拿 L1/L2 当尺子，绝不拿代码当尺子。
+
+### active 为什么不会越用越胖（1.7.0）
+
+`active/` 只放**项目最新的状态和内容**。任何角色写它之前，先按下面处置一遍：
+
+```
+          要写 active 文件
+                 │
+    ┌────────────┼──────────────┬────────────────┐
+    ▼            ▼              ▼                ▼
+ 内容变了     内容是新的      内容过期了        内容没变
+                            (做完/修好/作废)
+    │            │              │                │
+    ▼            ▼              ▼                ▼
+只改那几行   插进它该在的    原文整段搬进        一行不碰
+其余不动     小节, 不堆末尾  backup/retired/
+                            再从 active 移除
+    │            │              │                │
+    └────────────┴──────┬───────┴────────────────┘
+                        ▼
+   active 只剩最新状态　旧内容在 backup 全文可查　一个字都没丢
+```
+
+| 好处 | 怎么来的 |
+| --- | --- |
+| 文件不随对话次数变胖 | 过期内容每次都搬走，active 行数由「现在有多少规则」决定，不由「用了多少次」决定 |
+| 省钱、不丢缓存 | 没变的行一次都不重写 |
+| 旧内容照样查得到 | 全在 `backup/retired/<源文件名>.md`，一字不丢；`backup/` 不进 git，不怕大 |
+
+> ⚠️ `backup/` 是历史的唯一载体且不进 git —— 别手动清它。
 
 ---
 
@@ -148,7 +178,7 @@ AI：产出五件规划文档（prd 含验收断言 A1..A12 / ux / project / dat
 你：/cc-code:plan-feature 加一个「429 限流自动退避重试」
 AI：codegraph 侦察现状 → 判定需求三态 → 有冲突逐条请你裁决
 AI：就地收敛落盘（prd.md 改写模块小节 + 断言进 §1.5 主表 / api.md 改写该 path 小节）
-    过程不落盘　back_up/change-log.md 追加 1 行　status.md 点名 F-n + 新断言号
+    过程不落盘　过期内容搬 backup/retired/　change-log 追加 1 行　status.md 点名 F-n
 你：/cc-code:agent-feature
 AI：增量定位 → Dev 实现 → QA 验收断言 A12.21~A12.24（affected 精准回归）
 ```
@@ -199,7 +229,7 @@ AI：落 references/architect-bull-redis-queue-references.md + 登记 INDEX
 | 我要手动切角色吗？ | 是。更新 `active/Agent.md` 顶部【当前激活角色】一行即可 |
 | AI 会自己乱改需求吗？ | 权限表禁止：Dev/QA 禁改 prd/ux；改不动就上报 |
 | 旧版场域升级会丢东西吗？ | 不会。全程零删除，旧物只 cp 快照与 mv 归位，永远可回溯 |
-| 验收标准在哪？ | `prd.md` §1.5 断言 A1..An（编号永久稳定，作废只加删除线） |
+| 验收标准在哪？ | `prd.md` §1.5 断言 A1..An（编号永久稳定、永不复用；作废条目搬进 `backup/retired/prd.md`，active 里不留） |
 | 实测结果在哪？ | `gates.md`（QA 写，Dev 禁读 —— 防拿答案做题） |
 
 ---

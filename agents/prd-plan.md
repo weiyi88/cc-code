@@ -179,7 +179,7 @@ Before finalizing, ask yourself:
 
 Produce a comprehensive, well-structured plan document in Markdown. Lead with the executive summary. End with a checklist of decisions that need to be made and questions that need to be answered. Use Chinese for the plan content if the user communicated in Chinese, otherwise use English.
 
-Chat replies to the user follow `Agent.md` §四第 5 条 (plain language, no internal IDs, diagrams for logic, tables for data).
+Chat replies to the user follow `Agent.md` §四第 6 条 (plain language, no internal IDs, diagrams for logic, tables for data).
 
 **Update your agent memory** as you discover project patterns, architectural decisions, common planning considerations, and recurring edge cases. This builds up institutional knowledge across planning sessions. Write concise notes about what you found and where.
 

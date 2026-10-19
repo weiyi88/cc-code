@@ -10,7 +10,7 @@
 2. Read `.cc_code/active/status.md` → 获取当前坐标（现在在做什么、卡在哪）
 3. 仅按当前角色权限读写对应文件，禁止越权
 
-## ⚖️ 四大铁律（贯穿全会话）
+## ⚖️ 五大铁律（贯穿全会话）
 
 1. **上下文最小化** — 只读当前任务所需最小文件集，禁止全量读取。
 2. **决策串行** — 严守 PM → Architect → Dev → QA，当前角色由 `Agent.md` 锁定，禁止跨角色思考。
@@ -20,12 +20,15 @@
 ```
    最新   ── 同一对象只有一处描述且是当前态 ⛔禁新开「增量 F-n」章节, 就地改写
    最完整 ── 每个待验维度都有稳定编号: A(prd §1.5) 管逻辑/链路/接口, U(ux §2.3) 管 UI/五态
-   最纯净 ── 只答「现在是什么」; 过程不落盘(change-log 留痕), 逐轮验收→docs/qa/, 历史→git
+   最纯净 ── 只答「现在是什么」; 过程不落盘(change-log 留痕), 逐轮验收→docs/qa/
+             过期内容 → backup/retired/<源文件名>.md（原文整段搬走, 一字不丢）
 ```
 
 写入前三问：① 已有对应小节吗？→ 就地改写。② 在答「现在是什么」吗？→ 否则落 `docs/`。③ 别的层有了吗？→ 只留指针。
 
-> 🗣️ **对用户说话**：给用户的话一律说人话——逻辑用图、数据用表、不出现编号和内部术语、不贴代码。细则见 `Agent.md` §四第 5 条（单一出处，此处仅指向）。
+5. **就地更新 + 搬运归档** — 写 `active/` 只动有变化的那几行；新增插进它该在的小节；过期内容原文整段搬进 `backup/retired/` 后从 active 移除。⛔ 不整份重写、⛔ 不往末尾追加、⛔ 不删内容、⛔ 不碰别人负责的文件。细则见 `Agent.md` §四第 5 条（单一出处，此处仅指向）。
+
+> 🗣️ **对用户说话**：给用户的话一律说人话——逻辑用图、数据用表、不出现编号和内部术语、不贴代码。细则见 `Agent.md` §四第 6 条（单一出处，此处仅指向）。
 
 ## 🔁 角色串行流水线
 
@@ -50,7 +53,7 @@ PM ──► Architect ──► Dev ──► QA
 | **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（Dev 禁读） | QA |
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完即删，常态为空） | plan-debug 写 / agent-debug 结算删 |
 | — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） | plan-uiux 编排 / uiux agent 绘制 |
-| — | `backup/` | 冷数据归档：change-log.md / milestone-log.md（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） | 各写者追加 |
+| — | `backup/` | 冷数据归档：change-log.md / milestone-log.md / `retired/` 退役原文（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） | 各写者追加 |
 | — | `references/` | 项目级经验资料库（INDEX 索引，角色按需读） | experience-summary |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） | init |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） | Architect / PM / QA |
@@ -84,7 +87,7 @@ PM ──► Architect ──► Dev ──► QA
 | `ux.md` | 视觉规格 + 交互五态（长什么样、点了怎么变） | 业务规则、字段类型 |
 
 判据：**能脱离界面存在的 → `prd.md`；离开界面就没意义的 → `ux.md`**。
-`prd.md` 由 `/cc-code:plan-mvp` 或 PM 维护，单文件动态更新，重大变更归档 `backup/`。
+`prd.md` 由 `/cc-code:plan-mvp` 或 PM 维护，单文件就地更新，过期内容搬 `backup/retired/prd.md`。
 
 ## ⚙️ 角色切换
 
