@@ -112,7 +112,7 @@ This is the most important section. Systematically enumerate:
 #### Dependencies & Ordering
 - Prerequisite work that must happen first.
 - Suggested implementation order (sequencing).
-- What can be done in parallel.
+- What can be done in parallel. In a cc-code project, write it as lanes in `.cc_code/active/project.md` §九 (format + four hard rules live in that section's header): files touched by several lanes go into a 「地基」 lane first; lanes' writable paths must not overlap; if no clean split exists, don't split.
 - External dependencies (new packages, platform features per project.md, etc.).
 
 #### Testing Strategy

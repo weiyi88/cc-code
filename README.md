@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.0.2** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.6.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
@@ -65,6 +65,33 @@ PM ──► Architect ──► Dev ──► QA
 | Architect | L3 | project, data, api | src/ 业务码 |
 | Dev | 代码 | src/, 测试目录 | gates |
 | QA | L4（灰盒） | gates, 测试目录 | 无关历史码 |
+
+### 并行泳道（1.6.0）：角色串行 ≠ 单线程
+
+串行锁的是**角色顺序**和**派活顺序**，不是「同一角色只能派一个人」。规划时把一个阶段拆成互不相干的泳道，执行时同一角色多人同时干：
+
+```
+ 规划（架构师）：拆阶段 → 拆泳道 → 给每条泳道划「只准写哪些文件」
+                 几条泳道都要改的文件 → 单列「地基」泳道，排最前
+        ▼
+ 执行（主控）：  地基（单线程）
+                   ▼
+                 Dev 甲 ┃ Dev 乙 ┃ Dev 丙     同时写
+                 ━━━━━━ 栅栏：全部写完 ━━━━━━
+                 QA 甲  ┃ QA 乙  ┃ QA 丙      同时验，只回报告
+                 ━━━━━━ 栅栏：全部验完 ━━━━━━
+                   ├─ 没过的泳道 → 只退回这几条（各自 ≤3 轮）
+                   └─ 全过 → 汇合回归（合并影响面 + 端到端）→ 阶段结算
+```
+
+| 不变的 | 怎么守住 |
+| --- | --- |
+| Dev → QA 角色顺序 | 两道栅栏之间全员同一角色 |
+| 执行器不规划 | 泳道只来自 `project.md` §九，不合规就退回单线程 |
+| 每个文件一个写者 | 子 agent 只回报告，验收结果 / 进度由主控写 |
+| 一次只派一张卡 | 并行只发生在一个阶段 / 一个增量内部 |
+
+没写泳道的老项目自动单线程，零影响。细则：`skills/cc-code/references/parallel-lanes.md`。
 
 ### 文件分层（先认层，再认角色）
 
@@ -138,9 +165,10 @@ PM ──► Architect ──► Dev ──► QA
                        原型真图；风格叠加：plan-uiux gpt-taste；AI 自动保存落盘
        ↓
 /cc-code:agent-mvp  纯执行（读定稿文档，Dev→QA，FAIL≤3轮回环，中途零确认；
+                       阶段内有泳道则同角色多人并发；
                        有 pen 则 Dev 先走底稿三步：Export html-tailwind → 薄装配 → 截图比对）
        ↓
-/cc-code:agent-whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
+/cc-code:agent-whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环；修复按文件分组并发）
        ↓
 /cc-code:deploy     上线（读 project.md 部署契约，任意平台组合；qa 线上冒烟，
                        出事 /cc-code:deploy rollback 一键回退）
@@ -152,7 +180,7 @@ PM ──► Architect ──► Dev ──► QA
                            +三件套交谈至通顺 → 就地收敛落盘（落盘即定稿）
                            +status.md 点名 F-n 与新断言号
        ↓
-/cc-code:agent-feature  增量纯执行（增量定位 → Dev→QA，affected 精准回归）
+/cc-code:agent-feature  增量纯执行（增量定位 → Dev→QA，affected 精准回归；有泳道则并发）
 
 ────────── 任意时刻修 bug 走这条支线（需求明确但实现错了）──────────
 

@@ -134,7 +134,7 @@ AI 必须且只能按照【当前激活角色】赋予的设定进行思考与�
 *   **文件权限：**
     *   `[必读]` `active/status.md`, `active/prd.md`, `active/ux.md`
     *   `[按需读]` `references/INDEX.md` — 先扫索引，命中主题才读对应经验文件
-    *   `[可写]` `active/project.md`, `active/data.md`, `active/api.md`（阶段拆分并入 project.md 章节）
+    *   `[可写]` `active/project.md`, `active/data.md`, `active/api.md`（阶段拆分与并行泳道并入 project.md §九）
     *   `[禁读]` `src/` 下的具体业务代码
 *   **契约纪律：** 允许用 codegraph 校准 `api.md` / `data.md` 的实现状态标记；发现代码偏离契约时，必须显式二选一（改代码回归契约 / 修契约并记录），**禁止沉默偏离**。
 

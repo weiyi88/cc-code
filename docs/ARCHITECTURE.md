@@ -77,6 +77,7 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 | subagent 自带纪律 | `agents/{dev,qa,prd-plan}.md` | 该 subagent | 系统提示词 |
 | 产物格式纪律 | 该文件模板头部 | 写它的角色 | 写前必读该文件 |
 | 编排纪律（串行 / ≤3 轮 / 拒跑 / 增量定位） | `skills/*/SKILL.md` 正文 | 编排器主控自己 | 命令本体 |
+| 多个执行器共用的编排纪律（并行泳道） | `skills/cc-code/references/parallel-lanes.md` | agent-mvp / agent-feature / agent-whole-qa 主控 | 执行器正文一行指针，⛔ 不复述 |
 | 触发闸门 | frontmatter `disable-model-invocation` | Claude Code 引擎 | 引擎强制 |
 
 **角色隔离靠「当前激活角色」开关，不靠拆文件** —— 未激活角色的规则物理上在同一文件，
@@ -102,6 +103,25 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
 `codegraph_search` / `codegraph_node` / `codegraph_callers` **不是 MCP 工具**，
 写进 `allowed-tools` 是死声明：不报错、不生效、只误导后续读者。
+
+## 并行泳道（1.6.0）
+
+> 串行锁的是角色顺序与派活顺序，不是「同一角色只能派一个人」。dashboard 的「进行中只放 1 张卡」是**卡片级**串行，泳道只在一张卡内部。
+
+| 部件 | 唯一出处 | 写者 / 读者 |
+| :--- | :--- | :--- |
+| 泳道表格式 + 四条拆分铁律 | `templates/project.md` §九 表头 | Architect 写（plan-mvp / plan-feature）· 执行器只读 |
+| 栅栏 / 体检 / 退回 / 汇合回归 / 写回纪律 | `skills/cc-code/references/parallel-lanes.md` | 三个执行器主控 |
+| dev 泳道纪律（只准写 / 自检范围 / 文件清单列全） | `agents/dev.md`「泳道模式」 | dev subagent |
+| qa 泳道纪律（断言范围 / 不跑浏览器层 / 只回报告） | `agents/qa.md`「泳道模式」 | qa subagent |
+
+```
+ §九 没写泳道 / 体检不过 ──► 单线程（1.5.x 行为，老项目零影响）
+ 体检通过              ──► 地基 → 同层泳道 Dev 并发 → 栅栏 → QA 并发 → 栅栏
+                           → 没过的泳道单独退回 → 全过后汇合回归 → 阶段结算
+```
+
+> 选型：栅栏同步（不选各泳道各跑各的，后者会让「当前激活角色」出现多个值）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。
 
 ## 散落物迁移（init.sh 的判定链）
 

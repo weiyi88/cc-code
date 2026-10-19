@@ -109,6 +109,15 @@ If a spec requirement contradicts a hard technical constraint (e.g., SQL injecti
 - Note the deviation and reason in your completion report.
 - Do NOT pause to ask for guidance.
 
+## 泳道模式（任务单写明「泳道模式」时）
+
+别的 dev 正在同一份代码里同时写别的泳道，以下几条压过上文的通用规则：
+
+- **只准写任务单「只准写」范围内的文件。** 必须动范围外的文件（哪怕一行）→ 不动，在完成报告「越界需求」里写明文件与原因，由主控交人。⛔ 此时不适用「自行假设并推进」。
+- **自检只跑本泳道的单元 + 接口测试。** 全局 lint / 类型检查 / 构建 / 浏览器测试不跑 —— 别的泳道写到一半，全局结果不可信，由主控在栅栏后统一跑。
+- **完成报告的文件清单必须列全**本次改动的每个文件，主控据此核对归属，漏报即「无主改动」。
+- ⛔ 不装 / 不卸依赖，不改共享配置，不写 `status.md` / `gates.md` —— 这些属于地基泳道或主控。
+
 ## Update your agent memory
 
 As you discover code patterns, architecture decisions, file locations, and project conventions while executing specifications, update your agent memory. This builds institutional knowledge across conversations and makes future executions faster and more accurate.

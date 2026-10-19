@@ -10,6 +10,7 @@ disable-model-invocation: true
 > **纯执行器**：需求与契约**只读不产**——一切规划产物（prd / ux / project / data / api）由 `/cc-code:plan-mvp` 商讨定稿。本命令读定稿文档直接开发，**中途零确认**，只在 FAIL 3 轮升级时交人。
 > **校准铁律**：每一个阶段完成后，**必须**先执行 `/cc-code:cc-code` 校准当前状态（重读 `Agent.md`/`status.md`，重锁角色与坐标），确认无误后再进入下一阶段。未校准禁止推进。校准是机器自检，**静默进行，不以「请确认」的姿态打扰人**。
 > **串行铁律**：严守 Dev → QA 顺序，由 `.cc_code/active/Agent.md` 锁定当前角色，禁止跨角色思考与跳序。
+> **并行泳道（1.6.0）**：阶段之间串行；阶段内 `project.md` §九 写了泳道 → 按 `../cc-code/references/parallel-lanes.md`（本 skill 目录的同级，插件内单一出处） 同一角色多人并发，没写 → 单线程照旧。
 
 ## 与规划命令的分工（两两配对，单一职责）
 
@@ -28,7 +29,7 @@ disable-model-invocation: true
    同理读 `project.md` §七「日志契约」：选库 / 配置值未填实，或门面与 requestId 入口未落地 → 把「搭日志基建 + 回填 §七」并入 Dev 首个任务。
 5. **索引体检（静默）**：`codegraph status --json` 读三字段 —— `initialized:false` → 报一行（⛔ 不自动重建）；`pendingChanges` 非 0 → 静默 `codegraph sync`；`reindexRecommended:true` → 报一行建议。CLI 未装则静默跳过，全流程照跑（精准回归降级为全量）。⛔ 健康时一个字都不提。
 6. 执行 `/cc-code:cc-code` 完成会话开启协议，锁定当前阶段与角色。
-7. **阶段来源**：读 `project.md` 的阶段拆分章节。有 → 按阶段逐段推进；无 → 整体作单阶段跑完（⛔ 不自行拆阶段，拆分是规划的职责）。
+7. **阶段来源**：读 `project.md` §九（9.1 阶段 / 9.2 泳道）。有阶段 → 按阶段逐段推进；无 → 整体作单阶段跑完。阶段内有两条以上泳道 → 先过并行协议的启用体检，过了并发跑、不过单线程跑（⛔ 不自行拆阶段 / 拆泳道，拆分是规划的职责）。
 
 ## 生命周期总览
 
@@ -43,6 +44,8 @@ disable-model-invocation: true
                                          ▼
                                  全PASS → MVP收口
 ```
+
+> 阶段内有泳道时，①Dev / ②QA 两段各自变成「同角色多人并发 + 栅栏」，FAIL 只退回没过的泳道，阶段末多一次汇合回归 —— 全部细则见并行协议，本节不复述。
 
 ## 阶段执行规范
 

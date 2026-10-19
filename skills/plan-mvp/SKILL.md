@@ -62,7 +62,7 @@ Step6 分批切角色落盘（⭐免请示：对话定稿即授权）：
       ├─ PM 批：Write prd.md（旧版归档 backup/YYYY-MM/）+ ux.md
       │    └─ Edit Agent.md「当前激活角色」→ PM → 落盘 → 复位
       └─ Architect 批：Write project.md / data.md / api.md
-           └─ 阶段拆分（phaseN）并入 project.md 对应章节（Dev 按此分阶段编码）
+           └─ 阶段拆分 + 并行泳道写进 project.md §九（执行器按此分阶段、分泳道并发）
 Step7 顺手更新 status.md 坐标 → 提示走 /cc-code:agent-mvp
 ```
 
@@ -98,11 +98,11 @@ Step7 顺手更新 status.md 坐标 → 提示走 /cc-code:agent-mvp
 
 | 文件 | 落什么 | 说明 |
 | --- | --- | --- |
-| `project.md` | 技术选型 / 架构决策 / 目录规约 / **阶段拆分（phaseN + 各阶段验收断言范围）** / §六 测试基建契约 / §七 日志契约（选库 + 配置值） / §八 部署契约（组件 × 平台 × 密钥名 × 健康检查） | 阶段拆分是 agent-mvp 的阶段来源；无阶段拆分则整体单阶段跑 |
+| `project.md` | 技术选型 / 架构决策 / 目录规约 / **§九 阶段拆分 + 并行泳道（phaseN / 各阶段断言范围 / 泳道只准写范围，格式与铁律见该节表头）** / §六 测试基建契约 / §七 日志契约（选库 + 配置值） / §八 部署契约（组件 × 平台 × 密钥名 × 健康检查） | §九 是 agent-mvp 的阶段与泳道来源；无阶段则整体单阶段跑，无泳道则单线程跑 |
 | `data.md` | 数据契约（interface ↔ DB 列） | Architect 契约纪律 |
 | `api.md` | 接口契约（method/path/入参/出参/错误码） | 同上 |
 
-> 阶段拆分并入 `project.md` 对应章节，**不另建方案文件** —— active 只答「现在是什么」，过程靠 git。
+> 阶段拆分与泳道并入 `project.md` §九，**不另建方案文件** —— active 只答「现在是什么」，过程靠 git。
 
 ---
 

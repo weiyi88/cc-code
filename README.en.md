@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.0.2** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.6.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -67,6 +67,33 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 | Architect | L3 | project, data, api | src/ business code |
 | Dev | code | src/, test dir | gates |
 | QA | L4 (gray box) | gates, test dir | unrelated history code |
+
+### Parallel Lanes (1.6.0): role serialization ≠ single thread
+
+Serialization locks the **role order** and the **dispatch order**, not "one worker per role". Planning splits a phase into independent lanes; execution runs several workers of the same role at once:
+
+```
+ Plan (Architect): split phases → split lanes → give each lane its "may write only" paths
+                   files several lanes need → a separate "foundation" lane, first
+        ▼
+ Execute (main):   foundation (single thread)
+                     ▼
+                   Dev A ┃ Dev B ┃ Dev C      write in parallel
+                   ━━━━━━ barrier: all written ━━━━━━
+                   QA A  ┃ QA B  ┃ QA C       verify in parallel, report only
+                   ━━━━━━ barrier: all verified ━━━━━━
+                     ├─ failed lanes → only those go back (≤3 rounds each)
+                     └─ all pass → merge regression (union impact + e2e) → phase settles
+```
+
+| Unchanged | How it holds |
+| --- | --- |
+| Dev → QA role order | Between two barriers everyone is the same role |
+| Executors never plan | Lanes come only from `project.md` §9; invalid table → single thread |
+| One writer per file | Subagents only report; main writes acceptance results / progress |
+| One card dispatched at a time | Parallelism lives inside one phase / one increment |
+
+Old projects without lanes run single-threaded automatically. Details: `skills/cc-code/references/parallel-lanes.md`.
 
 ### File Layering (know the layer, then the role)
 
@@ -140,9 +167,10 @@ Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
                        prototype frames; style stacking: plan-uiux gpt-taste; AI auto-saves
        ↓
 /cc-code:agent-mvp  Pure execution (read final docs, Dev→QA, FAIL≤3-round loop, zero mid-run confirmation;
+                       lanes in a phase → same role runs in parallel;
                        with pen, Dev runs bottom-up three steps: Export html-tailwind → thin assembly → screenshot diff)
        ↓
-/cc-code:agent-whole-qa      Full acceptance (function + redundancy, FAIL≤3-round loop)
+/cc-code:agent-whole-qa      Full acceptance (function + redundancy, FAIL≤3-round loop; fixes grouped by file, in parallel)
        ↓
 /cc-code:deploy        Launch (reads the deployment contract in project.md, any platform mix;
                        qa smoke-tests production; /cc-code:deploy rollback to revert)
@@ -154,7 +182,7 @@ Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
                            + three-piece-set conversation → converge in place (landing = final)
                            + status.md names F-n and new assertion ids
        ↓
-/cc-code:agent-feature  Incremental pure execution (increment locate → Dev→QA, affected precise regression)
+/cc-code:agent-feature  Incremental pure execution (increment locate → Dev→QA, affected precise regression; parallel if lanes)
 
 ────────── Anytime, bug fixing takes this branch (requirement clear, implementation wrong) ──────────
 
