@@ -16,7 +16,7 @@
 - [快速开始](#快速开始)
 - [Codex CLI 适配（1.1.0）](#codex-cli-适配110)
 - [可选增强：codegraph](#可选增强codegraph)
-- [Skill 一览（17 个）](#skill-一览17-个)
+- [Skill 一览（16 个）](#skill-一览16-个)
 - [Agent（4 个）](#agent4-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
@@ -119,7 +119,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、17 个 skill 与 4 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 4 个配套 agent。
 
 ## 完整生命周期
 
@@ -142,7 +142,8 @@ PM ──► Architect ──► Dev ──► QA
        ↓
 /cc-code:agent-whole-qa      全量验收（功能 + 冗余，FAIL≤3轮回环）
        ↓
-部署                   /cc-code:deploy-vercel-supabase 或 /cc-code:deploy-cf
+/cc-code:deploy     上线（读 project.md 部署契约，任意平台组合；qa 线上冒烟，
+                       出事 /cc-code:deploy rollback 一键回退）
 
 ────────── MVP 交付后，功能迭代走这条支线 ──────────
 
@@ -227,7 +228,7 @@ $cc-code:plan-mvp 触发
 
 - Claude 侧 `allowed-tools` 工具白名单在 Codex 无等价物，由角色沙箱（`sandbox_mode`）承接主要权限边界。
 - skill 正文提及的 `EnterPlanMode` 等 Claude 工具名，Codex 读到时会忽略 —— 写盘安全由上表护栏兜底，流程安全靠人按序操作。
-- 17 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
+- 16 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
 
 ## 可选增强：codegraph
 
@@ -270,7 +271,7 @@ $cc-code:plan-mvp 触发
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill 一览（17 个）
+## Skill 一览（16 个）
 
 **框架核心（管流程）**
 
@@ -289,6 +290,7 @@ $cc-code:plan-mvp 触发
 | `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 | `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
+| `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数，出事一键回滚 |
 
 **工具外挂（干活的，与状态机无关）**
 
@@ -296,8 +298,6 @@ $cc-code:plan-mvp 触发
 | --- | --- |
 | `project_resume` | 扫描代码库，替你写一段项目介绍文案 |
 | `login_auto` | 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密 |
-| `deploy-vercel-supabase` | 一键上线：数据库搬上云、代码传 GitHub、自动部署 |
-| `deploy-cf` | 三分钟把 Next.js 网站发布到 Cloudflare 全球节点 |
 
 ## Agent（4 个）
 
@@ -345,7 +345,7 @@ $cc-code:plan-mvp 触发
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           17 个 skill 目录
+├── skills/           16 个 skill 目录
 ├── agents/           4 个 agent（prd-plan / dev / qa / uiux）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）

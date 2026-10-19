@@ -16,7 +16,7 @@
 - [Quick Start](#quick-start)
 - [Codex CLI Support (1.1.0)](#codex-cli-support-110)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
-- [Skill List (17)](#skill-list-17)
+- [Skill List (16)](#skill-list-16)
 - [Agents (4)](#agents-4)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
@@ -121,7 +121,7 @@ Each role is locked by the `active/Agent.md` routing table: "must-read / writabl
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 17 skills, and 4 companion agents.
+After install you get the `/cc-code:*` command family, 16 skills, and 4 companion agents.
 
 ## Full Lifecycle
 
@@ -144,7 +144,8 @@ Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
        ↓
 /cc-code:agent-whole-qa      Full acceptance (function + redundancy, FAIL≤3-round loop)
        ↓
-Deploy                 /cc-code:deploy-vercel-supabase or /cc-code:deploy-cf
+/cc-code:deploy        Launch (reads the deployment contract in project.md, any platform mix;
+                       qa smoke-tests production; /cc-code:deploy rollback to revert)
 
 ────────── After MVP delivered, feature iteration takes this branch ──────────
 
@@ -230,7 +231,7 @@ $cc-code:plan-mvp fires
 
 - Claude's `allowed-tools` allowlist has no Codex equivalent; role sandboxes (`sandbox_mode`) carry the main permission boundary.
 - Claude tool names like `EnterPlanMode` mentioned in skill bodies are ignored by Codex — write safety is backstopped by the guard above; flow safety relies on following the sequence.
-- The 17 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
+- The 16 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
 
 ## Optional Enhancement: codegraph
 
@@ -273,7 +274,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 2. **Tests must import the source under test** — static `import` ✅ dynamic `await import()` ✅ pure HTTP-interface scripts ⛔ (no import edge to trace).
 3. **Non-standard names must register a glob** — defaults match `*.spec.*` / `*.test.*` / `__tests__/`; others need `--filter`.
 
-## Skill List (17)
+## Skill List (16)
 
 **Framework Core (manages flow)**
 
@@ -292,6 +293,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `experience-summary` | `/cc-code:experience-summary` | Turn pitfalls into indexed experience notes you can look up next time |
 | `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
 | `just-do-it` | `/cc-code:just-do-it` | Tiny change, one sentence, done: dev writes, qa verifies, one log entry, that's it |
+| `deploy` | `/cc-code:deploy` | Ship every component per the deployment contract; only qa's live smoke test counts; one-command rollback |
 
 **Tool Attachments (do work, unrelated to state machine)**
 
@@ -299,8 +301,6 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | --- | --- |
 | `project_resume` | Scan the codebase and write the project intro copy for you |
 | `login_auto` | A ready-made login suite: password / Google / email code + password reset |
-| `deploy-vercel-supabase` | One-click launch: DB to Supabase, code to GitHub, auto-deploy |
-| `deploy-cf` | Publish your Next.js site to Cloudflare's global edge in minutes |
 
 ## Agents (4)
 
@@ -348,7 +348,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           17 skill directories
+├── skills/           16 skill directories
 ├── agents/           4 agents (prd-plan / dev / qa / uiux)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)

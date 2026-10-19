@@ -52,7 +52,7 @@ PM ──► Architect ──► Dev ──► QA
 
 ---
 
-## 三、Skill 一览（17 个）
+## 三、Skill 一览（16 个）
 
 ### 框架核心（管流程）
 
@@ -70,6 +70,8 @@ PM ──► Architect ──► Dev ──► QA
 | `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
 | `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
+| `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
+| `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数，出事一键回滚 |
 
 ### 工具外挂（干活的，与状态机无关）
 
@@ -77,8 +79,6 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- |
 | `project_resume` | 扫描代码库，替你写一段项目介绍文案 |
 | `login_auto` | 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密 |
-| `deploy-vercel-supabase` | 一键上线：数据库搬上云、代码传 GitHub、自动部署 |
-| `deploy-cf` | 三分钟把 Next.js 网站发布到 Cloudflare 全球节点 |
 
 ---
 
