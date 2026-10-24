@@ -16,7 +16,7 @@
 | SvelteKit | `src/routes/**/+page.svelte` | 目录即路由 |
 | 服务端模板（Django/Rails/Laravel） | `urls.py` / `routes.rb` / `routes/web.php` | 从路由表提取 |
 
-> 拿不准框架时，读 `project.md` 的技术栈段；仍不确定则问用户，**不猜**。
+> 拿不准框架时，读 `project.md` 的技术栈段；仍不确定则在报告里写「框架未识别」，交回主控由主控交人，**不猜**（你是 subagent，不能问用户）。
 
 ### 1.2 动态路由处理
 
@@ -140,7 +140,7 @@
   接口 → 按 api.md 的「模块：xxx」分段
   
 孤儿项（归不进任何模块）→ 单列「M0 未归属」组，照测，
-                          并在报告中提示 PM 补 prd.md 模块归属
+                          并在报告中提示主人：模块归属缺失，走 plan-feature 由 pm 补 prd.md
 ```
 
 ---

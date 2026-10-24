@@ -1,6 +1,6 @@
 # 🏗️ 项目技术架构与开发宪法 (project.md)
 
-> 本文件由 [Architect] 角色维护。Dev 工程师必须将此文件作为唯一的编码准则。
+> 本文件由 architect agent 维护。dev 必须将此文件作为唯一的编码准则。
 > **数据结构细节不在本文件**——interface / 字段规则 / DB 列对齐统一由 `active/data.md` 承载，本文件只在第四节引用。
 
 ### ⛔ 写入纪律（active = 最新 + 最完整 + 最纯净）
@@ -16,6 +16,7 @@
 *   **核心框架：** [待填写]
 *   **语言：** [待填写]
 *   **样式方案：** [待填写]
+*   **pen 导出格式：** [待填写，项目有 `design.pen` 时由 architect 按样式方案填；没有 pen 写「无」]（dev 按此导出底稿）
 *   **状态管理：** [待填写]
 *   **数据请求：** [待填写]
 *   **部署环境：** 见第八节 部署契约
@@ -60,27 +61,39 @@
 *   [待填写]
 
 ## 四、 数据契约 (Data Contract)
-> 数据层唯一真相源：`.cc_code/active/data.md`（Architect 维护，Dev/QA 必读）。
+> 数据层唯一真相源：`.cc_code/active/data.md`（architect 维护，dev / qa 必读）。
 > 本文件不重复 interface 字段定义。涉及数据结构时，统一 `@active/data.md` 引用。
-> Architect 须保证：DB schema 列名 ↔ `data.md` interface 字段一一对齐；跨 ORM 栈时在 `data.md` 第五节记录差异。
+> architect 须保证：DB schema 列名 ↔ `data.md` interface 字段一一对齐；跨 ORM 栈时在 `data.md` 第五节记录差异。
 
 ## 五、 特殊约束 (Constraints)
 *   [待填写]
 
 ## 六、 测试基建契约 (Test Infrastructure)
 
-> ⭐ 本节是 **`affected` 精准回归的前提契约**。Architect 在 MVP 前必须填实，
-> QA 与 `agent-mvp` / `agent-whole-qa` 据此计算「改了 X 该跑哪些测试」。
+> ⭐ 本节是 **`affected` 精准回归的前提契约**。architect 在 MVP 前必须填实，
+> qa 与 `agent-mvp` / `agent-whole-qa` 据此计算「改了 X 该跑哪些测试」。
+
+> ⭐ **执行器（agent-mvp / agent-feature / agent-debug / agent-whole-qa）与 dev、qa 只认本表的行，⛔ 不自带命令、不翻项目配置去猜。** 某行是 `[待填写]` 且本轮用得到 → 交回主控交人，不猜。
 
 | 项 | 值 | 说明 |
 | :--- | :--- | :--- |
-| **测试根目录** | `.cc_code/test/` | ⛔ **必须入 git**，绝不可 `.gitignore` |
-| 单元测试 | `.cc_code/test/unit/**/*.spec.ts` | `affected` 默认 glob 直接命中 |
-| 接口测试 | `.cc_code/test/api/**/*.spec.ts` | 同上 |
-| E2E 测试 | `.cc_code/test/e2e/**/*.spec.ts` | 同上 |
-| 冒烟脚本 | `.cc_code/test/smoke/*.ts` | 非 `.spec` 命名，需 `affected --filter` |
-| 测试框架 | [待填写] | 如 vitest / jest / playwright |
-| 运行命令 | [待填写] | 如 `pnpm test` / `npx tsx <file>` |
+| **测试根目录** | `.cc_code/test/`（可改） | ⛔ **必须入 git**，绝不可 `.gitignore` |
+| 单元测试 glob | `.cc_code/test/unit/**/*[后缀按测试框架约定]` | `affected` 默认 glob 直接命中 |
+| 接口测试 glob | `.cc_code/test/api/**/*[后缀按测试框架约定]` | 同上 |
+| E2E 测试 glob | `.cc_code/test/e2e/**/*[后缀按测试框架约定]` | 同上 |
+| 冒烟脚本 glob | `.cc_code/test/smoke/*[后缀按测试框架约定]` | 非标准命名，需 `affected --filter` |
+| 非常规命名测试 glob | [待填写，没有就写「无」] | 见下方铁律 ③ |
+| 测试框架 | [待填写] | 本项目实际使用的单元 / 接口 / 浏览器测试框架 |
+| 启动命令 | [待填写] | 起本地服务，供接口 / e2e 测试用 |
+| 端口 / BASE_URL | [待填写] | 测试打的地址 |
+| 构建命令 | [待填写] | |
+| 自检命令 | [待填写] | 代码规范检查 / 类型检查等，有哪些填哪些 |
+| 单元测试命令 | [待填写] | |
+| 接口测试命令 | [待填写] | |
+| e2e 命令 | [待填写] | |
+| 冒烟命令 | [待填写] | |
+| 全量测试命令 | [待填写] | 收口全量回归用 |
+| 测试所需环境变量 | [待填写，只写变量名] | 接口 / e2e 测试要的变量（值不进本文件） |
 
 ### ⛔ 三条铁律（违反即 `affected` 永久失效）
 
@@ -89,7 +102,7 @@
    codegraph 尊重 .gitignore → 被 ignore 的测试不进索引
    → affected 查不到 → 精准回归退化为全量瞎跑
    ✅ 该 ignore 的是「测试产物」: coverage/ test-results/ *.png
-   ⛔ 绝不能 ignore 的是「测试代码」: *.spec.ts *.test.ts
+   ⛔ 绝不能 ignore 的是「测试代码」: *.spec.* *.test.*（后缀按测试框架）
 
 ② 测试必须 import 被测源码
    affected 沿 import 依赖图反向回溯算影响面
@@ -103,7 +116,7 @@
 
 ## 七、 日志契约 (Logging)
 
-> ⭐ 本节是 **plan-debug 取运行事实、QA 取证的前提契约**。Architect 在 MVP 前必须填实；
+> ⭐ 本节是 **plan-debug 取运行事实、QA 取证的前提契约**。architect 在 MVP 前必须填实；
 > 未填实时 `agent-mvp` / `agent-feature` 把「搭日志基建 + 回填本节」作为 Dev 首个任务。
 > active 回答「应该怎样」，日志回答「实际怎样」——日志只当事实，⛔ 不当期望的尺子。
 
@@ -165,7 +178,7 @@
 
 ## 八、 部署契约 (Deployment)
 
-> ⭐ 本节是 **`/cc-code:deploy` 的唯一事实来源**。Architect 在 MVP 前填实；
+> ⭐ 本节是 **`/cc-code:deploy` 的唯一事实来源**。architect 在 MVP 前填实（deploy 要写入 / 补全本节时同样派 architect，主控不代写）；
 > 未填项由 deploy 启动时逐项补问并写回本节。各平台怎么做见插件 `skills/deploy/references/`，本节只写「本项目用什么」。
 
 ### 8.1 组件拓扑（一个组件一行，没有的组件不写）
@@ -174,7 +187,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 前端 | [待填写，如 Vercel] | [Git 推送 / 命令行] | [如 首页 200] | [平台回滚] |
 | 接口 | [待填写] | | [如 `/api/health` 200] | |
-| 数据库 | [待填写] | [迁移工具] | [迁移版本一致] | 不回滚，只向前 |
+| 数据库 | [待填写] | [迁移工具] | [迁移版本一致] | [待填写] |
 | 登录 | [待填写] | [控制台配置] | [登录流程走通] | — |
 | 队列 / Worker / 定时 | [待填写] | | [进程存活 / 最近一次执行成功] | |
 
@@ -201,13 +214,13 @@
 
 ```
 ① 本节不出现任何密钥值、令牌、密码
-② 数据库迁移只向前，且兼容上一版代码（先加后删）——平台回滚只回代码不回库
+② 数据库迁移必须兼容上一版代码（先加后删）；数据库怎么回滚以 8.1 表「回滚方式」列为准——平台回滚通常只回代码不回库
 ③ 组件、平台、域名变了就地改写本节，⛔ 不新开章节
 ```
 
 ## 九、 阶段拆分与并行泳道 (Phases & Lanes)
 
-> ⭐ 本节是 **执行器（agent-mvp / agent-feature）的阶段与泳道来源**，由 Architect 在规划时填写，执行器只读、⛔ 绝不自己拆。
+> ⭐ 本节是 **执行器（agent-mvp / agent-feature）的阶段与泳道来源**，由 architect 在规划时填写，执行器只读、⛔ 绝不自己拆。
 > 泳道 = 同一阶段内**互不相干、可同时开工**的工作包。没填泳道的阶段照单线程跑，拆不出就不拆。
 > 并行协议（栅栏、退回、汇合回归）见插件 `skills/cc-code/references/parallel-lanes.md`，本节只写「本项目怎么拆」。
 

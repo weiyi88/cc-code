@@ -14,25 +14,25 @@ disable-model-invocation: true
 
 1. **项目级唯一落点**：只写当前项目 `.cc_code/references/`，⛔ 禁写插件目录、全局 `~/.claude/`。
 2. **命名规范**：`[角色]-[具体事件域]-references.md`
-   - 角色小写：`architect` / `dev` / `qa` / `pm`
+   - 角色 = agent 名，小写：`architect` / `dev` / `qa` / `pm` / `uiux`
    - 事件域 = 技术或流程主题，kebab-case，不含日期
    - ✅ `architect-bull-redis-queue-references.md`
    - ❌ `arch-xp.md`（无事件域）❌ `20260807-bug-references.md`（含日期）
 3. **内容精炼**：只写「设计/验收时应该怎么思考、怎么做」，⛔ 禁写溯源叙事、清理修复过程、流水账。
 4. **按需读取**：必须登记 `.cc_code/references/INDEX.md`（按角色分组，一行式「何时读」），⛔ 禁要求角色每次全读。
-5. **不越权**：⛔ 禁改 `active/` 任何状态文件（Agent.md 权限表、status.md 等）——references 是补充资料，不是状态机。唯一例外：主人当场明确要求把 INDEX 挂进 `Agent.md` 某角色 `[按需读]`，可代笔加一行。
+5. **不越权**：⛔ 禁改 `active/` 任何文件（Agent.md 权限表、status.md、prd 等）——references 是补充资料，不是状态机。想把 INDEX 挂进 `Agent.md` 某角色 `[按需读]`：⛔ 不代笔，把要加的那一行交给主人自己加。
 
 ## 执行流程
 
 ```
-① 定位角色      本次经验归谁：architect / dev / qa / pm
+① 定位角色      本次经验归谁：architect / dev / qa / pm / uiux
 ② 提炼准则      从对话/踩坑中抽出「必答问题 + 设计准则」
                 每条准则 = 一句话规则 + 一句话为什么
 ③ 主人过目      先输出草稿给主人看，确认后才落盘（禁先斩后奏）
 ④ 落盘          写 .cc_code/references/[角色]-[事件域]-references.md
 ⑤ 登记索引      更新 .cc_code/references/INDEX.md（无则新建）：
                 | 文件 | 何时读 |
-⑥ 挂载请示      若该角色 Agent.md 未挂 INDEX，请示主人是否加 [按需读] 行
+⑥ 挂载提示      若该角色在 Agent.md 里未挂 INDEX，告诉主人要加的 [按需读] 行（主人自己加）
 ```
 
 ## 文件模板

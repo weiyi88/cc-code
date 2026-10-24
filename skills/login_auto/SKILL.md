@@ -31,12 +31,13 @@ Step 3  环境盘点 + 询问 key
         缺什么列清单 → 询问主人提供
 Step 4  整理改动清单
         输出表: 文件 | 现状 | 目标 | 动作
-Step 5  调用 /cc-code:cc-code 执行
-        按角色串行 PM→Architect→Dev→QA 落地
-        (本 skill 只整理方案, 执行交 cc-code 工作流)
+Step 5  把改动清单交主人, 由主人走 cc-code 工作流落地
+        /cc-code:plan-feature (先 pm 后 architect 规划, 主人批准)
+        → /cc-code:agent-feature (dev 写 → qa 验)
+        (本 skill 只整理方案, 不写代码, 不派 agent)
 ```
 
-> 本 skill 主体是「标准逻辑 + 实现指南」，供 Step 2 对比、Step 4 改动参考。Step 5 不在本 skill 内写代码，交由 /cc-code:cc-code。
+> 本 skill 主体是「标准逻辑 + 实现指南」，供 Step 2 对比、Step 4 改动参考。Step 5 不在本 skill 内写代码，交由上述 cc-code 工作流。
 
 ---
 
@@ -68,9 +69,7 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 
 ### 0.2 若缺失，先安装依赖
 
-```bash
-pnpm add @supabase/supabase-js @supabase/ssr
-```
+用项目现有的包管理器安装：`@supabase/supabase-js`、`@supabase/ssr`。
 
 ### 0.3 若缺失，先创建基础设施文件
 
@@ -702,9 +701,7 @@ export async function GET(request: NextRequest) {
 
 ## Phase 4: 构建验证
 
-```bash
-pnpm build
-```
+运行项目的构建命令（取自 `project.md` §六 测试基建契约；无契约则用项目现有的构建脚本）。
 
 验证清单:
 - [ ] 构建通过，无 TypeScript 错误

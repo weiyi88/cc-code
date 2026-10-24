@@ -95,11 +95,13 @@ MODEL_MAP = {
     "haiku": ('"gpt-5.3-codex-spark"', None),
     "sonnet": ('"gpt-5.4-mini"', None),
     "opus": ('"gpt-5.4"', '"high"'),
+    "inherit": (None, None),  # 不写 model 行 → 继承父会话(Codex 模型映射本版不重设计)
 }
-SANDBOX_MAP = {  # 引擎级角色权限: 规划/验收只读, 执行可写
-    "prd-plan": "read-only",
-    "qa": "read-only",
+SANDBOX_MAP = {  # 引擎级角色权限: 五角色都要落盘(pm/architect 写规划文件, qa 写 gates/bugs/测试), 一律可写
+    "pm": "workspace-write",
+    "architect": "workspace-write",
     "dev": "workspace-write",
+    "qa": "workspace-write",
     "uiux": "workspace-write",
 }
 
@@ -107,6 +109,16 @@ def toml_str(s: str) -> str:
     return json.dumps(s, ensure_ascii=False)  # JSON 转义 ⊂ TOML basic string 转义
 
 n_toml = 0
+# 源已删除的角色 → 清掉旧 toml（生成物目录只许有「当前源」对应的文件; 仅清带 AUTO-GENERATED 头的）
+src_names = set()
+for agent_md in (root / "agents").glob("*.md"):
+    raw0 = agent_md.read_text(encoding="utf-8").split("---", 2)
+    m0 = re.search(r'^name:\s*["\']?(.+?)["\']?\s*$', raw0[1] if len(raw0) == 3 else "", re.M)
+    src_names.add(m0.group(1).strip() if m0 else agent_md.stem)
+for old in sorted((root / "assets/codex/agents").glob("*.toml")):
+    if old.stem not in src_names and old.read_text(encoding="utf-8").startswith("# AUTO-GENERATED"):
+        old.unlink()
+        print(f"  agents toml: 清除已删源 {old.name}")
 for agent_md in sorted((root / "agents").glob("*.md")):
     raw = agent_md.read_text(encoding="utf-8")
     parts = raw.split("---", 2)
@@ -117,7 +129,7 @@ for agent_md in sorted((root / "agents").glob("*.md")):
         return m.group(1).strip() if m else ""
 
     name = fm("name") or agent_md.stem
-    model, effort = MODEL_MAP.get(fm("model"), ('"gpt-5.4-mini"', None))
+    model, effort = MODEL_MAP.get(fm("model") or "inherit", (None, None))  # 未知档位/缺省 = 继承父会话
     toml = {
         "name": toml_str(name),
         "description": toml_str(fm("description") or name),
@@ -128,7 +140,12 @@ for agent_md in sorted((root / "agents").glob("*.md")):
     }
     lines = []
     for k, v in toml.items():
-        lines.append(f"{k} = {v}" if v is not None else f"# {k} = (继承父会话)")
+        if v is not None:
+            lines.append(f"{k} = {v}")
+        elif k not in ("model", "model_reasoning_effort"):   # inherit 档: model 两行都不输出
+            lines.append(f"# {k} = (继承父会话)")
+        elif model is not None:                              # 有 model 无 effort: 保留原注释
+            lines.append(f"# {k} = (继承父会话)")
     out = root / "assets/codex/agents" / f"{name}.toml"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(

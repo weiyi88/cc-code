@@ -56,6 +56,16 @@ for pair in "${PAIRS[@]}"; do
   fi
 done
 
+# 源已删除的旧 toml（快照里有、重生成后消失）单独点名 —— sync 负责清, 这里只报
+if [[ -d "$SNAP/assets__codex__agents" ]]; then
+  for t in "$SNAP"/assets__codex__agents/*.toml; do
+    [[ -f "$t" ]] || continue
+    if [[ ! -f "$PLUGIN_ROOT/assets/codex/agents/$(basename "$t")" ]]; then
+      echo -e "${RED}  ✗ 过期 toml: $(basename "$t") —— 对应 agents/*.md 已删, 已由 sync 清除, 请再跑一次 verify 确认${NC}"
+    fi
+  done
+fi
+
 # skills 下的 openai.yaml 散点单独扫（快照打平在 SNAP/skills）
 yaml_drift=0
 while IFS= read -r f; do
