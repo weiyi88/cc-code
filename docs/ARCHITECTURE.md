@@ -114,6 +114,7 @@ codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
 | 栅栏 / 体检 / 退回 / 汇合回归 / 写回纪律 | `skills/cc-code/references/parallel-lanes.md` | 三个执行器主控 |
 | dev 泳道纪律（只准写 / 自检范围 / 文件清单列全） | `agents/dev.md`「泳道模式」 | dev subagent |
 | qa 泳道纪律（断言范围 / 不跑浏览器层 / 只回报告） | `agents/qa.md`「泳道模式」 | qa subagent |
+| whole-qa fan-out 的 Workflow 脚本 | `skills/agent-whole-qa/references/whole-qa.workflow.js` | agent-whole-qa 主控传 args · Workflow 引擎执行 |
 
 ```
  §九 没写泳道 / 体检不过 ──► 单线程（1.5.x 行为，老项目零影响）
@@ -121,7 +122,7 @@ codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
                            → 没过的泳道单独退回 → 全过后汇合回归 → 阶段结算
 ```
 
-> 选型：栅栏同步（不选各泳道各跑各的，后者会让进度坐标与写者出现多头）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。
+> 选型：栅栏同步（不选各泳道各跑各的，后者会让进度坐标与写者出现多头）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。`agent-whole-qa` 按功能模块 fan-out，不读 §九；泳道只服务 `agent-mvp` / `agent-feature`。
 
 ## 散落物迁移（init.sh 的判定链）
 
