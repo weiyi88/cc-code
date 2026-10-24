@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.8.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.8.1** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -79,7 +79,7 @@ Each role's must-read / writable / forbidden permissions live only in `templates
      dispatch dev ─► dispatch qa ─► FAIL ≤3 rounds ─► still FAIL: hand to human
    Debug (no plan mode; bugs.md is maintained automatically, no approval wait)
      qa reproduces + gathers evidence, writes B-n the moment it reproduces (to-diagnose) ─► dev diagnoses read-only
-     ─► main relays verbatim to qa, who adds root cause / plan / blast radius
+     ─► main relays to qa, who adds root cause / blast radius / plan
      ├─ pure implementation bug ─► to-fix ─► dev fixes ─► qa retests ─► on PASS qa moves the entry to backup/retired/bugs.md
      └─ contract wrong / requirement wrong / no expected-behaviour source / cannot reproduce ─► to-decide: one question to the human
         ─► after the ruling architect / pm edit the docs (or qa reproduces again) ─► to-fix
@@ -167,6 +167,8 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
 
+**1.8.1:** the debug report to the owner is now four business-language segments (symptom / root cause / blast radius / fix) instead of the old trio - inform only, never persisted; only the conclusions land in B-n (the "impact" field became "blast radius", covering affected features/pages plus the regression test surface).
+
 ### In-place update + retire-by-move (1.7.0)
 
 `active/` holds only the project's **latest state and content**. Before writing, triage as below; each role touches only the files it owns:
@@ -249,7 +251,7 @@ Session open (2 steps)  Read Agent.md (permission table) → status.md (set coor
 
 /cc-code:plan-debug        No plan mode → qa interrogates + reproduces, writes B-n into active/bugs.md the moment
                            it reproduces (to-diagnose) → dev traces the chain read-only (links/radius/test surface)
-                           → qa fills root cause / plan / blast radius (to-fix). Records never wait for approval;
+                           → qa fills root cause / blast radius / plan (to-fix), then main tells you the four segments (symptom / root cause / blast radius / fix) in business language - inform only, no approval wait. Records never wait for approval;
                            only contract wrong / requirement wrong / no expected-behaviour source / cannot reproduce
                            marks the entry to-decide and asks you one question
                            (sticky note; moved to backup/retired/bugs.md once fixed)
