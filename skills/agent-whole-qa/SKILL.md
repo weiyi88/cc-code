@@ -1,7 +1,7 @@
 ---
 name: agent-whole-qa
 description: 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修；按功能模块 fan-out
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, Workflow, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
 
@@ -72,6 +72,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 ```
 ┌ ⓿ PREFLIGHT 前置检查 ──────────────────────────────────────────┐
 │   .cc_code/ 存在 · prd.md 有模块清单与验收断言 · 应用能起来      │
+│   可用浏览器工具恰好一套（记为 browserTool）                     │
 └───────────────────────┬────────────────────────────────────────┘
                         ▼
 ┌ ❶ INVENTORY 清点（派 qa 做，只做一次，落盘即锁死分母）────────┐
@@ -124,18 +125,18 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 本 skill 的 ❶ 清点 → ❷ fan-out → ❸ 汇总 → ❹ 修复回环，在 Claude Code 端交给 Workflow 引擎执行；主控只做 ⓿ PREFLIGHT、启动应用、传参、❺ 收口写回。规则出处不变：本 skill + `parallel-lanes.md` + `Agent.md`，脚本只是机械执行器。
 
 ```
- 主控 ⓿ PREFLIGHT + 后台启动应用 + 打开唯一浏览器会话
+ 主控 ⓿ PREFLIGHT + 后台启动应用（不开浏览器）
           ▼
  读 references/whole-qa.workflow.js
           ▼
- 调用 Workflow（后台）──► 清点 → 按模块 fan-out → 汇总 → 修复回环（≤3 轮）
+ 调用 Workflow（后台）──► 清点(owner 开唯一浏览器) → 按模块 fan-out → 汇总 → 修复回环（≤3 轮）→ 收口(closer 关)
           ▼                              │
      完成通知 ◄────────────────── 终态（pass / escalate / aborted）
           ▼
  主控 ❺ 收口：milestone-log + status.md + 向主人报告
 ```
 
-**启动方式**：应用就绪且**唯一浏览器会话已打开**后，优先 `Workflow({ scriptPath: "<本 skill 目录>/references/whole-qa.workflow.js", args })`；宿主不认路径时，Read 全文后用 `script` 传入。workflow 内的所有 qa 借用这一个实例，收口由主控 `browser_close`。
+**启动方式**：应用就绪后，优先 `Workflow({ scriptPath: "<本 skill 目录>/references/whole-qa.workflow.js", args })`；宿主不认路径时，Read 全文后用 `script` 传入。浏览器实例由**清点 qa（owner）**打开、**收口 qa（closer）**关闭；主控的 `allowed-tools` 不含浏览器工具，⛔ 不代开代关。
 
 **args**
 
@@ -147,7 +148,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 | `concurrency` | 并发上限，读 `project.md` §九，缺省 3 |
 | `maxRounds` | 缺省 3 |
 | `qaAgentType` / `devAgentType` | 与 Agent 工具可用名称一致（如 `qa` / `dev`；宿主带命名空间时传带前缀的） |
-| `browserTool` | 浏览器工具名，取 `project.md` §六，缺省 `playwright`（全流程单实例复用，规则见 `parallel-lanes.md` §九） |
+| `browserTool` | 浏览器工具逻辑名，`project.md` §六 有登记就用登记值，否则从宿主可用工具前缀自动识别（如 playwright / chrome-devtools）；全流程单实例复用，规则见 `parallel-lanes.md` §九 |
 
 **铁律**
 
@@ -169,7 +170,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 | 3c | `gates.md` 有「§二 验收追溯矩阵」骨架 | 格式落后 —— 提示 `/cc-code:init` 走 D4 格式体检归位，或本轮由 qa 按新模板重建骨架（旧内容零删除迁 `docs/qa/`） |
 | 4 | 读 `project.md` §六 测试基建契约拿到：启动命令 / 测试命令 / 测试目录 / 端口 | 契约不存在或缺项 → 停下交人，⛔ 不猜 |
 | 5 | 应用可启动 | 见下方「启动应用」 |
-| 6 | 有且只有一个浏览器自动化 MCP（工具名取 `project.md` §六「浏览器工具」） | 无 → 中止（逐元素点击必须真实浏览器）；两套并存 → 按 §六 只留一个，⛔ 不混用 |
+| 6 | 可用浏览器工具恰好一套（从工具前缀自动识别；`project.md` §六 有登记则以其为准），记为 `browserTool` | 零套 → 中止（逐元素点击必须真实浏览器）；两套及以上 → 交人，⛔ 不猜、⛔ 不混用 |
 
 ### 启动应用
 ```bash
@@ -177,7 +178,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 # 2. 后台启动（run_in_background: true）
 # 3. 轮询端口就绪再继续，不要固定 sleep
 # 4. 记下 BASE_URL，传给所有 subagent
-# 5. 打开【唯一浏览器会话】——全流程所有 qa 复用这一个实例，收口才关
+# 5. 主控不碰浏览器：唯一实例由清点 qa（owner）打开、收口 qa（closer）关闭
 #    （规则单一出处：references/parallel-lanes.md §九）
 ```
 > 破坏性操作（删除 / 支付 / 发信 / 清库）必须跑在 **seed 数据 + 独立库/独立环境**。无法隔离的元素，标 `SKIPPED(需隔离环境)`，**不许在生产或共享库上点**。
@@ -214,8 +215,9 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 
 每模块一个 `qa` subagent。**在单条消息里发出多个 Agent 调用**以并发执行。
 
-> 🌐 **浏览器照常测，实例只有一个**：所有并发 qa 共用 PREFLIGHT 打开的同一个浏览器实例，各自建 tab；
-> 开工建 tab、每次操作前切回自己的 tab、收工只关自己的 tab，⛔ 不新开实例、⛔ 不 `browser_close`。
+> 🌐 **浏览器照常测，实例只有一个**：所有并发 qa 共用同一个浏览器实例，各自建 tab；
+> **清点 qa 是 owner**（没有实例就建立，有就复用），**收口 qa 是 closer**（统一关一次）；
+> 其他 qa 开工建 tab、每次浏览器调用前切回自己的 tab、收工只关自己的 tab，⛔ 不新开实例、⛔ 不关闭整个浏览器。
 > 规则单一出处：`references/parallel-lanes.md` §九（此处不复述细节）。
 
 ### 派给 qa subagent 的 prompt 骨架
@@ -243,8 +245,9 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
   3. 每接口 5 类断言：正常 / 缺参 / 越权 / 边界 / 错误码
   4. 全程捕获 console 错误与失败网络请求，任一非预期报错即 FAIL
   5. 破坏性操作若无法隔离，标 SKIPPED(需隔离环境)，不许硬点
-  6. 浏览器复用同一实例：开工建自己的 tab，每次操作前切回自己的 tab，收工只关自己的 tab
-     —— 不新开浏览器、不 browser_close
+  6. 浏览器复用同一实例：开工建自己的 tab，每次浏览器调用前切回自己的 tab，收工只关自己的 tab
+     —— 不新开第二个浏览器、不关闭整个浏览器；实例失联写 escalate，不自行重建
+  7. 截图 / console / snapshot 显式保存到 project.md §六 登记的浏览器产物目录，不依赖 MCP 默认输出目录
 
 【禁止】
   ✗ 抽样跳过唯一元素      ✗ 修改 prd.md / ux.md / api.md
@@ -329,7 +332,7 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 | --- | --- |
 | 1 | **qa** 对 `gates.md` **就地更新**：§一 Verdict + §二 矩阵全行 + §六 四分母覆盖率 + §三~五 只留未关闭项。⛔ 禁新开轮次章节、禁加附录索引 |
 | 2 | **主控**：`backup/milestone-log.md` 追加一行：`<日期> ｜ <模块> ｜ agent-whole-qa 全量验收 第N轮 PASS，覆盖率 x/y ｜ <F号/->`；`status.md` 只刷新坐标/卡点/下一步，⛔ 里程碑不落 status.md |
-| 3 | **主控**：`browser_close` 关掉唯一浏览器实例（只此一次）；确认所有 qa 的 tab 已收，⛔ 不在中途关 |
+| 3 | **收口 qa（closer）**：关掉所有残留 tab + 关闭唯一浏览器实例一次；主控只核对结果，⛔ 不代关 |
 | 4 | 向用户报告：四个覆盖率（A / U / 元素 / 接口）、SKIPPED 清单、ESCALATE 清单、轮次消耗 |
 | 5 | ⛔ **不报告归档细节**（Hook 静默） |
 
