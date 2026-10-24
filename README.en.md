@@ -1,8 +1,9 @@
 # cc-code
 
-> Version: **1.8.1** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.8.2** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
+> Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
 
 ---
@@ -166,6 +167,8 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                process artifacts not persisted (change-log one line) · per-round acceptance details → docs/qa/
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
+
+**1.8.2:** a constitutional principle now heads the generated project's `CLAUDE.md` - own the result, not the process: the only yardstick is whether the result meets the requirements; only conclusions are persisted; the owner hears results and impact, never implementation; humans step in only when results miss the requirements or the requirements must change.
 
 **1.8.1:** the debug report to the owner is now four business-language segments (symptom / root cause / blast radius / fix) instead of the old trio - inform only, never persisted; only the conclusions land in B-n (the "impact" field became "blast radius", covering affected features/pages plus the regression test surface).
 
