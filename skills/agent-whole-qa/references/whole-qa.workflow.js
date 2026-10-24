@@ -19,10 +19,20 @@ const LIMIT = cfg.concurrency || 3
 const MAX_ROUNDS = cfg.maxRounds || 3
 const QA_TYPE = cfg.qaAgentType || 'qa'
 const DEV_TYPE = cfg.devAgentType || 'dev'
+const BROWSER = cfg.browserTool || 'playwright'
 
 const COMMON = `你是 cc-code 工作流里的子角色。项目状态目录：${ROOT}。
 角色权限唯一出处：${ACTIVE}/Agent.md §三；项目约定一律读 ${ACTIVE}/project.md，不要假设。
 subagent 不能问主人：需要人决策的事写进返回值的 escalate / escalated 字段。`
+
+// ── 浏览器单实例复用（规则单一出处：skills/cc-code/references/parallel-lanes.md §九）──
+const BROWSER_RULE = `浏览器协议（全流程单实例复用；浏览器验收照常做）：
+唯一实例已由主控 PREFLIGHT 打开，工具 ${BROWSER}（取自 ${ACTIVE}/project.md §六「浏览器工具」）。
+- ⛔ 不新开浏览器实例、⛔ 不 browser_close（关闭只由主控收口做一次）
+- 开工 browser_tabs(new) 建自己的 tab 并记住句柄
+- 每次浏览器操作前先 select 自己的 tab —— 并发兄弟 agent 会切走「当前页」
+- 收工只关自己的 tab，不碰别人的、也不关整个实例
+- 截图 / console / snapshot 落 project.md §六 登记的浏览器产物目录`
 
 // ── 结构化输出 ──
 const INVENTORY_SCHEMA = {
@@ -163,6 +173,7 @@ phase('清点')
 log(`清点开始：${ROOT}`)
 const inv = await agent(`${COMMON}
 你是本轮的清点执行者（qa 角色）。只清点，不测、不修。
+${BROWSER_RULE}
 读：${ACTIVE}/prd.md（模块清单 + §1.5 断言主表）、${ACTIVE}/ux.md（§2.3 U 编号矩阵 + §2.4 元素清单）、${ACTIVE}/api.md、${ACTIVE}/project.md（§六 测试基建契约）。
 页面 / 元素 / 接口三来源取并集，差集必报；断言与 U 编号原样引用，禁止另起编号。
 落盘 ${ROOT}/docs/qa/${DATE}-inventory.md，落盘即锁定本轮分母。
@@ -187,6 +198,7 @@ for (const batch of chunk(inv.modules, LIMIT)) {
   const part = await parallel(batch.map((m) => () => agent(`${COMMON}
 你是本模块的验收执行者（qa 角色）。模块：${m}
 只测取证：不改业务代码、不改 prd / ux / api。
+${BROWSER_RULE}
 读 ${ACTIVE}/prd.md 的本模块小节与 §1.5 断言、${ACTIVE}/ux.md 对应页面（§2.3 U 编号 + §2.4 元素）、${ACTIVE}/api.md 对应接口、${ACTIVE}/project.md 测试契约。
 本轮分母（锁定）：断言 ${inv.denominators.assertions} / U 五态 ${inv.denominators.ustates} / 元素 ${inv.denominators.elements} / 接口 ${inv.denominators.apis}；只完成本模块归属部分。
 BASE_URL=${BASE_URL}
@@ -291,6 +303,7 @@ ${JSON.stringify(g)}
 
   const reg = await agent(`${COMMON}
 你是回归执行者（qa 角色）。只重跑「本轮 FAIL 项 + affected 算出的影响面」，不重写全量。
+${BROWSER_RULE}
 本轮 FAIL：${JSON.stringify(red.failures)}
 本轮改动文件：${JSON.stringify(changedFiles)}
 先按 ${ACTIVE}/project.md §六 的测试契约算 affected（未装 codegraph 则全量，并在证据里注明来源）。

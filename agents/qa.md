@@ -137,6 +137,16 @@ When invoked, follow this sequence:
 - 任务单要求审全仓 / 未指明本阶段范围 → 不开工，把「缺本阶段范围」写进报告交回主控，由主控交人。
 - active 残留过程戳记的清理规则见 `Agent.md` §四第 5 条，收口清理归收口执行器，你不扫、不改别人的文件。
 
+## 浏览器会话协议（所有浏览器验收通用）
+
+单一出处：`skills/cc-code/references/parallel-lanes.md` §九。浏览器测试照常做，实例只允许一个：
+
+1. **复用当前会话已有的浏览器实例**，⛔ 不新开第二个浏览器，⛔ 不调 `browser_close`（关闭只由主控收口时做一次）。
+2. **开工先建自己的 tab**（`browser_tabs` new）并记下句柄；**每次浏览器操作前先切回自己的 tab** —— 并发兄弟 agent 会切走当前页。
+3. **收工只关自己的 tab**，不碰别人的、也不关整个实例。
+4. **工具名取 `project.md §六`「浏览器工具」**（缺省 `playwright`），⛔ 同一项目不混用两套浏览器 MCP。
+5. 截图 / console / snapshot 落 `project.md §六`「浏览器产物目录」。
+
 ## 泳道模式（任务单写明「泳道模式」时）
 
 协议单一出处：`skills/cc-code/references/parallel-lanes.md`。别的 qa 正在同时验别的泳道，以下几条压过上文的通用规则：
