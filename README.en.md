@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.9.1** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.9.2** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -182,7 +182,9 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
 
-**1.9.1:** browser acceptance now reuses a **single instance** - one browser for the whole run (opened at PREFLIGHT, closed at wrap-up); concurrent qa agents still test as before, each owning its own tab and re-selecting it before every browser call, never launching a second instance or calling `browser_close`. project.md §6 gains three contract rows (browser tool / instance / artifact dir); the qa agent, inventory flow and Workflow script carry the same protocol.
+**1.9.2:** fixes the 1.9.1 landing gap - the orchestrator has no browser tools in `allowed-tools`, so the browser lifecycle now belongs to the first qa (owner, opens) and a wrap-up qa (closer, closes); the qa protocol and Workflow script gain owner/closer roles, report-on-lost-instance without relaunching, and explicit artifact paths; PREFLIGHT auto-detects the single browser tool and `Workflow` joins the tool allowlist; project.md §6 gains a QA data-isolation contract.
+
+**1.9.1:** browser acceptance now reuses a **single instance** - one browser for the whole run; concurrent qa agents still test as before, each owning its own tab and re-selecting it before every browser call, never launching a second instance or closing the whole browser. project.md §6 gains three contract rows (browser tool / instance / artifact dir); the qa agent, inventory flow and Workflow script carry the same protocol.
 
 **1.9.0:** agent-whole-qa now runs on Workflow orchestration - inventory → module fan-out → reduce → fix loop (≤3 rounds), falling back to multiple Agent calls when the tool is unavailable; the three executor descriptions state their parallelism bounds; lane reports use a fixed summary skeleton and single-threaded runs say so; README gains a parallelism-by-command table.
 

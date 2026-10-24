@@ -6,6 +6,7 @@ export const meta = {
     { title: '验收' },
     { title: '汇总' },
     { title: '修复' },
+    { title: '收口' },
   ],
 }
 
@@ -26,13 +27,15 @@ const COMMON = `你是 cc-code 工作流里的子角色。项目状态目录：$
 subagent 不能问主人：需要人决策的事写进返回值的 escalate / escalated 字段。`
 
 // ── 浏览器单实例复用（规则单一出处：skills/cc-code/references/parallel-lanes.md §九）──
+// 工具名以宿主实际可用名为准；BROWSER 只是 project.md 登记的逻辑名。
 const BROWSER_RULE = `浏览器协议（全流程单实例复用；浏览器验收照常做）：
-唯一实例已由主控 PREFLIGHT 打开，工具 ${BROWSER}（取自 ${ACTIVE}/project.md §六「浏览器工具」）。
-- ⛔ 不新开浏览器实例、⛔ 不 browser_close（关闭只由主控收口做一次）
-- 开工 browser_tabs(new) 建自己的 tab 并记住句柄
-- 每次浏览器操作前先 select 自己的 tab —— 并发兄弟 agent 会切走「当前页」
-- 收工只关自己的 tab，不碰别人的、也不关整个实例
-- 截图 / console / snapshot 落 project.md §六 登记的浏览器产物目录`
+唯一实例：本次验收只允许一个浏览器（逻辑名 ${BROWSER}，以宿主实际可用的工具名为准；⛔ 不混用第二套浏览器 MCP）。
+- ⛔ 不新开第二个浏览器实例；⛔ 非收口 agent 不关闭整个浏览器
+- 每个 qa 开工建自己的 tab，并记住它
+- 每次浏览器工具调用前先切回自己的 tab —— 并发兄弟 agent 会改掉「当前页」
+- 收工只关自己的 tab，不碰别人的
+- 截图 / console / snapshot 显式保存到 project.md §六 登记的浏览器产物目录（不依赖 MCP 默认输出目录）
+- 实例失联（被关 / 崩溃）→ 写进 escalate 上报，⛔ 不自行重建第二个实例`
 
 // ── 结构化输出 ──
 const INVENTORY_SCHEMA = {
@@ -141,6 +144,15 @@ const REGRESSION_SCHEMA = {
   required: ['passed', 'outcomes'],
 }
 
+const CLOSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    closed: { type: 'boolean' },
+    leftoverTabs: { type: 'number' },
+  },
+  required: ['closed'],
+}
+
 // ── 工具：分批（尊重 cc-code 并发上限）、按文件分组（并查集）──
 function chunk(list, size) {
   const out = []
@@ -173,6 +185,7 @@ phase('清点')
 log(`清点开始：${ROOT}`)
 const inv = await agent(`${COMMON}
 你是本轮的清点执行者（qa 角色）。只清点，不测、不修。
+你是本次验收的**浏览器 owner**：开工时先看当前会话是否已有唯一浏览器实例——有就复用，没有就建立这一个；owner 不在中途关闭，实例由收口 agent 统一关闭。
 ${BROWSER_RULE}
 读：${ACTIVE}/prd.md（模块清单 + §1.5 断言主表）、${ACTIVE}/ux.md（§2.3 U 编号矩阵 + §2.4 元素清单）、${ACTIVE}/api.md、${ACTIVE}/project.md（§六 测试基建契约）。
 页面 / 元素 / 接口三来源取并集，差集必报；断言与 U 编号原样引用，禁止另起编号。
@@ -184,9 +197,9 @@ ${BROWSER_RULE}
   schema: INVENTORY_SCHEMA,
 })
 
-if (!inv) return { status: 'aborted', reason: '清点未返回结果' }
+if (!inv) return await end({ status: 'aborted', reason: '清点未返回结果' })
 if (!inv.modules || inv.modules.length === 0) {
-  return { status: 'aborted', reason: '清点未得到模块清单', inventoryPath: inv.inventoryPath }
+  return await end({ status: 'aborted', reason: '清点未得到模块清单', inventoryPath: inv.inventoryPath })
 }
 log(`分母锁定：${inv.modules.length} 个模块 / 断言 ${inv.denominators.assertions} / U ${inv.denominators.ustates} / 元素 ${inv.denominators.elements} / 接口 ${inv.denominators.apis}`)
 log(`并发上限 ${LIMIT}，最大修复轮次 ${MAX_ROUNDS}`)
@@ -237,7 +250,7 @@ let red = await agent(reducePrompt(round, moduleResults), {
   schema: REDUCE_SCHEMA,
 })
 
-if (!red) return { status: 'aborted', reason: '汇总未返回结果', inventoryPath: inv.inventoryPath }
+if (!red) return await end({ status: 'aborted', reason: '汇总未返回结果', inventoryPath: inv.inventoryPath })
 
 const escalations = [
   ...moduleResults.flatMap((r) => r.escalate || []),
@@ -248,8 +261,25 @@ const skipped = [
   ...(red.skipped || []),
 ]
 
-function finish(status, reason, summary) {
-  return {
+// ── 浏览器收口：owner 打开，closer 关闭；任何终态都只关一次 ──
+async function closeBrowser() {
+  try {
+    await agent(`${COMMON}
+你是浏览器收口执行者（qa 角色）。只做一件事：关闭本次验收的浏览器会话。不测、不修、不改任何文件。
+步骤：① 列出所有 tab，逐个关闭；② 关闭唯一浏览器实例一次（用当前工具关闭浏览器的等价操作）；③ 若实例本来未开，返回 closed=false；④ 发现非本次工作流的浏览器实例只报告，不关闭。
+返回 closed / leftoverTabs。`, {
+      label: 'qa:browser-close',
+      phase: '收口',
+      agentType: QA_TYPE,
+      schema: CLOSE_SCHEMA,
+    })
+  } catch (_) {
+    // 关闭失败不改变验收结论；残留实例由主控报告
+  }
+}
+
+async function finish(status, reason, summary) {
+  const result = {
     status,
     reason: reason || undefined,
     rounds: round,
@@ -263,13 +293,20 @@ function finish(status, reason, summary) {
     lastRoundReport: summary ? summary.roundReportPath : undefined,
     moduleReports: moduleResults.map((r) => r.reportPath).filter(Boolean),
   }
+  await closeBrowser()
+  return result
+}
+
+async function end(result) {
+  await closeBrowser()
+  return result
 }
 
 // ── ❹ 修复回环：按文件分组 → 并发修 → 回归门 → 收敛检查 ──
 while (red.failedCount > 0) {
   if (round > MAX_ROUNDS) {
     log(`已达最大轮次 ${MAX_ROUNDS}，仍未收敛`)
-    return finish('escalate', `超过最大轮次 ${MAX_ROUNDS}`, red)
+    return await finish('escalate', `超过最大轮次 ${MAX_ROUNDS}`, red)
   }
 
   phase('修复')
@@ -298,7 +335,7 @@ ${JSON.stringify(g)}
   escalations.push(...fixSets.flatMap((f) => f.escalated || []))
   const changedFiles = [...new Set(fixSets.flatMap((f) => f.files || []))]
   if (changedFiles.length === 0) {
-    return finish('escalate', '修复轮没有任何文件改动', red)
+    return await finish('escalate', '修复轮没有任何文件改动', red)
   }
 
   const reg = await agent(`${COMMON}
@@ -315,10 +352,10 @@ PASS 项就地更新 ${ACTIVE}/gates.md 对应行（唯一写者）。
     schema: REGRESSION_SCHEMA,
   })
 
-  if (!reg) return finish('escalate', '回归未返回结果', red)
+  if (!reg) return await finish('escalate', '回归未返回结果', red)
   if (reg.passed) {
     log(`第 ${round} 轮回归全 PASS`)
-    return finish('pass', undefined, red)
+    return await finish('pass', undefined, red)
   }
 
   // 收敛门控：FAIL 数必须严格递减，且不得出现新增 FAIL
@@ -331,16 +368,16 @@ PASS 项就地更新 ${ACTIVE}/gates.md 对应行（唯一写者）。
     agentType: QA_TYPE,
     schema: REDUCE_SCHEMA,
   })
-  if (!next) return finish('escalate', '汇总未返回结果', red)
+  if (!next) return await finish('escalate', '汇总未返回结果', red)
 
   const newIds = next.failures.map((f) => f.id).filter((id) => !prevIds.includes(id))
   if (newIds.length) {
-    return finish('escalate', `出现新增 FAIL（震荡）：${newIds.join(', ')}`, next)
+    return await finish('escalate', `出现新增 FAIL（震荡）：${newIds.join(', ')}`, next)
   }
   if (next.failedCount >= prevCount) {
-    return finish('escalate', `未收敛：第 ${round} 轮 FAIL 数未递减（${prevCount} → ${next.failedCount}）`, next)
+    return await finish('escalate', `未收敛：第 ${round} 轮 FAIL 数未递减（${prevCount} → ${next.failedCount}）`, next)
   }
   red = next
 }
 
-return finish('pass', undefined, red)
+return await finish('pass', undefined, red)
