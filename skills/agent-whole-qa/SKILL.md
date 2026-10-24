@@ -1,6 +1,6 @@
 ---
 name: agent-whole-qa
-description: 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修
+description: 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修；按功能模块 fan-out
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---
@@ -116,6 +116,44 @@ INVENTORY 阶段的产物落盘后**本轮分母不可变更**。禁止中途以
 │   qa：gates.md 矩阵定稿 ｜ 主控：milestone-log +1行、status.md 刷新坐标 │
 └────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## ⚙ Workflow 编排模式（Claude Code 默认；工具不可用时自动回退）
+
+本 skill 的 ❶ 清点 → ❷ fan-out → ❸ 汇总 → ❹ 修复回环，在 Claude Code 端交给 Workflow 引擎执行；主控只做 ⓿ PREFLIGHT、启动应用、传参、❺ 收口写回。规则出处不变：本 skill + `parallel-lanes.md` + `Agent.md`，脚本只是机械执行器。
+
+```
+ 主控 ⓿ PREFLIGHT + 后台启动应用
+          ▼
+ 读 references/whole-qa.workflow.js
+          ▼
+ 调用 Workflow（后台）──► 清点 → 按模块 fan-out → 汇总 → 修复回环（≤3 轮）
+          ▼                              │
+     完成通知 ◄────────────────── 终态（pass / escalate / aborted）
+          ▼
+ 主控 ❺ 收口：milestone-log + status.md + 向主人报告
+```
+
+**启动方式**：优先 `Workflow({ scriptPath: "<本 skill 目录>/references/whole-qa.workflow.js", args })`；宿主不认路径时，Read 全文后用 `script` 传入。
+
+**args**
+
+| 键 | 值 |
+| --- | --- |
+| `projectRoot` | 生成项目的 `.cc_code` 路径 |
+| `baseUrl` | ⓿ 启动后的应用地址 |
+| `date` | 今天的日期（脚本内取不到时间，必须由主控传） |
+| `concurrency` | 并发上限，读 `project.md` §九，缺省 3 |
+| `maxRounds` | 缺省 3 |
+| `qaAgentType` / `devAgentType` | 与 Agent 工具可用名称一致（如 `qa` / `dev`；宿主带命名空间时传带前缀的） |
+
+**铁律**
+
+- 脚本只做机械调度；角色权限、测试口径、写者归属只来自本 skill 与 `Agent.md` / `parallel-lanes.md`，⛔ 不在脚本里另写一份规则。
+- 运行中不能问人：ESCALATE / 冲突一律作为返回值带回，由主控交人。
+- 不静默缩分母：脚本返回的 `skipped` 必须逐条报给主人。
+- Workflow 工具不可用（如 Codex 端）→ 按本 skill 下文原有的 Agent 多开流程执行，零改动。
 
 ---
 

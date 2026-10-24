@@ -1,6 +1,6 @@
 ---
 name: agent-feature
-description: 只写新功能涉及的代码，只跑相关测试，又快又稳
+description: 只写新功能涉及的代码，只跑相关测试，又快又稳；有泳道则同角色并发
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
 disable-model-invocation: true
 ---

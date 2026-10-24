@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.8.2** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.9.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -125,6 +125,20 @@ Serialization locks the **role order** and the **dispatch order**, not "one work
 
 Old projects without lanes run single-threaded automatically. Details: `skills/cc-code/references/parallel-lanes.md`.
 
+#### Parallelism by command
+
+| Command | Parallel? | Unit | Who runs in parallel | Trigger | Max at once |
+| --- | --- | --- | --- | --- | --- |
+| `plan-*` | ❌ | — | — | Q&A, the owner is present | 1 |
+| `agent-mvp` | ⚠️ conditional | lanes | multiple devs, or multiple qas (two batches) | `project.md` §9 has ≥2 lanes for this phase and the check passes | 3 (default) |
+| `agent-feature` | ⚠️ conditional | lanes | multiple devs / qas | §9 9.2 has ≥2 lanes for this F-number | 3 (default) |
+| `agent-debug` | ❌ | — | — | one bug, one line; splitting loses root cause | 1 |
+| `agent-whole-qa` | ✅ by default | module fan-out | multiple qas; multiple devs in fix rounds | right after inventory; Workflow on Claude Code, falls back to multiple Agent calls when unavailable | modules / fix groups ≤3 |
+| `just-do-it` | ❌ | — | — | too small to be worth a lane | 1 |
+| `deploy` | ❌ | — | — | single serial command | 1 |
+
+**Three things never run at once**: dev and qa (separated by two barriers), two phases, two writers on the same ledger.
+
 ### File Layering (know the layer, then the role)
 
 ```
@@ -167,6 +181,8 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                process artifacts not persisted (change-log one line) · per-round acceptance details → docs/qa/
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
+
+**1.9.0:** agent-whole-qa now runs on Workflow orchestration - inventory → module fan-out → reduce → fix loop (≤3 rounds), falling back to multiple Agent calls when the tool is unavailable; the three executor descriptions state their parallelism bounds; lane reports use a fixed summary skeleton and single-threaded runs say so; README gains a parallelism-by-command table.
 
 **1.8.2:** a constitutional principle now heads the generated project's `CLAUDE.md` - own the result, not the process: the only yardstick is whether the result meets the requirements; only conclusions are persisted; the owner hears results and impact, never implementation; humans step in only when results miss the requirements or the requirements must change.
 
