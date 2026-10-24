@@ -44,7 +44,7 @@
 | | `active/data.md` | 数据契约（interface ↔ DB 列） | architect |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） | architect |
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单 | qa |
-| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n：状态/现象/复现/期望出处/根因/方案/影响面；状态 待诊断→待裁决→待修复 见该文件头部）；施工便签，修复通过后原文搬 `backup/retired/bugs.md` 再从 active 移除，常态为空 | qa（唯一写者；dev 的诊断报告由主控原样转给 qa 填入） |
+| — | `active/bugs.md` | 未修复 bug 工作上下文（B-n：状态/现象/复现/期望出处/根因/爆炸半径/方案；状态 待诊断→待裁决→待修复 见该文件头部）；施工便签，修复通过后原文搬 `backup/retired/bugs.md` 再从 active 移除，常态为空 | qa（唯一写者；dev 的诊断报告由主控原样转给 qa 填入） |
 | — | 根目录 `design.pen` | 前端可视化原型（P-n/M-n 帧 + reusable 组件 + design tokens）；⭐加密文件**只准 pencil MCP 读写，⛔ 禁 Read/Grep**。视觉事实唯一出处（pen 模式下 ux.md 不重复记色值/像素） | uiux（`/cc-code:plan-uiux` 只负责派它，编排器自己不画）· dev 只读参考（pen 底稿） |
 | — | `backup/**` | 冷数据归档：两张流水表 + `retired/` 退役原文（人看历史，AI 工作时禁读；格式见下方归档规范） | 各写者追加 |
 | — | `references/**` | 项目级经验资料库（`/cc-code:experience-summary` 产出，INDEX 按需读） | — |
@@ -213,7 +213,7 @@
     *   `[可读]` `active/project.md`（**仅取约定形式**：技术栈 / 测试基建契约 / 日志契约 / 契约风格）, `src/` 本阶段改动
     *   `[可写]` `active/gates.md`, `active/bugs.md`（**唯一写者**：dev 的诊断报告由主控原样转给 qa，由 qa 填进 B-n）, 项目测试目录, `backup/change-log.md`（只追加）, `backup/retired/gates.md`、`backup/retired/bugs.md`（只追加）
     *   `[禁读]` 无关历史业务代码
-*   **B-n 落盘时机：** 记录自动整理，不等主人批准。plan-debug 里 qa 复现成功当场写 B-n（状态 = 待诊断），收到 dev 的只读诊断后就地补根因 / 方案 / 影响面并把状态改为待修复；字段与三个状态（待诊断 / 待裁决 / 待修复）的含义见 `bugs.md` 头部（`templates/bugs.md`）。
+*   **B-n 落盘时机：** 记录自动整理，不等主人批准。plan-debug 里 qa 复现成功当场写 B-n（状态 = 待诊断），收到 dev 的只读诊断后就地补根因 / 爆炸半径 / 方案并把状态改为待修复（四段告知本体不落盘，只有结论进 B-n）；字段与三个状态（待诊断 / 待裁决 / 待修复）的含义见 `bugs.md` 头部（`templates/bugs.md`）。
 *   **bug 条目的退场：** 修复复测 PASS 后，或主人裁决「不是 bug」后，qa 把条目原文搬进 `backup/retired/bugs.md`，再从 active 移除（不直接删）。agent-debug 3 轮修复仍不过：qa 把状态写回待裁决并写清卡点，交人。
 *   **根因归属与停下交人：** 根因若是契约错或需求错、期望出处找不到、或复现不了，qa 不改文档、不改断言，把 B-n 状态写成待裁决，并用业务语言写一句要主人回答的问题，交回主控交人；裁决后由主控另派 architect / pm（或续接 qa 重新复现），qa 再更新 B-n。
 *   **⛔ 绝对禁止：** 把 FAIL 四舍五入成 PASS；修改 `prd.md` 的断言让结果变绿。
