@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.9.2** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.9.3** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 宪法原则：**只对结果负责，不在乎过程**（结果是否符合需求是唯一尺子）。
@@ -178,6 +178,8 @@ PM ──► Architect ──► Dev ──► QA
              过期内容 → backup/retired/<源文件名>.md（原文整段搬走, 一字不丢）
 ```
 
+**1.9.3：** 升级与迁移也严守单一写者——`init` 按文件派 pm / architect / qa 回填，主控只分拣、只派、不写；`Agent.md` / `CLAUDE.md` 由 init 脚本按插件模板覆盖；pm 不读 milestone-log。
+
 **1.9.2：** 修 1.9.1 的落地缺口——主控 `allowed-tools` 不含浏览器工具，生命周期改为「首个 qa 开（owner）/ 收口 qa 关（closer）」；qa 协议与 Workflow 脚本补上 owner / closer、失联只上报不自建、产物显式落盘；PREFLIGHT 自动识别唯一浏览器工具，`Workflow` 纳入工具白名单；`project.md` §六 增加「QA 数据隔离」契约。
 
 **1.9.1：** 浏览器验收改为**单实例复用**——全流程只起一个浏览器，所有 qa 照常并发测，各自建 tab 并在每次操作前切回自己的 tab；⛔ 不新开实例、⛔ 不关闭整个浏览器。`project.md` §六 新增「浏览器工具 / 实例 / 产物目录」三行契约；qa agent、清点流程与 Workflow 脚本同步该协议。
@@ -294,7 +296,7 @@ PM ──► Architect ──► Dev ──► QA
 ```
 
 - **新项目**：直接搭场域 + 盖版本戳，切 PM 等需求。
-- **旧项目（无 `.cc_code/`）**：备份旧 `CLAUDE.md` → `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，AI 按映射表分拆归并到 `active/` 各文件，再用入口模板覆盖根目录 `CLAUDE.md`。
+- **旧项目（无 `.cc_code/`）**：备份旧 `CLAUDE.md` → `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`，主控只分拣，按文件派 pm / architect / qa 按映射表分拆回填 `active/` 各文件，`Agent.md` 与根目录 `CLAUDE.md` 由 init 脚本按插件模板覆盖。
 - **旧版场域（已有 `.cc_code/` 但版本戳缺失或更旧）**：自动走升级迁移 —— **归档 → 清点 → 迁移 → 校验 → 归位 → 盖戳**，`init.sh` 中 `rm` 出现 0 次，旧物只 `cp` 快照与 `mv` 归位，内容永远可回溯。校验门未过则停手，戳不盖，下次 `init` 仍判为待升级。
 
 > 根目录 `CLAUDE.md` 是纯入口引导（会话开启协议 + 三铁律 + 文件索引），不含业务状态。Claude Code 原生自动加载它，从而被引导进 `.cc_code/` 状态机。

@@ -15,7 +15,7 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 ## 三大铁律（贯穿全会话）
 
 1. **上下文最小化** — 任何时刻只读完成当前任务所需的最小文件集，禁止全量读取。
-2. **决策串行** — 严守 pm → architect → dev → qa 顺序；派哪个 agent 就是哪个角色，主控是编排者、不扮演任何角色，禁止越权。
+2. **决策串行** — 严守 pm → architect → dev → qa 顺序；派哪个 agent 就是哪个角色，主控是编排者、不扮演任何角色、不代写任何角色文件，禁止越权。
 3. **记忆外部化** — 进度/踩坑/归档全部落到 `.cc_code/` 静态文件，AI 不在 prompt 中维护状态。
 
 ## 会话开启协议（每次必执行）
@@ -40,14 +40,14 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 
 ## agent 权限
 
-5 个 agent：`pm`（L1+L2）、`architect`（L3）、`dev`（代码）、`qa`（L4 + bugs.md，灰盒）、`uiux`（design.pen）。**每个 agent 的必读 / 可写 / 禁读只以 `.cc_code/active/Agent.md` §三 为准、codegraph 权限只以其 codegraph 权限矩阵为准**，本 skill 不抄副本。
+5 个 agent：`pm` / `architect` / `dev` / `qa` / `uiux`。**每个 agent 的必读 / 可写 / 禁读只以 `.cc_code/active/Agent.md` §三 为准、codegraph 权限只以其 codegraph 权限矩阵为准**，本 skill 不抄副本。
 
-> 主控（跑命令的主会话）是编排者：只传话，不扮演任何 agent；它的写权限见 `active/Agent.md` §一。
+> 主控（跑命令的主会话）是编排者：只传话，不扮演任何 agent；它的写权限与两个显式例外见 `active/Agent.md` §一。
 > 测试目录与全部测试 / 构建 / 自检命令以 `project.md` 的测试基建契约为准，不硬编码。
 
 ## 热数据写入分工
 
-谁写哪个文件，以 `active/Agent.md` §二 为准（单一出处）。要点：agent 写各自负责的 active 文件；`status.md` 与里程碑行归主控，在任务节点完成时更新。
+谁写哪个文件，以 `active/Agent.md` §二 为准（单一出处，含 `Agent.md` / `CLAUDE.md` / `AGENTS.md` 的写者），本 skill 不列写者。要改某个角色文件（任何命令、任何阶段，含 init / 升级 / 迁移）→ 一律派该文件的写者 agent，主控自己不 Edit / Write；规则全文见 `Agent.md` §一「单一写者铁律」。
 
 `status.md` 只答「坐标/卡点/下一步」；里程碑一律追加到 `backup/milestone-log.md`（格式见 `active/Agent.md` 归档规范），⛔ 不落 `status.md`。
 

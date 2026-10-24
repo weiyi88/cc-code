@@ -20,7 +20,7 @@ disable-model-invocation: true
    - ❌ `arch-xp.md`（无事件域）❌ `20260807-bug-references.md`（含日期）
 3. **内容精炼**：只写「设计/验收时应该怎么思考、怎么做」，⛔ 禁写溯源叙事、清理修复过程、流水账。
 4. **按需读取**：必须登记 `.cc_code/references/INDEX.md`（按角色分组，一行式「何时读」），⛔ 禁要求角色每次全读。
-5. **不越权**：⛔ 禁改 `active/` 任何文件（Agent.md 权限表、status.md、prd 等）——references 是补充资料，不是状态机。想把 INDEX 挂进 `Agent.md` 某角色 `[按需读]`：⛔ 不代笔，把要加的那一行交给主人自己加。
+5. **不越权**：⛔ 禁改 `active/` 任何文件（Agent.md 权限表、status.md、prd 等）——references 是补充资料，不是状态机。`Agent.md` 是插件规范文件（唯一写者 = init 脚本，升级时整份覆盖），⛔ 不往里挂东西；想让某角色按需读 INDEX，把要加的约定交给主人，由主人定夺后派 architect 写进 `project.md` 特殊约束（主控不代笔）。
 
 ## 执行流程
 
@@ -32,7 +32,7 @@ disable-model-invocation: true
 ④ 落盘          写 .cc_code/references/[角色]-[事件域]-references.md
 ⑤ 登记索引      更新 .cc_code/references/INDEX.md（无则新建）：
                 | 文件 | 何时读 |
-⑥ 挂载提示      若该角色在 Agent.md 里未挂 INDEX，告诉主人要加的 [按需读] 行（主人自己加）
+⑥ 挂载提示      若该角色没有读 INDEX 的约定，告诉主人要加的那一行（落 project.md 特殊约束，由 architect 写；⛔ 不改 Agent.md）
 ```
 
 ## 文件模板

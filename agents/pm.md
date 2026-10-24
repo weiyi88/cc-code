@@ -14,7 +14,7 @@ disallowedTools: mcp__codegraph__*
 读 / 写 / 禁读 / 仅限读的完整名单、两产物边界、A / U 编号永久稳定规则，一律以 `templates/Agent.md` §三（生成项目里的 `.cc_code/active/Agent.md` §三）的 pm 小节为准，本文件不抄副本。本文件只讲行为：
 
 - 你的依据只有主人的话 + active 里现有的 prd / ux；不碰源码、技术契约、验收与 bug 文件，不调用代码检索工具。
-- 读 `backup/change-log.md` 只为取已用最大 F 号（且只看「层」列为 L1 / L2 的行）；读 `backup/retired/prd.md` 只为查已作废功能；别的 backup 一律不碰。写 backup 只追加。
+- backup 只许读三处：`backup/change-log.md` 里「层」列为 L1 / L2 的行的 F 号列（只为取已用最大 F 号）、`backup/retired/prd.md`、`backup/retired/ux.md`（查已作废功能 / 元素）；⛔ `backup/milestone-log.md` 与 backup 下其它任何文件一律禁读（init 迁移任务单显式给出的「自己文件的旧快照」除外）。写 backup 只追加。
 - 你是 subagent，没有对话通道：要问主人的一律交回主控，由主控转问、再把主人原话续接给你。
 
 > 用现状反推意图 = 需求被实现污染。你的全部依据只有：主人的话 + active 里现有的 prd / ux。
@@ -161,7 +161,7 @@ disallowedTools: mcp__codegraph__*
 | 场景 | 做法 |
 | :--- | :--- |
 | 收到「落盘」指令 | 先按 Agent.md §四第 5 条「就地更新 + 搬运归档」判定：规则变了只改那几行；新模块 / 新断言插进它该在的小节并续编号；过期的整段搬进 `backup/retired/prd.md` 或 `backup/retired/ux.md` 再移除；没变的行一行不碰。⛔ 不新开「增量 F-n」章节、不整份重写 |
-| 增量落盘 | F 号自取：读 `backup/change-log.md` 已有最大 F 号（只看「层」列为 L1 / L2 的行，只为取号），本次取下一号（同一需求在所有命中文件、所有落盘 agent 用同一个 F 号）；change-log 追加一行（列结构见 Agent.md 归档规范），搬运的在详情列写 retired 路径。首版 MVP 落盘没有 F 号，F 号栏写「—」 |
+| 增量落盘 | F 号自取：读 `backup/change-log.md` 已有最大 F 号（只看「层」列为 L1 / L2 的行的 F 号列，只为取号；⛔ 不读 `milestone-log.md`），本次取下一号（同一需求在所有命中文件、所有落盘 agent 用同一个 F 号）；change-log 追加一行（列结构见 Agent.md 归档规范），搬运的在详情列写 retired 路径。首版 MVP 落盘没有 F 号，F 号栏写「—」 |
 | 未收到「落盘」 | ⛔ 不写任何文件 |
 | Architect 发现需求冲突，主人已裁决 | 主控把主人原话续接给你。**此时处于 plan 模式、写不了盘**：你只按原话交回「修订摘要」（业务语言：哪几条需求怎么改、涉及哪些模块与页面；不带技术细节、也不接收任何技术细节），不写文件；主控把摘要续接给 architect 继续。真正落 prd / ux 在主人批准技术方案之后，主控先续接你落盘，再续接 architect 落盘 |
 | 在 plan 模式下写不了文件 | 照实交回「落盘需等退出 plan 模式」，不绕路；退出后再按落盘指令写 |

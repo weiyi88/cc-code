@@ -4,6 +4,8 @@
 #       bash init.sh --relocate <相对路径...>   冗余归位（mv 进 backup/superseded/，零删除）
 #       bash init.sh --stamp                    盖场域版本戳
 #       bash init.sh --codex                    分发 codex 护栏（AGENTS.md + hooks + agents）
+# 脚本只做机械动作：建目录 / 快照 / 对不存在的文件复制模板骨架 / 盖版本戳；
+# 不改任何已存在的角色文件内容（规范文件 Agent.md / CLAUDE.md / AGENTS.md 除外：先快照再覆盖）。
 set -euo pipefail
 
 # 参数解析：首参以 -- 开头即子命令（项目根取 cwd），否则视为项目根
@@ -258,7 +260,7 @@ update_gitignore() {
 #   ⑤ 永不自动全量重建 —— index 可能耗时数分钟，只提示不执行
 #
 # ⛔ 本函数只探测、只建索引，绝不执行 npm i -g（全局安装是高风险操作，
-#    且脚本无法交互）。CLI 缺失时输出探测结果，由 AI 在 /cc-code:init
+#    且脚本无法交互）。CLI 缺失时输出探测结果，由主控在 /cc-code:init
 #    对话内用 AskUserQuestion 弹选择框，介绍收益后由人决定装不装。
 # ⛔ 任何分支都 return 0 —— init 永不因 codegraph 挂掉。
 # ══════════════════════════════════════════════════════════════════════════
@@ -318,6 +320,7 @@ archive_legacy() {
     SNAP="$SNAP-$(date +%H%M%S)"
   fi
   mkdir -p "$SNAP"
+  SNAP_DIR="$SNAP"   # 供 refresh_spec_files 复用同一个快照目录
 
   # active/ 全量 + .cc_code 根层散落 md（规范外冗余的主要藏身处）
   [ -d "$TARGET/active" ] && cp -R "$TARGET/active" "$SNAP/active"
@@ -329,7 +332,60 @@ archive_legacy() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
-# 升级 D2 —— 清点（四类差异，落 upgrade_audit.md 交 AI 迁移）
+# 升级 D1.5 —— 规范文件机械覆盖（1.9.3 新增）
+# Agent.md / 根目录 CLAUDE.md / AGENTS.md 是插件规范文件，唯一写者 = 本脚本：
+#   旧版先 cp 进 D1 快照目录的 spec/，再 cp 插件模板新版覆盖；内容已一致则不动。
+# 项目不自定义 Agent.md 权限（项目差异一律写 project.md，由 architect 落盘）。
+# ⛔ 只覆盖这三个规范文件；任何角色文件（prd/ux/project/data/api/gates/bugs/status）绝不碰。
+# ⛔ 零 rm：只 cp 快照 + cp 覆盖。
+# ══════════════════════════════════════════════════════════════════════════
+overwrite_spec() {   # $1=现有文件 $2=插件模板 $3=快照内文件名
+  local cur="$1" tpl="$2" name="$3"
+  [ -f "$tpl" ] || return 0
+  if [ -f "$cur" ] && cmp -s "$cur" "$tpl"; then return 0; fi
+  if [ -f "$cur" ]; then
+    mkdir -p "$SNAP_DIR/spec"
+    cp "$cur" "$SNAP_DIR/spec/$name"
+  fi
+  cp "$tpl" "$cur"
+  log "  规范文件已覆盖为插件新版：${name}（旧版快照 → backup/$(date +%Y-%m)/$(basename "$SNAP_DIR")/spec/${name}）"
+}
+
+refresh_spec_files() {
+  local agents="$PROJECT_ROOT/AGENTS.md"
+  overwrite_spec "$TARGET/active/Agent.md" "$TEMPLATES/Agent.md"  "Agent.md"
+  overwrite_spec "$PROJECT_ROOT/CLAUDE.md" "$TEMPLATES/CLAUDE.md" "CLAUDE.md"
+  # AGENTS.md：软链 → 指向 CLAUDE.md 即可；cc-code 旧版实体副本 → 快照后换成软链；
+  # 其它来源的 AGENTS.md 属项目自己的文件，原地不动
+  if [ -L "$agents" ]; then
+    [ "$(readlink "$agents")" = "CLAUDE.md" ] || ln -sfn CLAUDE.md "$agents"
+  elif [ -f "$agents" ]; then
+    if head -1 "$agents" | grep -qF "cc-code 工作流入口"; then
+      mkdir -p "$SNAP_DIR/spec"
+      cp "$agents" "$SNAP_DIR/spec/AGENTS.md"
+      ln -sfn CLAUDE.md "$agents"
+      log "  规范文件已换成软链：AGENTS.md → CLAUDE.md（旧版快照 → spec/AGENTS.md）"
+    else
+      warn "  AGENTS.md 不是 cc-code 生成的，原地保留（不覆盖）"
+    fi
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D2.5 —— 缺失骨架补建（只补不存在的，已存在的角色文件一个字不动）
+# ══════════════════════════════════════════════════════════════════════════
+fill_missing_skeleton() {
+  local base
+  for base in status.md prd.md ux.md project.md data.md api.md gates.md; do
+    if [ ! -f "$TARGET/active/$base" ] && [ -f "$TEMPLATES/$base" ]; then
+      cp "$TEMPLATES/$base" "$TARGET/active/$base"
+      log "  缺失骨架已补建（空模板，内容由该文件写者填）：active/$base"
+    fi
+  done
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D2 —— 清点（四类差异，落 upgrade_audit.md 交各文件写者 agent 迁移）
 # ══════════════════════════════════════════════════════════════════════════
 audit_layout() {
   local YM AUDIT rows_missing rows_stray rows_extra rows_ok f base
@@ -372,7 +428,7 @@ audit_layout() {
   {
     echo "# 升级清点报告 ($(date +%Y-%m-%d))"
     echo ""
-    echo "> 由 init.sh 自动生成（机械清点）。**内容迁移是理解力活，由 AI 按 /cc-code:init 第 2C 步执行。**"
+    echo "> 由 init.sh 自动生成（机械清点）。**内容迁移是理解力活，由各文件的写者 agent 按 /cc-code:init 第 2C 步执行（主控只派不写）。**"
     echo "> ⛔ 本次升级全程零删除：迁移校验通过后，旧物 \`mv\` 进 \`backup/$YM/superseded/\`。"
     echo ""
     echo "旧形态：\`${_old:-无版本戳}\`  →  目标：\`$PLUGIN_VERSION\`"
@@ -487,7 +543,7 @@ esac
 # 三轨闸门
 #   Track B 新建   —— 无 active/Agent.md
 #   Track C 已最新 —— 版本戳 == 插件版本，只搬散落物
-#   Track D 升级   —— 版本戳缺失/更旧，走 D1 归档 → D2 清点 → 交 AI 迁移
+#   Track D 升级   —— 版本戳缺失/更旧，走 D1 归档 → D2 清点 → D1.5 规范文件覆盖 → 缺失骨架补建 → 交写者 agent 迁移
 # ══════════════════════════════════════════════════════════════════════════
 if [ -f "$TARGET/active/Agent.md" ]; then
   OLD_STAMP="$(read_stamp)"
@@ -508,6 +564,8 @@ if [ -f "$TARGET/active/Agent.md" ]; then
 
   archive_legacy "${OLD_STAMP:-unstamped}"
   audit_layout
+  refresh_spec_files   # 1.9.3：Agent.md / CLAUDE.md / AGENTS.md 机械覆盖（先快照），角色文件一个字不动
+  fill_missing_skeleton # 缺的角色文件才补模板骨架；已存在的不碰
   migrate_scattered
   update_gitignore
   ensure_bugs
@@ -516,10 +574,11 @@ if [ -f "$TARGET/active/Agent.md" ]; then
   YM="$(date +%Y-%m)"
   warn ""
   warn "══════════ 脚手架侧完成，以下是 AI 的活 ══════════"
-  warn "AI 必须按 /cc-code:init 第 2C 步「升级迁移协议」继续："
-  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，把内容搬到规范位（一段不丢）"
-  warn "  D4 补层   按 templates/Agent.md 补齐缺失规范段，保留项目自定义权限"
-  warn "  D5 校验门 逐节核对，未全命中即停手报清单，禁止归位"
+  warn "主控必须按 /cc-code:init 第 2C 步「升级迁移协议」继续（主控只派不写）："
+  warn "  已完成    Agent.md / CLAUDE.md / AGENTS.md 已机械覆盖为插件新版（旧版在 D1 快照 spec/），脚本不改任何角色文件内容"
+  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，按文件派写者 agent（prd/ux→pm、project/data/api→architect、gates/bugs→qa），status 主控自己写"
+  warn "  D4 补层   同上，各写者按 templates/ 骨架补齐自己的文件"
+  warn "  D5 校验门 各写者自检交回，主控只跑机械检查（grep / 计数），未全命中即停手报清单，禁止归位"
   warn "  D6 归位   校验通过 → bash init.sh --relocate <路径...> 把旧物 mv 进 superseded/"
   warn "  D7 盖戳   bash init.sh --stamp"
   warn "⛔ 版本戳未盖前，下次 init 仍判为待升级 —— 迁移没做完不会被误认为完成。"
@@ -550,15 +609,15 @@ mkdir -p "$TARGET/backup/$(date +%Y-%m)"
 # 根目录 CLAUDE.md 入口引导（新/旧项目统一生成）
 #   - 旧项目：先备份 legacy → backup/YYYY-MM/CLAUDE.md.legacy，再覆盖
 #   - 新项目：直接生成
-#   注：旧 CLAUDE.md 的内容分拆（理解力活）由 AI 在 /cc-code:init 对话内完成，
-#       读取 backup 里的 legacy 按 init 的映射表归并到 active/ 各文件。
+#   注：旧 CLAUDE.md 的内容分拆（理解力活）：主控在 /cc-code:init 内只做原文分拣，
+#       再按 pm → architect → qa 顺序派各文件写者落盘（主控不写角色文件）。
 LEGACY_CLAUDE="$PROJECT_ROOT/CLAUDE.md"
 YM="$(date +%Y-%m)"
 if [ -f "$LEGACY_CLAUDE" ]; then
   mkdir -p "$TARGET/backup/$YM"
   cp "$LEGACY_CLAUDE" "$TARGET/backup/$YM/CLAUDE.md.legacy"
   warn "检测到旧 CLAUDE.md，已备份至 .cc_code/backup/$YM/CLAUDE.md.legacy"
-  warn "→ AI 须读取该 legacy，按 /cc-code:init 映射表分拆归并到 active/ 各文件。"
+  warn "→ 主控须按 /cc-code:init 第 2A 步对该 legacy 做原文分拣，再派各文件写者落盘。"
 fi
 cp "$TEMPLATES/CLAUDE.md" "$LEGACY_CLAUDE"
 log "已生成根目录 CLAUDE.md（入口引导，纯协议不含业务状态）。"

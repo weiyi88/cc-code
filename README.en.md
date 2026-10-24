@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.9.2** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.9.3** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -182,6 +182,8 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
 
+**1.9.3:** upgrade and migration also keep the single-writer rule - `init` dispatches pm / architect / qa per file to backfill, the orchestrator only sorts and dispatches and never writes; `Agent.md` / `CLAUDE.md` are overwritten by the init script from plugin templates; pm does not read milestone-log.
+
 **1.9.2:** fixes the 1.9.1 landing gap - the orchestrator has no browser tools in `allowed-tools`, so the browser lifecycle now belongs to the first qa (owner, opens) and a wrap-up qa (closer, closes); the qa protocol and Workflow script gain owner/closer roles, report-on-lost-instance without relaunching, and explicit artifact paths; PREFLIGHT auto-detects the single browser tool and `Workflow` joins the tool allowlist; project.md §6 gains a QA data-isolation contract.
 
 **1.9.1:** browser acceptance now reuses a **single instance** - one browser for the whole run; concurrent qa agents still test as before, each owning its own tab and re-selecting it before every browser call, never launching a second instance or closing the whole browser. project.md §6 gains three contract rows (browser tool / instance / artifact dir); the qa agent, inventory flow and Workflow script carry the same protocol.
@@ -300,7 +302,7 @@ In any project root:
 ```
 
 - **New project**: scaffold + stamp version, switch to PM, await requirements.
-- **Existing project (no `.cc_code/`)**: back up old `CLAUDE.md` → `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`; AI splits and merges into `active/` per mapping table, then overwrites root `CLAUDE.md` with the entry template.
+- **Existing project (no `.cc_code/`)**: back up old `CLAUDE.md` → `.cc_code/backup/YYYY-MM/CLAUDE.md.legacy`; the orchestrator only sorts, dispatching pm / architect / qa per file to split and backfill `active/` per the mapping table; `Agent.md` and root `CLAUDE.md` are overwritten by the init script from plugin templates.
 - **Old-version field (has `.cc_code/` but version stamp missing or older)**: auto upgrade migration — **archive → audit → migrate → verify → relocate → stamp**. `init.sh` uses `rm` zero times; old files only `cp` snapshot and `mv` relocate, always recoverable. If the verify gate fails, stop, no stamp; next `init` still judges as pending-upgrade.
 
 > Root `CLAUDE.md` is a pure entry guide (session-open protocol + three iron rules + file index), no business state. Claude Code natively auto-loads it, guiding into the `.cc_code/` state machine.

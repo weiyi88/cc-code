@@ -46,7 +46,7 @@ grep '^NAME=' .env | cut -d= -f2- | wrangler secret put NAME   # 值走管道
 
 非机密配置写 wrangler 配置的 `vars`。构建时变量（如 `NEXT_PUBLIC_*`）必须在构建环境里存在。
 
-## 首次开通（产出的资源标识写回已存在的 wrangler 配置，单独提交）
+## 首次开通（产出的资源标识由主控派 dev 写回已存在的 wrangler 配置，主控单独提交）
 
 ```bash
 wrangler d1 create <库名>

@@ -43,6 +43,8 @@ Step 5  把改动清单交主人, 由主人走 cc-code 工作流落地
 
 ## 实现指南流程
 
+> 以下 Phase 是**给 dev 的实现指南**（经 `/cc-code:plan-feature` → `/cc-code:agent-feature` 由 `dev` 执行）。本 skill 的主控只整理方案，⛔ 不亲自创建 / 修改任何源码、配置或 `.cc_code/active/` 文件。
+
 ```
 Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 4
 环境检查   后端实现   前端UI    回调路由   构建验证
