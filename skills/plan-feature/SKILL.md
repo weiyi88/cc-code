@@ -44,8 +44,13 @@ pm / architect 每轮只交回**一个**模糊点或**一条**冲突；主控不
 ```
 ⛔ active/gates.md、active/bugs.md —— qa 唯一域，本命令绝不写
 ⛔ src/ 与测试目录                  —— dev 唯一域，本命令绝不写
-⛔ active/Agent.md                  —— 人的域，本命令一个字不许动
+⛔ active/Agent.md                  —— 插件规范文件（唯一写者 = init 脚本），本命令一个字不许动
 ✅ active/status.md                 —— 主控唯一落盘动作（坐标 / 卡点 / 下一步）
+
+每个 active 文件只有一个写者：pm → prd / ux；architect → project / data / api；
+qa → gates / bugs；uiux → design.pen；dev → src。任何阶段无例外：
+主控绝不自己 Write / Edit 这些文件（含「顺手补一行」「体检后补救」「落到实际文件」），
+要改一律派对应写者 agent。
 ```
 
 ---
@@ -58,8 +63,8 @@ pm / architect 每轮只交回**一个**模糊点或**一条**冲突；主控不
 Step0 ⭐ 进入规划模式（第一动作，写盘当场锁死）
   │ ═══════════ 需求阶段（规划模式内，只读 + 文字）═══════════
 Step0.5 规范体检门（主控只看形态，不读内容）
-  │     目录形态偏离 → ⛔停手，要求先跑 /cc-code:init
-  │     宪法为旧版   → ⚠️提醒升级，不阻断
+  │     目录形态偏离 → ⛔停手，要求主人自己先跑 /cc-code:init（主控不代跑）
+  │     宪法为旧版   → ⚠️只提醒主人自己跑 /cc-code:init，不阻断；⛔ 主控不代跑 init、不改任何 active 文件
   │
 Step1 派 pm（全新上下文）
   │     读：status、prd、ux ＋ 主人原话（新需求原文）
@@ -139,13 +144,13 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 体检项 | 判据 | 命中时的动作 |
 | --- | --- | --- |
 | 目录形态 | `active/` 下 prd / ux / project / data / api / status 齐备 | 缺项 → ⛔ 停手（见下） |
-| 宪法版本 | 项目 `active/Agent.md` 不再有「当前激活角色」字段，且角色条目齐全（pm / architect / dev / qa / uiux） | 仍是旧版 → ⚠️ 提醒升级，不阻断，本次按插件规范推进 |
+| 宪法版本 | 项目 `active/Agent.md` 不再有「当前激活角色」字段，且角色条目齐全（pm / architect / dev / qa / uiux） | 仍是旧版 → ⚠️ **只提醒主人自己跑 `/cc-code:init`**，不阻断，本次按插件规范推进；⛔ 主控不得代跑 init、不得为补救体检结果改任何 active 文件（`status.md` 仍只在 Step4 / Step10 按本命令写坐标） |
 
-提醒话术（命中即报，只报一次，不啰嗦）：
+提醒话术（命中即报，只报一次，不啰嗦；升级由主人自己触发，主控绝不顺手代劳）：
 
 ```
 ⚠️ 本项目 .cc_code 为旧版形态，缺 <项>。
-   建议：/plugin update cc-code  →  重跑 /cc-code:init 升级
+   建议：/plugin update cc-code  →  请你自己重跑 /cc-code:init 升级
    本次规划仍按插件规范推进。
 ```
 
@@ -155,7 +160,7 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 规范路径缺失（如无 active/ux.md、prd.md 不在 active/ 下、L3 三件缺项）
   ⛔ 停：「规范路径 <X> 不存在，请先跑 /cc-code:init 归正目录形态，
           否则增量章节会落错文件造成版本冲突。」
-  → 仅当主人明示「就落 <实际文件>」才落，落完再提醒一次升级
+  → 仅当主人明示「就落 <实际文件>」才落——由对应写者 agent（pm / architect）落，主控不自己写；落完再提醒一次升级
 ```
 
 ### architect 代码侦察（技术阶段第一件事，主控不参与）
@@ -313,7 +318,8 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 主控只传话 | 不读代码 / L3，不跑 codegraph，不思考需求，不替主人回答，不扮演任何角色 |
 | 先 pm 后 architect | 严格串行；两次批准（需求、技术方案） |
 | 续接不新派 | 同一阶段同一个 agent 一直续接，保留全部记忆；⛔ 不另派顶替 |
-| 规范唯一源 = 插件 | 项目 `.cc_code` 形态不作依据；落后即提醒升级 + 重跑 `/cc-code:init` |
+| 规范唯一源 = 插件 | 项目 `.cc_code` 形态不作依据；落后即提醒主人自己重跑 `/cc-code:init`，⛔ 主控不代跑 init、不改任何 active 文件 |
+| 单写者无例外 | prd/ux = pm；project/data/api = architect；gates/bugs = qa；design.pen = uiux；主控只写 status.md（+ backup/retired/status.md、milestone-log / change-log 追加） |
 | codegraph 只校准 L3 | 只由 architect 用；永不生成 L1/L2/L4 |
 | 契约漂移禁沉默 | 逐条二选一 |
 | ⛔ 禁批量决策清单 | 一次一个模糊点 / 一条冲突 |

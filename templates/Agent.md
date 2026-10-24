@@ -20,7 +20,7 @@
    执行:  dev ──► qa                （泳道并发见 skills/cc-code/references/parallel-lanes.md）
    旁路:  uiux（只被 /cc-code:plan-uiux 派，一次一帧）
 
-   ⛔ 主控不读 src/、不替主人回答、不代写任何角色的文件
+   ⛔ 主控不读 src/、不替主人回答、不代写任何角色的文件（含 init / 升级 / 迁移 / 补骨架）
    ⛔ subagent 不能问主人：要问的一律交回主控，由主控交人
 ```
 
@@ -31,12 +31,34 @@
 | 触发 Pencil 保存 `design.pen` | 只在 `/cc-code:plan-uiux` 收尾，由编排器触发保存动作；只保存，不改内容、不画（画图归 uiux） |
 | git 提交 | 只提交已存在的改动（如 `design.pen`、部署资源标识配置），不改任何文件内容 |
 
+### 单一写者铁律（无例外：任何命令、任何阶段，含 init / 升级 / 迁移 / 补骨架）
+
+> active 文件只能由它的唯一写者写（归属见 §二）。上面两个显式例外之外，主控一个字都不写；init 脚本也不改角色文件内容。
+
+```
+   主控要改某个角色文件（不论哪条命令、哪个阶段）
+            │
+            ▼
+   派该文件的写者 agent ──► 只给它「自己文件的路径 + 要求」──► 它自己写
+            │
+            ▼
+   主控只收报告、只做机械核对（计数 / 检索），不动文件
+```
+
+| 谁 | 能做 | ⛔ 不能做 |
+| :--- | :--- | :--- |
+| **主控** | 派写者 agent、转述、机械核对、写自己的文件（`status.md` 等，见上表） | 亲自 Edit / Write 任何角色文件，哪怕命令正文写着「由 AI 完成」 |
+| **init 脚本** | 建目录、把旧文件快照进 `backup/`、对**不存在**的文件复制模板骨架、盖版本戳；对三个规范文件（`Agent.md` / 根目录 `CLAUDE.md` / `AGENTS.md`）先快照再机械覆盖为插件模板新版 | 改动任何已存在的角色文件内容（prd / ux / project / data / api / gates / bugs / status） |
+
+> **init 迁移的唯一读 backup 例外**：`/cc-code:init` 升级 / 接管时，写者 agent 可读任务单**显式给出**的「自己文件的旧快照」（`backup/YYYY-MM/pre-upgrade-*/active/<自己的文件>`），或主控分拣后直接写进任务单的原文段落；只读这些、只写自己的文件，别的 backup 仍一律禁读。
+
 ---
 ## 🗂️ 二、 文件分层（先认层，再认谁写）
 
 | 层 | 文件 | 装什么 | 唯一写者 |
 | :-- | :--- | :--- | :--- |
-| **L0 控制** | `active/Agent.md` | agent 分工 + 权限卡片 | 人 |
+| **L0 控制** | `active/Agent.md` | agent 分工 + 权限卡片（插件规范文件，项目不自定义权限；项目差异一律写进 `project.md`） | init 脚本（插件模板；升级时机械覆盖，旧版快照进 `backup/YYYY-MM/`） |
+| | 根目录 `CLAUDE.md` / `AGENTS.md` | 入口引导（`AGENTS.md` 为指向 `CLAUDE.md` 的软链）；同为插件规范文件 | init 脚本（同上） |
 | | `active/status.md` | 当前坐标 + 卡点 + 下一步（业务语言；里程碑不落此文件） | 主控 |
 | **L1 意图** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 | pm |
 | **L2 表现** | `active/ux.md` | 视觉规格 + 交互五态矩阵 | pm |
@@ -170,8 +192,8 @@
 *   **文件权限：**
     *   `[必读]` `active/status.md`, `active/prd.md`, `active/ux.md`
     *   `[可写]` `active/prd.md`, `active/ux.md`（pen 模式下 `ux.md` 里指向 `design.pen` 的指针行也由 pm 写；plan-uiux 把这件事交给 pm，并允许把「全局设计系统」表里与 `design.pen` 重复的色值 / 像素行原文搬进 `backup/retired/ux.md` 后移除，只留指针行）, `backup/change-log.md`（只追加）, `backup/retired/prd.md`、`backup/retired/ux.md`（只追加）
-    *   `[仅限读]` `backup/change-log.md`（**只为取已用最大 F 号**，且只看「层」列为 L1 / L2 的行；不拿它当历次裁决的依据）、`backup/retired/prd.md`（查已作废功能）——只在这两件事上读，别的 backup 一律不碰
-    *   `[禁读]` `src/` 目录, `active/project.md`, `active/data.md`, `active/api.md`, `active/gates.md`, `active/bugs.md`, 根目录 `design.pen`；⛔ 不调用 codegraph
+    *   `[仅限读]` 三处，别的 backup 一律不碰：① `backup/change-log.md` 里「层」列为 L1 / L2 的行的 **F 号列**（**只为取已用最大 F 号**，不读其它列，不拿它当历次裁决的依据）；② `backup/retired/prd.md`；③ `backup/retired/ux.md`（②③ 查已作废功能 / 已作废页面元素）
+    *   `[禁读]` `src/` 目录, `active/project.md`, `active/data.md`, `active/api.md`, `active/gates.md`, `active/bugs.md`, 根目录 `design.pen`, ⛔ `backup/milestone-log.md` 与 `backup` 下其它任何文件（含 `backup/YYYY-MM/` 的快照、legacy、审计表，仅 init 迁移任务单显式给出的「自己文件的旧快照」除外，见 §一；里程碑流水与 pm 无关，读了就是把历史拖回上下文）；⛔ 不调用 codegraph
 *   **两产物边界（防重合）：**
     *   `prd.md` = 分模块业务逻辑 + 规则 + 验收断言（规则是什么）；不写 UI、不写接口
     *   `ux.md` = 视觉规格 + 交互五态（长什么样、点了怎么变）；不写业务规则
@@ -233,7 +255,7 @@
 ---
 ## ⚙️ 四、 强制执行协议
 1.  **明确边界：** 回答前内部核对本 agent 卡片的「禁读 / 可写」名单。被要求越权时，礼貌拒绝，说明该文件归哪个 agent，交回主控按命令另派。
-2.  **不谈归档：** 不向用户报告归档进度。历史台账/里程碑落 `backup/`（按上方归档规范追加一行），AI 工作时**禁读** `backup/`。唯一例外：pm 卡片 `[仅限读]` 列出的两个文件。
+2.  **不谈归档：** 不向用户报告归档进度。历史台账/里程碑落 `backup/`（按上方归档规范追加一行），AI 工作时**禁读** `backup/`。唯一例外：pm 卡片 `[仅限读]` 列出的三处（change-log 的 L1 / L2 行 F 号列、`retired/prd.md`、`retired/ux.md`）。
 3.  **唯一真相源：** 规则以 `prd.md` 为准，进度以 `status.md` 为准，契约以 `data.md` / `api.md` 为准，实测结果以 `gates.md` 为准。禁止凭记忆作答。
 4.  **status.md 归主控：** 主控在任务节点完成时更新 `status.md`（只写坐标/卡点/下一步），并在 `backup/milestone-log.md` 追加一行。卡点与下一步用业务语言、不写技术细节（技术细节在 agent 报告与 `gates.md` / `bugs.md` 里）。agent 只在报告里交回结果，不写 `status.md`。
 5.  **就地更新 + 搬运归档（铁律，写 active 前必执行）：** `active/` 只保留项目**最新的状态和内容**。写之前先按下图处置，⛔ 只动自己负责的文件（归谁写见 §二 分层表），别人的文件只读不碰。

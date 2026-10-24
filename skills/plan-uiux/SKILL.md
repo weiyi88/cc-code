@@ -31,7 +31,7 @@ disable-model-invocation: true
   流转 / 五态 U 矩阵                 组件视觉长相
 ```
 
-- ⛔ 同一事实只落一处：改视觉只动 pen；改行为只动 ux.md（pen 对应帧跟进视觉）
+- ⛔ 同一事实只落一处：改视觉只动 pen（派 uiux 写）；改行为只动 ux.md（派 pm 写；pen 对应帧再派 uiux 跟进视觉）。编排器自己不写任何一个
 - pen 模式下 ux.md 的「全局设计系统」表只留一行指针 → design.pen（指针行由 pm 写，见收尾步骤）
 
 ## 三、风格叠加机制
@@ -53,7 +53,7 @@ disable-model-invocation: true
 4. **串行绘制（单 .pen 唯一写者）**：单 .pen 文件禁并发写，同一时刻最多一个 uiux 在写；风格锁、样板页、逐页绘制都派 uiux，一个完成→验收→下一个。编排器自己不碰 pencil，不是第二个写者
    并行泳道不适用于本命令（出处 `skills/cc-code/references/parallel-lanes.md`，此处不复述）
 5. **截图自检**：每帧完成后 TakeScreenshot（MCP 能力）亲眼看过再交——禁闭眼作画
-6. **保存自动化**：收尾跑 osascript Cmd+S（macOS）→ stat 验证字节增长 → git commit design.pen；⛔ 禁把「手动保存」推给主人
+6. **保存自动化**：收尾由编排器跑 osascript Cmd+S（macOS，只触发保存、不改内容）→ stat 验证字节增长 → git commit design.pen（这是编排器仅有的两个写例外，其余画图 / 改 ux.md / 改 project.md 一律派 uiux / pm / architect）；⛔ 禁把「手动保存」推给主人
 7. **禁生成断言**：A/U 编号唯一出处是 plan-mvp / plan-feature，本 skill 只画图不发明判定项
 
 ## 五、流程骨架（细节待调试回填）
