@@ -15,7 +15,7 @@ disable-model-invocation: true
 | 探测条件 | 轨道 | 行为 |
 | --- | --- | --- |
 | 无 `active/Agent.md`，且存在 `src/` / `package.json` / `go.mod` 等旧代码或根目录已有 `CLAUDE.md` | **Track A** 旧项目接管 | 扫描技术栈+断层，与用户多轮补 PRD，预填 `project.md`；执行第 2A 步分拆旧 `CLAUDE.md` |
-| 无 `active/Agent.md`，全空目录 | **Track B** 新项目 | 直接搭场域 + 盖版本戳，切 PM 角色等待需求 |
+| 无 `active/Agent.md`，全空目录 | **Track B** 新项目 | 直接搭场域 + 盖版本戳，等待需求（规划时由主控派 pm agent，init 不扮演角色） |
 | 有 `active/Agent.md`，且版本戳 **==** 插件版本 | **Track C** 已最新 | 跳过脚手架，搬散落物 + ⭐**跑 D4 骨架格式体检**（0.9.0 起），再进第 3 步 |
 | 有 `active/Agent.md`，但版本戳**缺失或更旧** | **Track D** ⭐升级迁移 | 脚本做 D1 归档 + D2 清点，**AI 按第 2C 步做 D3~D7** |
 
@@ -119,7 +119,7 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
 ```
 
-产物三件：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）｜`.codex/hooks.json + hooks/gate.sh`（plan-lock 写盘拦截）｜`.codex/agents/*.toml`（dev/prd-plan/qa/uiux 角色沙箱，唯一源 `agents/*.md` 的生成物）。
+产物三件：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）｜`.codex/hooks.json + hooks/gate.sh`（plan-lock 写盘拦截）｜`.codex/agents/*.toml`（pm/architect/dev/qa/uiux 角色沙箱，唯一源 `agents/*.md` 的生成物；重跑会清掉源已删除的旧角色 toml，如 1.8.0 删除的旧综合规划角色）。
 
 告知主人两件事（一次性）：① codex 首跑会在 `/hooks` 要求审查信任 gate.sh，trust 一次生效；② codex 侧 plan 笼子用法 = 先 `/plan`（内建只读），或 `touch .cc_code/.runtime/plan-lock` 开护栏、出关 `rm`。⛔ 非.codex 用户不问不做（零打扰）。
 
@@ -254,8 +254,9 @@ for 每个规范文件 X ∈ {Agent status prd ux project data api gates}:
 | Architect「契约纪律」（漂移禁沉默） | 代码偏离契约无人发现 |
 | Architect「按需读 `references/INDEX.md`」行（0.8.0 新增） | 经验资料库无人读，等于没沉淀 |
 | QA「灰盒定义」 | QA 退化为拿代码验代码 |
+| 1.8.0：角色 = agent（pm / architect / dev / qa / uiux），已无「当前激活角色」字段（原「当前执行阶段」改名「当前流程 / 步骤」，仅记坐标） | 旧项目 `Agent.md` 残留该字段与「切角色 / 复位」步骤；**整段删除、改按模板新版**（规范段，不适用「只加不覆盖」）；同时旧 `status.md` 里的「当前激活角色」行一并清掉，「当前执行阶段」行改名「当前流程 / 步骤」（它是主控记录的坐标，不是角色） |
 | 「就地收敛写入纪律」（0.9.0 新增） | 增量落盘退回追加模式，active 继续膨胀 |
-| 「强制执行协议」第 5 条「对用户说话（铁律）」全员条款（0.13.1 上提，旧版在 QA 卡内；本次扩写为「编号不外露 + 逻辑用图数据用表」） | 编排器主控与各角色向主人输出裸编号、内部判词、代码，主人得查表才看懂结果；若项目 `Agent.md` 仍把该条留在 QA 卡内，**移到 §四**（不是两处都留）；若第 5 条仍是旧版「输出可读（铁律）」（仅要求断言双标识），**整条替换为模板新版**（此条为规范段、非项目自定义，不适用「只加不覆盖」） |
+| 「强制执行协议」第 6 条「对用户说话（铁律）」全员条款（0.13.1 上提，旧版在 QA 卡内；本次扩写为「编号不外露 + 逻辑用图数据用表」） | 编排器主控与各角色向主人输出裸编号、内部判词、代码，主人得查表才看懂结果；若项目 `Agent.md` 仍把该条留在 QA 卡内，**移到 §四**（不是两处都留）；若项目里该条仍是旧版「输出可读（铁律）」（旧版条号为第 5 条，仅要求断言双标识），**整条替换为模板新版第 6 条**（此条为规范段、非项目自定义，不适用「只加不覆盖」） |
 
 ### D5 校验门（⛔ 未过禁止进 D6）
 
@@ -315,6 +316,6 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --stamp
 ## 第 3 步：进入状态机循环
 
 1. Read 根目录 `CLAUDE.md` → 按其「会话开启协议」执行。
-2. Read `.cc_code/active/Agent.md` → 锁定当前角色与文件路由权限表。
+2. Read `.cc_code/active/Agent.md` → 读文件路由权限表（角色 = 被派出的 agent，Agent.md 不再有「当前激活角色」字段）。
 3. Read `.cc_code/active/status.md` → 同步坐标。
 4. 按 `cc-code` skill 协议持续约束后续行为（所有热数据由 AI 顺手写）。

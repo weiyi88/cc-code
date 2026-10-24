@@ -1,13 +1,14 @@
 ---
 name: just-do-it
 description: 小改动一句话就干：dev 写完 qa 验，记一笔就完事
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
+allowed-tools: Read, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 disable-model-invocation: true
 ---
 
 # just-do-it — 小改动直通车（零规划零责任）
 
-> **纯执行器**：主人一句话说清的小活（微小改动 / 单个页面 / 小工具），不规划、不定位、不锁角色，dev 写完 qa 验，记一笔就结束。
+> **纯执行器**：主人一句话说清的小活（微小改动 / 单个页面 / 小工具），不规划、不定位，dev 写完 qa 验，记一笔就结束。
+> **主控只编排**：不扮演任何角色，不写任何文件——代码归 dev，验收记录归 qa（角色权限唯一出处 = `.cc_code/active/Agent.md` §三）。
 > **零责任声明**：不做断言对账、不做全量回归、不更新 status/milestone——快，是拿深度换的。
 > **与 agent-feature 的分界**：需求一句话说不清、要动契约/动架构、要追溯既有断言 → 拒绝执行，指路 `/cc-code:plan-feature`。
 
@@ -23,7 +24,7 @@ disable-model-invocation: true
 主人一句话需求
       │
       ▼
-① dev 直接改 + 能跑的自检（lint / build / test，有就跑）
+① dev 直接改 + 自检（只跑项目测试基建契约里登记的命令，没有就跳过）
       │
       ▼
 ② qa 只拿「主人原话」当尺子验一遍
@@ -33,7 +34,7 @@ disable-model-invocation: true
  FAIL→回dev     PASS
  (≤2轮)          │
    │             ▼
- 仍FAIL→报告  ③ gates.md 追加完整记录 → 结束
+ 仍FAIL→交人   ③ qa 记一笔 → 结束
 ```
 
 ## ① Dev 段（agent: dev）
@@ -42,7 +43,8 @@ disable-model-invocation: true
 | --- | --- |
 | 读 | 仅需求涉及的代码文件（最小集） |
 | 做 | 只按主人原话实现；⛔ 不顺手重构无关代码、不擅自扩大范围 |
-| 自检 | 项目有 lint / build / test 就跑，没有就跳过（不补基建） |
+| 自检 | 有 `.cc_code/` 且 `project.md` §六「测试基建契约」登记了命令 → 按契约跑；没有契约 → 跳过（不补基建、⛔ 不自带命令） |
+| 冲突 | 主人原话与项目既有需求 / 契约（若有）明显冲突 → 停下，交回主控，由主控交人，⛔ 不自己拍板 |
 | 输出 | 改动文件清单 + 每个文件干了啥 + 自检结果 |
 
 ## ② QA 段（agent: qa）
@@ -50,15 +52,18 @@ disable-model-invocation: true
 | 项 | 内容 |
 | --- | --- |
 | 尺子 | **只有主人原话**（⛔ 不读 prd 断言、不做追溯矩阵） |
-| 验 | 需求点逐条过一遍；能跑则实测，跑不了则代码走查 |
-| 输出 | Verdict（PASS / FAIL 清单） |
-| 回环 | FAIL → 主控原样喂回 dev，≤2 轮；仍 FAIL → 直接报告交人，⛔ 不硬修 |
+| 验 | 需求点逐条过一遍；能跑则实测（测试命令取自测试基建契约，没有就手动驱动），跑不了则代码走查 |
+| 输出 | Verdict（PASS / FAIL 清单）+ 下节五件套 |
+| 回环 | FAIL → 主控原样喂回 dev，≤2 轮；仍 FAIL → 直接交人决策，⛔ 不硬修、不回规划 |
 
-## ③ gates.md 记录（唯一善后）
+## ③ 记一笔（唯一善后，qa 写，主控不代写）
 
-**落点**：项目有 `.cc_code/active/gates.md` → 追加到末尾；没有 → 项目根建 `gates.md`。**只追加，⛔ 不改历史段落。**
+| 场景 | 落点 |
+| :--- | :--- |
+| 项目有 `.cc_code/active/gates.md` | **qa** 在 gates.md 的「just-do-it 记录」小节就地更新：只留最近一条，上一条原文整段搬 `backup/retired/gates.md`（规则出处 = `active/Agent.md` §四第 5 条） |
+| 项目没有 `.cc_code/` | ⛔ 不落盘、⛔ 不在项目根另起 `gates.md` 或任何记录文件；qa 把五件套交回，主控原样呈给主人，对话即记录 |
 
-每段必须五件套：
+五件套（qa 产出）：
 
 ```
 ## just-do-it YYYY-MM-DD HH:mm
@@ -71,6 +76,7 @@ disable-model-invocation: true
 
 ## 铁律
 
-- **不碰**：status.md / milestone-log.md / prd.md / ux.md / 契约文档。
+- **不碰**：status.md / milestone-log.md / prd.md / ux.md / 契约文档；主控自己一个文件都不写。
 - **不负责**：不改回滚方案、不做回归承诺、不测无关面——记录在案即免责。
-- **中途零确认**：跑完一次性报告结果；只有「需求说不清」和「2 轮仍 FAIL」两种情况才打断主人。
+- **subagent 不能问用户**：dev / qa 要问人的事交回主控，由主控交人。
+- **中途零确认**：跑完一次性报告结果；只有「需求说不清」「与既有需求 / 契约冲突」和「2 轮仍 FAIL」才打断主人。

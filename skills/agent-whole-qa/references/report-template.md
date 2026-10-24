@@ -27,7 +27,7 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 
 | 断言 ID | 模块·功能（中文） | Verdict | 测试位置 / 证据 | 实测结果 |
 | --- | --- | --- | --- | --- |
-| A1 | 登录 · 会话过期登出 | ✅ PASS | `tests/api/auth.test.ts::登录成功` | 1/1 pass |
+| A1 | 登录 · 会话过期登出 | ✅ PASS | `<测试根>/api/auth.test.ts::登录成功` | 1/1 pass |
 | A2 | 登录 · 重复提交防护 | ❌ FAIL | `docs/qa/shots/m1-a2.png` | 按钮未禁用，连点产生 3 次提交 |
 | A7 | 订单 · 过期订单可见性 | ⚠️ UNVERIFIABLE | — | 需 seed 一个过期订单，当前无样本 |
 | A9 | 看板 · 卡片拖拽 | 🚫 VOID | — | prd.md 已标作废 |

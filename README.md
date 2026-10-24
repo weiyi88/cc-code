@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.7.0** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.8.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 基于四大铁律：**上下文最小化 · 决策串行 · 记忆外部化 · active 三判据**。
@@ -11,6 +11,7 @@
 
 - [设计哲学](#设计哲学)
 - [核心逻辑](#核心逻辑)
+- [编排方式（1.8.0）](#编排方式180角色--agent主控只传话)
 - [就地更新 + 搬运归档（1.7.0）](#就地更新--搬运归档170)
 - [安装](#安装)
 - [完整生命周期](#完整生命周期)
@@ -18,7 +19,7 @@
 - [Codex CLI 适配（1.1.0）](#codex-cli-适配110)
 - [可选增强：codegraph](#可选增强codegraph)
 - [Skill 一览（16 个）](#skill-一览16-个)
-- [Agent（4 个）](#agent4-个)
+- [Agent（5 个）](#agent5-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
 - [角色串行](#角色串行)
@@ -51,25 +52,50 @@ cc-code 的处方：**把记忆、状态、规则全部外部寄存到 `.cc_code
 
 ## 核心逻辑
 
-### 角色串行（同一时刻只有一个角色被激活）
+### 角色串行（先 PM 后 Architect，再 Dev、QA）
 
 ```
 PM ──► Architect ──► Dev ──► QA
 (逻辑)   (契约)      (编码)   (验收)
 ```
 
-每个角色由 `active/Agent.md` 路由表锁定「必读 / 可写 / 禁读」，禁止越权。
+各角色「必读 / 可写 / 禁读」权限只写在 `templates/Agent.md` §三（单一出处，此处不抄副本）。
 
-| 角色 | 掌 | 可写 | 禁读 |
-| --- | --- | --- | --- |
-| PM | L1+L2 | prd, ux | src/, project, data, api |
-| Architect | L3 | project, data, api | src/ 业务码 |
-| Dev | 代码 | src/, 测试目录 | gates |
-| QA | L4（灰盒） | gates, 测试目录 | 无关历史码 |
+### 编排方式（1.8.0）：角色 = agent，主控只传话
+
+```
+ 主人 ◄──────────────► 主控（编排者：不扮演任何角色、不读代码、不替主人回答）
+                         │  只写 status.md（坐标/卡点/下一步）+ backup/milestone-log.md 追加行
+                         │
+   规划（plan-mvp / plan-feature）          严格先 PM 后 Architect
+     ① 派 pm（全新上下文）─ 一次一个问题 ◄──► 主人原话原样续接同一个 pm
+            └─ 主人批准需求（第 1 次批准）→ pm 落盘 prd / ux
+     ② 派 architect（全新上下文）─ 逐点问技术 ◄──► 主人
+            ├─ 发现需求冲突 → 业务语言转述 → 主人裁决 → pm 交修订摘要（plan 模式不写盘）→ 回 architect；批准后先 pm 后 architect 落盘
+            └─ 主人批准方案（第 2 次批准）→ architect 落盘 project / data / api / §九
+   执行（agent-*）
+     派 dev 写 ─► 派 qa 验 ─► FAIL ≤3 轮 ─► 仍 FAIL：交人决策
+   debug（不进 plan 模式，bugs.md 自动整理，不等批准）
+     qa 复现取证，复现成功当场写 B-n（待诊断）─► dev 只读诊断（不改码）─► 主控原样转 qa 补根因/方案/影响面
+     ├─ 纯实现层 ─► 待修复 ─► dev 修 ─► qa 复测 ─► PASS 则 qa 把条目搬 backup/retired/bugs.md
+     └─ 契约错 / 需求错 / 找不到期望出处 / 复现不了 ─► 待裁决：问主人一句话 ─► 裁决后 architect / pm 改文档（或 qa 重新复现）─► 待修复
+```
+
+| agent | 模型档位 |
+| --- | --- |
+| `pm` | opus |
+| `architect` | opus |
+| `dev` | inherit（继承主会话） |
+| `qa` | sonnet |
+| `uiux` | inherit（继承主会话） |
+
+谁写哪个文件见 `templates/Agent.md` §二 / §三，此处不抄副本。
+
+所有 agent 开 `memory: project`（记忆存在生成项目的 `.claude/agent-memory/<agent>/`，只记本角色经验）；项目约定永远从 `.cc_code/active/*` 读，不从记忆读。Codex 端本版只保证生成链不坏（inherit 档继承父会话，不写 model 行）。
 
 ### 并行泳道（1.6.0）：角色串行 ≠ 单线程
 
-串行锁的是**角色顺序**和**派活顺序**，不是「同一角色只能派一个人」。规划时把一个阶段拆成互不相干的泳道，执行时同一角色多人同时干：
+串行锁的是**角色顺序**和**派活顺序**，不是「同一角色只能派一个人」（编排方式见下节）。规划时把一个阶段拆成互不相干的泳道，执行时同一角色多人同时干：
 
 ```
  规划（架构师）：拆阶段 → 拆泳道 → 给每条泳道划「只准写哪些文件」
@@ -89,7 +115,7 @@ PM ──► Architect ──► Dev ──► QA
 | --- | --- |
 | Dev → QA 角色顺序 | 两道栅栏之间全员同一角色 |
 | 执行器不规划 | 泳道只来自 `project.md` §九，不合规就退回单线程 |
-| 每个文件一个写者 | 子 agent 只回报告，验收结果 / 进度由主控写 |
+| 每个文件一个写者 | 泳道内子 agent 只回报告；落盘写者按 `parallel-lanes.md` |
 | 一次只派一张卡 | 并行只发生在一个阶段 / 一个增量内部 |
 
 没写泳道的老项目自动单线程，零影响。细则：`skills/cc-code/references/parallel-lanes.md`。
@@ -179,7 +205,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 4 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 5 个配套 agent。
 
 ## 完整生命周期
 
@@ -188,7 +214,7 @@ PM ──► Architect ──► Dev ──► QA
                        + 刷新 .cc_code/README.md 使用手册）
                        旧版场域自动走升级迁移（零删除）
        ↓
-会话开启(2步)          Read Agent.md(锁角色) → status.md(定坐标)
+会话开启(2步)          Read Agent.md(读权限表) → status.md(定坐标)
        ↓
 /cc-code:plan-mvp  ⭐第一动作 call EnterPlanMode → plan 内探测+三件套
                        +逐点交谈至通顺 → 落盘五件（prd/ux/project/data/api）
@@ -217,12 +243,12 @@ PM ──► Architect ──► Dev ──► QA
 
 ────────── 任意时刻修 bug 走这条支线（需求明确但实现错了）──────────
 
-/cc-code:plan-debug          ⭐第一动作 call EnterPlanMode → 问诊把 bug 问清楚
-                             +codegraph 查脉络（链路/半径/测试面）+ 裁决门
-                             （动契约/动需求 → 拒修指路规划）+ 三件套确认
-                             → 落盘 B-n 到 active/bugs.md（施工便签，修完即删）
+/cc-code:plan-debug          不进 plan 模式 → qa 问诊复现，复现成功当场写 B-n 到 active/bugs.md（待诊断）
+                             → dev 只读查脉络（链路/半径/测试面）→ qa 补根因/方案/影响面（待修复）
+                             记录不等批准；只在契约错/需求错/找不到期望出处/复现不了时
+                             标「待裁决」问你一句（施工便签，修完原文搬 backup/retired/bugs.md）
        ↓
-/cc-code:agent-debug        bug 修复纯执行（定位 B-n → Dev→QA，affected 精准回归
+/cc-code:agent-debug        bug 修复纯执行（只接待修复的 B-n → Dev→QA，affected 精准回归
                              + 回归测试留守，无全量清算）
 
 ────────── 任意时刻 ──────────
@@ -265,7 +291,7 @@ codex plugin add cc-code@cc-code-marketplace
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # 或指向本仓库 scripts/init.sh
 ```
 
-`--codex` 做三件事：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）、`.codex/hooks.json + gate.sh`（plan 写盘拦截）、`.codex/agents/*.toml`（四角色沙箱）。**首次运行 codex 会要求在 `/hooks` 里审查信任 gate.sh —— trust 一次即生效。**
+`--codex` 做三件事：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）、`.codex/hooks.json + gate.sh`（plan 写盘拦截）、`.codex/agents/*.toml`（五角色沙箱；源已删除的旧角色 toml 会被清掉）。**首次运行 codex 会要求在 `/hooks` 里审查信任 gate.sh —— trust 一次即生效。**
 
 ### Codex 侧的 plan 笼子
 
@@ -281,7 +307,7 @@ $cc-code:plan-mvp 触发
 
 | 层 | 机制 | 强度 |
 | :--- | :--- | :--- |
-| 自动 | plan-* 触发即 AI 自开 plan-lock，hook 拦下一切 Edit/Write/apply_patch | 引擎级拦截 |
+| 自动 | plan-mvp / plan-feature 触发即 AI 自开 plan-lock，hook 拦下一切 Edit/Write/apply_patch（plan-debug 不进 plan 模式，不开） | 引擎级拦截 |
 | 加固 | 人可先敲内建 `/plan`（引擎级只读，双层更硬） | 引擎级只读 |
 | 出关 | AI 呈落盘清单 → 人点头 → AI `rm .cc_code/.runtime/plan-lock` | 对话内确认 |
 
@@ -345,7 +371,7 @@ $cc-code:plan-mvp 触发
 | `plan-uiux` | `/cc-code:plan-uiux` | 先试画 2 页定风格，再逐页画进 `design.pen` 设计稿，每页经你确认才保存 |
 | `agent-mvp` | `/cc-code:agent-mvp` | 按定好的方案写码，写完自动测试，不过就改到过（最多 3 轮） |
 | `agent-feature` | `/cc-code:agent-feature` | 只写新功能涉及的代码，只跑相关测试，又快又稳 |
-| `plan-debug` | `/cc-code:plan-debug` | 出 bug 后顺着代码调用链查到根因，定好修复方案不写码 |
+| `plan-debug` | `/cc-code:plan-debug` | 出 bug 后顺着代码调用链查到根因，bugs.md 自动整理、不等批准，不写码 |
 | `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
 | `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
@@ -360,16 +386,19 @@ $cc-code:plan-mvp 触发
 | `project_resume` | 扫描代码库，替你写一段项目介绍文案 |
 | `login_auto` | 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密 |
 
-## Agent（4 个）
+## Agent（5 个）
 
-三 agent 与 cc-code 角色串行绑定，**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`：
+五个 agent 与 cc-code 角色一一对应（**角色 = agent**，主控只编排），**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`；测试 / 构建 / 自检命令只认其中的测试基建契约：
+
+
 
 | agent | 模型 | cc-code 角色 | 职责 |
 | --- | --- | --- | --- |
-| `prd-plan` | opus | PM + Architect | 需求→规范→技术方案；产出 prd/ux/project/data/api（阶段拆分并入 project.md，服务 plan-mvp / plan-feature） |
-| `dev` | haiku | Dev | 按规格实现代码 + 三层测试；自检 lint/tsc/test/e2e |
-| `qa` | sonnet | QA（灰盒） | 写+跑三层测试（逻辑/接口/浏览器），结构化 FAIL 清单回 dev，≤3 轮循环 |
-| `uiux` | haiku | UIUX（原型工人） | 收单页任务单 → pencil MCP 画 P-n/M-n 帧 → 截图自检 → 报 frameId；服务 plan-uiux |
+| `pm` | opus | PM | 逐点问需求至通顺，批准后落盘 prd/ux；服务 plan-mvp / plan-feature |
+| `architect` | opus | Architect | codegraph 侦察 + 逐点问技术，批准后落盘 project/data/api 与 project.md §九（阶段+泳道）、§八 部署契约 |
+| `dev` | inherit | Dev | 按 prd/ux/api/data 实现代码；自检命令来自 project.md 测试基建契约 |
+| `qa` | sonnet | QA（灰盒） | 写+跑分层测试，直接写 gates/bugs/测试目录，结构化 FAIL 清单回 dev，≤3 轮仍 FAIL 交人决策 |
+| `uiux` | inherit | UIUX（原型工人） | 收单页任务单 → pencil MCP 画 P-n/M-n 帧 → 截图自检 → 报 frameId；服务 plan-uiux |
 
 > agent 定义「怎么干」，cc-code 定义「干什么+在哪干」，`.cc_code/active/` 是唯一耦合接口。
 
@@ -407,7 +436,7 @@ $cc-code:plan-mvp 触发
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
 ├── skills/           16 个 skill 目录
-├── agents/           4 个 agent（prd-plan / dev / qa / uiux）
+├── agents/           5 个 agent（pm / architect / dev / qa / uiux）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）
 ├── docs/             ARCHITECTURE.md
@@ -430,7 +459,7 @@ cc-code/
     │   ├── data.md        L3 数据契约 interface ↔ DB 列（Architect）
     │   ├── api.md         L3 接口契约 method/path/入参/出参/错误码（Architect）
     │   ├── gates.md       L4 A+U 验收追溯矩阵 + 未关闭 FAIL（QA，Dev 禁读）
-    │   └── bugs.md        🐛 未修复 bug 工作上下文 B-n（plan-debug 写，修完即删，常态为空）
+    │   └── bugs.md        🐛 未修复 bug 工作上下文 B-n（qa 写，修复 PASS 后原文搬 backup/retired/bugs.md，常态为空）
     ├── docs/qa/         🔵 全量验收报告 + 元素清单（agent-whole-qa 产出）
     ├── test/           ⭐ 测试代码（源码，必须入库；affected 精准回归的索引基础）
     ├── images/          🔵 截图（init 迁移，扁平存放）
@@ -448,14 +477,7 @@ PM ──► Architect ──► Dev ──► QA
 (逻辑)   (契约)      (编码)   (验收)
 ```
 
-每个角色由 `active/Agent.md` 路由表锁定「必读/可写/禁读」，禁止越权。
-
-| 角色 | 掌 | 可写 | 禁读 |
-| --- | --- | --- | --- |
-| PM | L1+L2 | prd, ux | src/, project, data, api |
-| Architect | L3 | project, data, api | src/ 业务码 |
-| Dev | 代码 | src/, 测试目录 | gates |
-| QA | L4（灰盒） | gates, 测试目录 | 无关历史码 |
+各角色「必读 / 可写 / 禁读」权限只写在 `templates/Agent.md` §三（单一出处，此处不抄副本）。
 
 ## 经验沉淀（references）
 

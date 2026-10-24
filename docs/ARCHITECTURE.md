@@ -11,7 +11,7 @@
 
 ```
 skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
-agents/       3+1 个 .md → prd-plan / dev / qa / uiux（uiux 为 pen 链绘制 agent）
+agents/       5 个 .md → pm / architect / dev / qa / uiux（角色 = agent：主控只编排、派谁谁就是当前角色；uiux 为 pen 链绘制 agent）
 scripts/     init.sh + sync-codex.sh（codex 生成器）+ verify-codex.sh（codex 漂移校验）
 templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ references-INDEX.md → init 时 cp 进 .cc_code/
 assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→ init.sh --codex 落用户项目
@@ -35,9 +35,9 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    templates/CLAUDE.md           ──► templates/AGENTS.md(软链)
 ```
 
-映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)；角色沙箱 prd-plan/qa = read-only，dev/uiux = workspace-write。
+映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)，`inherit` 不写 model 行（继承父会话；本版不重设计 Codex 模型映射）；角色沙箱 pm/architect/dev/qa/uiux 五个一律 workspace-write（都要落盘）。源 `agents/*.md` 删除后，sync 清掉对应旧 toml，`init.sh --codex` 也会把用户项目里残留的旧 toml 搬走（零 rm）。
 
-**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-* 首行「引擎分支」条款让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
+**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-mvp / plan-feature 首行「引擎分支」条款（plan-debug 不进 plan 模式，不开护栏）让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
 
 ## 寻址约定
 
@@ -61,8 +61,8 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    ① 换个角色还成立吗？
         ├─ 成立   ──────► templates/Agent.md §四 强制执行协议（全员通用区）
         └─ 不成立 ──────► templates/Agent.md §三 对应那张角色卡
-   ② dev / qa / prd-plan 这三个 subagent 需要吗？
-        └─ 需要   ──────► 追加写进 agents/{dev,qa,prd-plan}.md
+   ② pm / architect / dev / qa / uiux 这五个 agent 需要吗？
+        └─ 需要   ──────► 追加写进 agents/{pm,architect,dev,qa,uiux}.md
                           （subagent 独立上下文，读不到 Agent.md，
                             自带系统提示词才是它的必经之路 → 不算副本）
    ③ 约束的是「产物长什么样」吗？
@@ -73,15 +73,15 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 | 规则性质 | 唯一出处 | 覆盖谁 | 传导机制 |
 | :--- | :--- | :--- | :--- |
 | 全员行为 / 输出条款 | `templates/Agent.md` §四 | 所有角色 + 编排器主控 | 校准协议必读 `Agent.md` |
-| 角色专属权限 / 能力 | `templates/Agent.md` §三 角色卡 | 该角色 | 「当前激活角色」开关只加载那一张 |
-| subagent 自带纪律 | `agents/{dev,qa,prd-plan}.md` | 该 subagent | 系统提示词 |
+| 角色专属权限 / 能力 | `templates/Agent.md` §三 角色卡（角色权限只写这一处，其他地方一句指针） | 该角色 | 角色 = 被派出的 agent，各 agent 只读到自己那一张 |
+| subagent 自带纪律 | `agents/{pm,architect,dev,qa,uiux}.md` | 该 subagent | 系统提示词 |
 | 产物格式纪律 | 该文件模板头部 | 写它的角色 | 写前必读该文件 |
 | 编排纪律（串行 / ≤3 轮 / 拒跑 / 增量定位） | `skills/*/SKILL.md` 正文 | 编排器主控自己 | 命令本体 |
 | 多个执行器共用的编排纪律（并行泳道） | `skills/cc-code/references/parallel-lanes.md` | agent-mvp / agent-feature / agent-whole-qa 主控 | 执行器正文一行指针，⛔ 不复述 |
 | 触发闸门 | frontmatter `disable-model-invocation` | Claude Code 引擎 | 引擎强制 |
 
-**角色隔离靠「当前激活角色」开关，不靠拆文件** —— 未激活角色的规则物理上在同一文件，
-但被开关挡在外面，一个字都不会污染当前角色。
+**角色隔离靠「角色 = agent」（独立上下文），不靠开关、也不靠拆文件** —— 主控是编排者、不扮演任何角色，
+只传话与写 status；每个角色在自己的 agent 里干活，别的角色的规则一个字都不会污染它。
 
 ### 触发闸门只认 frontmatter
 
@@ -121,7 +121,7 @@ codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
                            → 没过的泳道单独退回 → 全过后汇合回归 → 阶段结算
 ```
 
-> 选型：栅栏同步（不选各泳道各跑各的，后者会让「当前激活角色」出现多个值）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。
+> 选型：栅栏同步（不选各泳道各跑各的，后者会让进度坐标与写者出现多头）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。
 
 ## 散落物迁移（init.sh 的判定链）
 

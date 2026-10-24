@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.7.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.8.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Built on four iron rules: **Context Minimization · Decision Serialization · Memory Externalization · active Three Criteria**.
@@ -11,6 +11,7 @@
 
 - [Design Philosophy](#design-philosophy)
 - [Core Logic](#core-logic)
+- [Orchestration (1.8.0)](#orchestration-180-role--agent-the-main-thread-only-relays)
 - [In-place update + retire-by-move (1.7.0)](#in-place-update--retire-by-move-170)
 - [Installation](#installation)
 - [Full Lifecycle](#full-lifecycle)
@@ -18,7 +19,7 @@
 - [Codex CLI Support (1.1.0)](#codex-cli-support-110)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
 - [Skill List (16)](#skill-list-16)
-- [Agents (4)](#agents-4)
+- [Agents (5)](#agents-5)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
 - [Role Serialization](#role-serialization)
@@ -53,21 +54,48 @@ Which layer a rule belongs to is settled by three questions (still true for anot
 
 ## Core Logic
 
-### Role Serialization (only one role active at a time)
+### Role Serialization (PM first, then Architect, then Dev, QA)
 
 ```
 PM ──► Architect ──► Dev ──► QA
 (logic)  (contract)   (code)   (acceptance)
 ```
 
-Each role is locked by the `active/Agent.md` routing table: "must-read / writable / forbidden-to-read", no overreach.
+Each role's must-read / writable / forbidden permissions live only in `templates/Agent.md` §3 (single source; no copy here).
 
-| Role | Owns | Writable | Forbidden |
-| --- | --- | --- | --- |
-| PM | L1+L2 | prd, ux | src/, project, data, api |
-| Architect | L3 | project, data, api | src/ business code |
-| Dev | code | src/, test dir | gates |
-| QA | L4 (gray box) | gates, test dir | unrelated history code |
+### Orchestration (1.8.0): role = agent, the main thread only relays
+
+```
+ Human ◄──────────────► Main thread (orchestrator: plays no role, reads no code, never answers for the human)
+                         │  writes only status.md (coords/blockers/next) + appends to backup/milestone-log.md
+                         │
+   Planning (plan-mvp / plan-feature)        strictly PM first, then Architect
+     1. dispatch pm (fresh context) ─ one question at a time ◄──► human's words relayed verbatim to the same pm
+            └─ human approves requirements (approval #1) → pm lands prd / ux
+     2. dispatch architect (fresh context) ─ asks tech points one by one ◄──► human
+            ├─ requirement conflict → restated in business language → human decides → pm hands back a revision summary (no writes in plan mode) → back to architect; after approval, land pm first, then architect
+            └─ human approves the design (approval #2) → architect lands project / data / api / §9
+   Execution (agent-*)
+     dispatch dev ─► dispatch qa ─► FAIL ≤3 rounds ─► still FAIL: hand to human
+   Debug (no plan mode; bugs.md is maintained automatically, no approval wait)
+     qa reproduces + gathers evidence, writes B-n the moment it reproduces (to-diagnose) ─► dev diagnoses read-only
+     ─► main relays verbatim to qa, who adds root cause / plan / blast radius
+     ├─ pure implementation bug ─► to-fix ─► dev fixes ─► qa retests ─► on PASS qa moves the entry to backup/retired/bugs.md
+     └─ contract wrong / requirement wrong / no expected-behaviour source / cannot reproduce ─► to-decide: one question to the human
+        ─► after the ruling architect / pm edit the docs (or qa reproduces again) ─► to-fix
+```
+
+| agent | Model tier |
+| --- | --- |
+| `pm` | opus |
+| `architect` | opus |
+| `dev` | inherit (main session's) |
+| `qa` | sonnet |
+| `uiux` | inherit (main session's) |
+
+Who writes which file: see `templates/Agent.md` §2 / §3 (single source; not copied here).
+
+Every agent has `memory: project` (stored in the generated project's `.claude/agent-memory/<agent>/`, role-specific lessons only); project conventions are always read from `.cc_code/active/*`, never from memory. On Codex this release only guarantees the generation chain still works (the inherit tier writes no model line and follows the parent session).
 
 ### Parallel Lanes (1.6.0): role serialization ≠ single thread
 
@@ -91,7 +119,7 @@ Serialization locks the **role order** and the **dispatch order**, not "one work
 | --- | --- |
 | Dev → QA role order | Between two barriers everyone is the same role |
 | Executors never plan | Lanes come only from `project.md` §9; invalid table → single thread |
-| One writer per file | Subagents only report; main writes acceptance results / progress |
+| One writer per file | Lane subagents only report; who lands the write follows `parallel-lanes.md` |
 | One card dispatched at a time | Parallelism lives inside one phase / one increment |
 
 Old projects without lanes run single-threaded automatically. Details: `skills/cc-code/references/parallel-lanes.md`.
@@ -181,7 +209,7 @@ those lines   its section    backup/retired/    (saves tokens,
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 16 skills, and 4 companion agents.
+After install you get the `/cc-code:*` command family, 16 skills, and 5 companion agents.
 
 ## Full Lifecycle
 
@@ -190,7 +218,7 @@ After install you get the `/cc-code:*` command family, 16 skills, and 4 companio
                        + refresh .cc_code/README.md handbook)
                        Old-version fields auto-run upgrade migration (zero deletion)
        ↓
-Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
+Session open (2 steps)  Read Agent.md (permission table) → status.md (set coords)
        ↓
 /cc-code:plan-mvp  ⭐ First action call EnterPlanMode → probe + three-piece-set in plan
                        + per-point conversation until smooth → land five docs (prd/ux/project/data/api)
@@ -219,13 +247,14 @@ Session open (2 steps)  Read Agent.md (lock role) → status.md (set coords)
 
 ────────── Anytime, bug fixing takes this branch (requirement clear, implementation wrong) ──────────
 
-/cc-code:plan-debug        ⭐ First action call EnterPlanMode → interrogate the bug
-                           + codegraph trace the chain (links/radius/test surface) + ruling gate
-                           (touches contract/requirement → refuse, redirect to planning)
-                           + three-piece-set confirmation → land B-n into active/bugs.md
-                           (sticky note, deleted once fixed)
+/cc-code:plan-debug        No plan mode → qa interrogates + reproduces, writes B-n into active/bugs.md the moment
+                           it reproduces (to-diagnose) → dev traces the chain read-only (links/radius/test surface)
+                           → qa fills root cause / plan / blast radius (to-fix). Records never wait for approval;
+                           only contract wrong / requirement wrong / no expected-behaviour source / cannot reproduce
+                           marks the entry to-decide and asks you one question
+                           (sticky note; moved to backup/retired/bugs.md once fixed)
        ↓
-/cc-code:agent-debug      Bug-fix pure execution (locate B-n → Dev→QA, affected precise
+/cc-code:agent-debug      Bug-fix pure execution (takes only to-fix B-n → Dev→QA, affected precise
                            regression + regression test retained, no full sweep)
 
 ────────── Anytime ──────────
@@ -268,7 +297,7 @@ Project side (run once after field init, distributes the guardrails):
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # or point at scripts/init.sh in this repo
 ```
 
-`--codex` does three things: `AGENTS.md → CLAUDE.md` symlink (one constitution for both runtimes), `.codex/hooks.json + gate.sh` (plan-mode write interception), `.codex/agents/*.toml` (four role sandboxes). **On first run codex asks you to review and trust gate.sh in `/hooks` — trust once and it takes effect.**
+`--codex` does three things: `AGENTS.md → CLAUDE.md` symlink (one constitution for both runtimes), `.codex/hooks.json + gate.sh` (plan-mode write interception), `.codex/agents/*.toml` (five role sandboxes; stale toml of agents deleted at source are cleaned up). **On first run codex asks you to review and trust gate.sh in `/hooks` — trust once and it takes effect.**
 
 ### The plan cage on Codex
 
@@ -284,7 +313,7 @@ $cc-code:plan-mvp fires
 
 | Layer | Mechanism | Strength |
 | :--- | :--- | :--- |
-| Automatic | plan-* arming is AI-run on trigger; the hook blocks all Edit/Write/apply_patch | Engine-level block |
+| Automatic | plan-mvp / plan-feature arming is AI-run on trigger (plan-debug does not enter plan mode, so it never arms); the hook blocks all Edit/Write/apply_patch | Engine-level block |
 | Hardening | Optionally run built-in `/plan` first (engine-level read-only, double layer) | Engine-level read-only |
 | Exit | AI presents write list → owner approves → AI `rm .cc_code/.runtime/plan-lock` | In-conversation consent |
 
@@ -348,7 +377,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `plan-uiux` | `/cc-code:plan-uiux` | Paint 2 sample pages to lock style, then paint page by page into `design.pen`, save each after your OK |
 | `agent-mvp` | `/cc-code:agent-mvp` | Write code per the approved plan, auto-test, fix until green (max 3 rounds) |
 | `agent-feature` | `/cc-code:agent-feature` | Only write code the feature touches, only run the related tests — fast and safe |
-| `plan-debug` | `/cc-code:plan-debug` | Trace the bug through the call chain to the root cause, write the fix plan, no code changes |
+| `plan-debug` | `/cc-code:plan-debug` | Trace the bug through the call chain to the root cause; bugs.md is maintained automatically, no approval wait, no code changes |
 | `agent-debug` | `/cc-code:agent-debug` | Fix per the plan, run affected tests, all green = fixed |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | Before launch, drive a browser to click every page and button; FAILs auto-fixed |
 | `experience-summary` | `/cc-code:experience-summary` | Turn pitfalls into indexed experience notes you can look up next time |
@@ -363,16 +392,17 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `project_resume` | Scan the codebase and write the project intro copy for you |
 | `login_auto` | A ready-made login suite: password / Google / email code + password reset |
 
-## Agents (4)
+## Agents (5)
 
-Three agents bind to cc-code role serialization, **independent of any specific project**; all project conventions defer to `.cc_code/active/project.md`:
+Five agents map one-to-one to cc-code roles (**role = agent**; the main thread only orchestrates), **independent of any specific project**; all project conventions defer to `.cc_code/active/project.md`, and test / build / self-check commands come only from its test-infra contract:
 
 | agent | Model | cc-code Role | Responsibility |
 | --- | --- | --- | --- |
-| `prd-plan` | opus | PM + Architect | Requirements→spec→tech plan; produces prd/ux/project/data/api (phase plans live inside project.md, serving plan-mvp / plan-feature) |
-| `dev` | haiku | Dev | Implement code per spec + three-layer tests; self-check lint/tsc/test/e2e |
-| `qa` | sonnet | QA (gray box) | Write+run three-layer tests (logic/api/browser), structured FAIL list back to dev, ≤3-round loop |
-| `uiux` | haiku | UIUX (prototype worker) | Receives a single-page task order → paints P-n/M-n frames via pencil MCP → screenshot self-check → reports frameId; serves plan-uiux |
+| `pm` | opus | PM | Asks requirement questions one by one, lands prd/ux once approved; serves plan-mvp / plan-feature |
+| `architect` | opus | Architect | codegraph recon + tech Q&A, lands project/data/api and project.md §9 (phases+lanes) and §8 deploy contract once approved |
+| `dev` | inherit | Dev | Implements per prd/ux/api/data; self-check commands come from project.md's test-infra contract |
+| `qa` | sonnet | QA (gray box) | Writes+runs layered tests, writes gates/bugs/test dir directly, structured FAIL list back to dev; still FAIL after 3 rounds → human decides |
+| `uiux` | inherit | UIUX (prototype worker) | Receives a single-page task order → paints P-n/M-n frames via pencil MCP → screenshot self-check → reports frameId; serves plan-uiux |
 
 > Agents define "how to do"; cc-code defines "what to do + where"; `.cc_code/active/` is the only coupling interface.
 
@@ -410,7 +440,7 @@ Three agents bind to cc-code role serialization, **independent of any specific p
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
 ├── skills/           16 skill directories
-├── agents/           4 agents (prd-plan / dev / qa / uiux)
+├── agents/           5 agents (pm / architect / dev / qa / uiux)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)
 ├── docs/             ARCHITECTURE.md
@@ -433,7 +463,7 @@ project-root/
     │   ├── data.md        L3 data contract interface ↔ DB columns (Architect)
     │   ├── api.md         L3 interface contract method/path/in/out/error codes (Architect)
     │   └── gates.md       L4 A+U acceptance traceability matrix + unclosed FAILs (QA, Dev forbidden)
-    │   └── bugs.md        🐛 Open-bug working context B-n (plan-debug writes; deleted once fixed; empty at rest)
+    │   └── bugs.md        🐛 Open-bug working context B-n (qa writes; on fix PASS the entry moves verbatim to backup/retired/bugs.md; empty at rest)
     ├── docs/qa/         🔵 Full acceptance reports + element inventory (agent-whole-qa produces)
     ├── test/           ⭐ Test code (source, must be in repo; index base for affected precise regression)
     ├── images/          🔵 Screenshots (init migrates, flat storage)
@@ -451,14 +481,7 @@ PM ──► Architect ──► Dev ──► QA
 (logic)  (contract)   (code)   (acceptance)
 ```
 
-Each role is locked by the `active/Agent.md` routing table: "must-read / writable / forbidden-to-read", no overreach.
-
-| Role | Owns | Writable | Forbidden |
-| --- | --- | --- | --- |
-| PM | L1+L2 | prd, ux | src/, project, data, api |
-| Architect | L3 | project, data, api | src/ business code |
-| Dev | code | src/, test dir | gates |
-| QA | L4 (gray box) | gates, test dir | unrelated history code |
+Each role's must-read / writable / forbidden permissions live only in `templates/Agent.md` §3 (single source; no copy here).
 
 ## Experience Sediment (references)
 
