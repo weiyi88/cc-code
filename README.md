@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.10.0** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.10.1** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 宪法原则：**只对结果负责，不在乎过程**（结果是否符合需求是唯一尺子）。
@@ -19,7 +19,7 @@
 - [快速开始](#快速开始)
 - [Codex CLI 适配（1.1.0）](#codex-cli-适配110)
 - [可选增强：codegraph](#可选增强codegraph)
-- [Skill 一览（16 个）](#skill-一览16-个)
+- [Skill 一览（15 个）](#skill-一览15-个)
 - [Agent（6 个）](#agent6-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
@@ -179,12 +179,13 @@ PM ──► Architect ──► Dev ──► QA
              过期内容 → backup/retired/<源文件名>.md（原文整段搬走, 一字不丢）
 ```
 
+**1.10.1：** 删除 `/cc-code:experience-summary`：经验只由 curator 从验收里真实发生过的错自动整理，不再有手动入口（手动整理会跳过三道筛、写进未经验证的经验，也违背零人工）。skill 16 → 15。
+
 **1.10.0：** 经验沉淀交给新增的 **curator** agent，全自动、静默，主人零操作、零确认、零裁决，最终报告只多一行结果（无变化不写）。
 - 执行器（agent-mvp / agent-feature / agent-debug / just-do-it）每次结算后，主控后台派 curator；qa 只在验收矩阵上标「连续 / 回归」与根因类别，curator 过三道筛后按级别分库，architect / dev 按渐进式披露读 INDEX 并在完成报告里写「采纳经验」一行。
 - 经验库三级同构：项目 `.cc_code/references/`、个人 `~/.cc-code/lessons/`、团队 `~/.cc-code/team/<仓库名>/`（只读）；只追加不覆盖，7 个活跃日未采纳休眠、14 个归档。
 - 新增唯一的 **Stop hook** 做保底（只比时间戳，不调 AI、不联网），漏派 curator 时提醒主会话补派；agent 5 → 6。
 - `init` 一次配好：建经验库骨架，并幂等合并 `.claude/settings.local.json` 权限，写个人库、拉团队库不弹确认。
-- `/cc-code:experience-summary` 改为手动入口：把你当场的话原样交给 curator。
 - codex 暂不适配（生成链照常、校验不破）；agent-whole-qa 本次不接入。
 
 **1.9.3：** 升级与迁移也严守单一写者——`init` 按文件派 pm / architect / qa 回填，主控只分拣、只派、不写；`Agent.md` / `CLAUDE.md` 由 init 脚本按插件模板覆盖；pm 不读 milestone-log。
@@ -241,7 +242,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill、6 个配套 agent 与 1 个 Stop hook。
+安装后自动获得 `/cc-code:*` 命令族、15 个 skill、6 个配套 agent 与 1 个 Stop hook。
 
 ## 完整生命周期
 
@@ -289,7 +290,6 @@ PM ──► Architect ──► Dev ──► QA
 
 ────────── 任意时刻 ──────────
 
-/cc-code:experience-summary  手动补一条经验（你当场的话原样交给 curator；平时全自动，无需调用）
 /cc-code:init                插件升级后再跑一次：场域迁移 + 手册刷新到最新
 ```
 
@@ -351,7 +351,7 @@ $cc-code:plan-mvp 触发
 
 - Claude 侧 `allowed-tools` 工具白名单在 Codex 无等价物，由角色沙箱（`sandbox_mode`）承接主要权限边界。
 - skill 正文提及的 `EnterPlanMode` 等 Claude 工具名，Codex 读到时会忽略 —— 写盘安全由上表护栏兜底，流程安全靠人按序操作。
-- 16 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
+- 15 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。
 
 ## 可选增强：codegraph
 
@@ -394,7 +394,7 @@ $cc-code:plan-mvp 触发
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill 一览（16 个）
+## Skill 一览（15 个）
 
 **框架核心（管流程）**
 
@@ -410,7 +410,6 @@ $cc-code:plan-mvp 触发
 | `plan-debug` | `/cc-code:plan-debug` | 出 bug 后顺着代码调用链查到根因，bugs.md 自动整理、不等批准，不写码 |
 | `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
-| `experience-summary` | `/cc-code:experience-summary` | 手动补一条经验：你当场说的话原样交给 curator 静默归档（平时经验全自动整理） |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 | `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
 | `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数，出事一键回滚 |
@@ -472,7 +471,7 @@ $cc-code:plan-mvp 触发
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 个 skill 目录
+├── skills/           15 个 skill 目录
 ├── agents/           6 个 agent（pm / architect / dev / qa / uiux / curator）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
 ├── templates/        md 骨架（L0~L4 + bugs.md debug 施工便签 + 经验库 INDEX / 主题文件骨架）
@@ -523,7 +522,7 @@ PM ──► Architect ──► Dev ──► QA
 
 ## 经验沉淀（全自动）
 
-经验沉淀由 **curator** agent 全自动、静默完成：主人零操作、零确认、零裁决，只在最终报告看到一行结果（无变化不写）。`/cc-code:experience-summary` 退为手动入口，平时不用。
+经验沉淀由 **curator** agent 全自动、静默完成：主人零操作、零确认、零裁决，只在最终报告看到一行结果（无变化不写）。没有手动入口——只沉淀验收里真实发生过、已修好的错。
 
 ### 谁整理 · 何时整理
 

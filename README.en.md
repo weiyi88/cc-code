@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.10.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.10.1** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -19,7 +19,7 @@
 - [Quick Start](#quick-start)
 - [Codex CLI Support (1.1.0)](#codex-cli-support-110)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
-- [Skill List (16)](#skill-list-16)
+- [Skill List (15)](#skill-list-15)
 - [Agents (6)](#agents-6)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
@@ -183,12 +183,13 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
 
+**1.10.1:** removed `/cc-code:experience-summary`: lessons are filed only by curator, automatically, from failures that really happened in acceptance; there is no manual entry any more (manual filing skipped the three gates, let unverified lessons in, and broke the zero-manual rule). Skills 16 → 15.
+
 **1.10.0:** experience sediment is handed to a new **curator** agent: fully automatic and silent - the owner does nothing, confirms nothing, rules on nothing, and sees exactly one result line in the final report (nothing written when nothing changed).
 - After every settlement of an executor (agent-mvp / agent-feature / agent-debug / just-do-it) the orchestrator dispatches curator in the background; qa only marks "consecutive / regression" and the root-cause category on the acceptance matrix, curator runs three gates and files lessons into the right level, architect / dev read the INDEX progressively and report an "adopted experience" line.
 - Three libraries share one structure: project `.cc_code/references/`, personal `~/.cc-code/lessons/`, team `~/.cc-code/team/<repo>/` (read-only); append-only, dormant after 7 active days without adoption, archived after 14.
 - A new, **only** Stop hook is the safety net (compares timestamps only - no AI, no network) and reminds the main session to dispatch curator if it was forgotten; agents 5 → 6.
 - `init` configures everything once: creates the library skeletons and idempotently merges `.claude/settings.local.json` permissions so writing the personal library and pulling the team library never prompt.
-- `/cc-code:experience-summary` becomes a manual entry: your words on the spot are handed to curator as-is.
 - Codex not adapted yet (generation chain unchanged, verification unbroken); agent-whole-qa not wired in this release.
 
 **1.9.3:** upgrade and migration also keep the single-writer rule - `init` dispatches pm / architect / qa per file to backfill, the orchestrator only sorts and dispatches and never writes; `Agent.md` / `CLAUDE.md` are overwritten by the init script from plugin templates; pm does not read milestone-log.
@@ -245,7 +246,7 @@ those lines   its section    backup/retired/    (saves tokens,
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 16 skills, 6 companion agents, and one Stop hook.
+After install you get the `/cc-code:*` command family, 15 skills, 6 companion agents, and one Stop hook.
 
 ## Full Lifecycle
 
@@ -295,7 +296,6 @@ Session open (2 steps)  Read Agent.md (permission table) → status.md (set coor
 
 ────────── Anytime ──────────
 
-/cc-code:experience-summary  Manually add one lesson (your words handed to curator as-is; normally fully automatic, no need to call)
 /cc-code:init                Run again after plugin upgrade: field migration + handbook refresh
 ```
 
@@ -357,7 +357,7 @@ $cc-code:plan-mvp fires
 
 - Claude's `allowed-tools` allowlist has no Codex equivalent; role sandboxes (`sandbox_mode`) carry the main permission boundary.
 - Claude tool names like `EnterPlanMode` mentioned in skill bodies are ignored by Codex — write safety is backstopped by the guard above; flow safety relies on following the sequence.
-- The 16 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
+- The 15 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected).
 
 ## Optional Enhancement: codegraph
 
@@ -400,7 +400,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 2. **Tests must import the source under test** — static `import` ✅ dynamic `await import()` ✅ pure HTTP-interface scripts ⛔ (no import edge to trace).
 3. **Non-standard names must register a glob** — defaults match `*.spec.*` / `*.test.*` / `__tests__/`; others need `--filter`.
 
-## Skill List (16)
+## Skill List (15)
 
 **Framework Core (manages flow)**
 
@@ -416,7 +416,6 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `plan-debug` | `/cc-code:plan-debug` | Trace the bug through the call chain to the root cause; bugs.md is maintained automatically, no approval wait, no code changes |
 | `agent-debug` | `/cc-code:agent-debug` | Fix per the plan, run affected tests, all green = fixed |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | Before launch, drive a browser to click every page and button; FAILs auto-fixed |
-| `experience-summary` | `/cc-code:experience-summary` | Manually add one lesson: your words on the spot go to curator, which files them silently (normally experience is sedimented automatically) |
 | `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
 | `just-do-it` | `/cc-code:just-do-it` | Tiny change, one sentence, done: dev writes, qa verifies, one log entry, that's it |
 | `deploy` | `/cc-code:deploy` | Ship every component per the deployment contract; only qa's live smoke test counts; one-command rollback |
@@ -476,7 +475,7 @@ Six agents map one-to-one to cc-code roles (**role = agent**; the main thread on
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 skill directories
+├── skills/           15 skill directories
 ├── agents/           6 agents (pm / architect / dev / qa / uiux / curator)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
 ├── templates/        md skeletons (L0~L4 + bugs.md debug sticky note + experience INDEX / topic skeletons)
@@ -527,7 +526,7 @@ Each role's must-read / writable / forbidden permissions live only in `templates
 
 ## Experience Sediment (fully automatic)
 
-Experience is sedimented by the **curator** agent, automatically and silently: the owner does nothing, confirms nothing, rules on nothing, and sees only one result line in the final report (nothing written when nothing changed). `/cc-code:experience-summary` is demoted to a manual entry you normally never need.
+Experience is sedimented by the **curator** agent, automatically and silently: the owner does nothing, confirms nothing, rules on nothing, and sees only one result line in the final report (nothing written when nothing changed). There is no manual entry: only failures that really happened in acceptance and were fixed get filed.
 
 ### Who files it · when
 
