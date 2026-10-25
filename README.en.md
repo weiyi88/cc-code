@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.9.3** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.10.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -20,12 +20,12 @@
 - [Codex CLI Support (1.1.0)](#codex-cli-support-110)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
 - [Skill List (16)](#skill-list-16)
-- [Agents (5)](#agents-5)
+- [Agents (6)](#agents-6)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
 - [Role Serialization](#role-serialization)
-- [Experience Sediment (references)](#experience-sediment-references)
-- [No-Hook Design](#no-hook-design)
+- [Experience Sediment (1.10.0, fully automatic)](#experience-sediment-fully-automatic)
+- [The Only Stop Hook](#the-only-stop-hook)
 - [Scattered-File Migration](#scattered-file-migration)
 - [Onboarding](#onboarding)
 - [License](#license)
@@ -93,10 +93,11 @@ Each role's must-read / writable / forbidden permissions live only in `templates
 | `dev` | inherit (main session's) |
 | `qa` | sonnet |
 | `uiux` | inherit (main session's) |
+| `curator` | sonnet |
 
 Who writes which file: see `templates/Agent.md` §2 / §3 (single source; not copied here).
 
-Every agent has `memory: project` (stored in the generated project's `.claude/agent-memory/<agent>/`, role-specific lessons only); project conventions are always read from `.cc_code/active/*`, never from memory. On Codex this release only guarantees the generation chain still works (the inherit tier writes no model line and follows the parent session).
+Every agent except curator has `memory: project` (stored in the generated project's `.claude/agent-memory/<agent>/`, role-specific lessons only); project conventions are always read from `.cc_code/active/*`, never from memory. On Codex this release only guarantees the generation chain still works (the inherit tier writes no model line and follows the parent session).
 
 ### Parallel Lanes (1.6.0): role serialization ≠ single thread
 
@@ -182,6 +183,14 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
 
+**1.10.0:** experience sediment is handed to a new **curator** agent: fully automatic and silent - the owner does nothing, confirms nothing, rules on nothing, and sees exactly one result line in the final report (nothing written when nothing changed).
+- After every settlement of an executor (agent-mvp / agent-feature / agent-debug / just-do-it) the orchestrator dispatches curator in the background; qa only marks "consecutive / regression" and the root-cause category on the acceptance matrix, curator runs three gates and files lessons into the right level, architect / dev read the INDEX progressively and report an "adopted experience" line.
+- Three libraries share one structure: project `.cc_code/references/`, personal `~/.cc-code/lessons/`, team `~/.cc-code/team/<repo>/` (read-only); append-only, dormant after 7 active days without adoption, archived after 14.
+- A new, **only** Stop hook is the safety net (compares timestamps only - no AI, no network) and reminds the main session to dispatch curator if it was forgotten; agents 5 → 6.
+- `init` configures everything once: creates the library skeletons and idempotently merges `.claude/settings.local.json` permissions so writing the personal library and pulling the team library never prompt.
+- `/cc-code:experience-summary` becomes a manual entry: your words on the spot are handed to curator as-is.
+- Codex not adapted yet (generation chain unchanged, verification unbroken); agent-whole-qa not wired in this release.
+
 **1.9.3:** upgrade and migration also keep the single-writer rule - `init` dispatches pm / architect / qa per file to backfill, the orchestrator only sorts and dispatches and never writes; `Agent.md` / `CLAUDE.md` are overwritten by the init script from plugin templates; pm does not read milestone-log.
 
 **1.9.2:** fixes the 1.9.1 landing gap - the orchestrator has no browser tools in `allowed-tools`, so the browser lifecycle now belongs to the first qa (owner, opens) and a wrap-up qa (closer, closes); the qa protocol and Workflow script gain owner/closer roles, report-on-lost-instance without relaunching, and explicit artifact paths; PREFLIGHT auto-detects the single browser tool and `Workflow` joins the tool allowlist; project.md §6 gains a QA data-isolation contract.
@@ -236,7 +245,7 @@ those lines   its section    backup/retired/    (saves tokens,
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 16 skills, and 5 companion agents.
+After install you get the `/cc-code:*` command family, 16 skills, 6 companion agents, and one Stop hook.
 
 ## Full Lifecycle
 
@@ -286,12 +295,12 @@ Session open (2 steps)  Read Agent.md (permission table) → status.md (set coor
 
 ────────── Anytime ──────────
 
-/cc-code:experience-summary  Pitfalls/retros → distill design rules → references/ library
+/cc-code:experience-summary  Manually add one lesson (your words handed to curator as-is; normally fully automatic, no need to call)
 /cc-code:init                Run again after plugin upgrade: field migration + handbook refresh
 ```
 
 **The main line is 6 skills chained in three pairs**: plan (conversation to final docs) → execute (pure machine) → full acceptance.
-The `cc-code` skill manages the runtime protocol (role routing + layering) in the background; `init` is the entry. No Stop Hook; all state written by AI in-conversation.
+The `cc-code` skill manages the runtime protocol (role routing + layering) in the background; `init` is the entry. Only one Stop hook (safety net for experience sediment); all other state is written by AI in-conversation.
 
 ## Quick Start
 
@@ -324,7 +333,7 @@ Project side (run once after field init, distributes the guardrails):
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # or point at scripts/init.sh in this repo
 ```
 
-`--codex` does three things: `AGENTS.md → CLAUDE.md` symlink (one constitution for both runtimes), `.codex/hooks.json + gate.sh` (plan-mode write interception), `.codex/agents/*.toml` (five role sandboxes; stale toml of agents deleted at source are cleaned up). **On first run codex asks you to review and trust gate.sh in `/hooks` — trust once and it takes effect.**
+`--codex` does three things: `AGENTS.md → CLAUDE.md` symlink (one constitution for both runtimes), `.codex/hooks.json + gate.sh` (plan-mode write interception), `.codex/agents/*.toml` (six role sandboxes; stale toml of agents deleted at source are cleaned up). **On first run codex asks you to review and trust gate.sh in `/hooks` — trust once and it takes effect.**
 
 ### The plan cage on Codex
 
@@ -407,7 +416,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `plan-debug` | `/cc-code:plan-debug` | Trace the bug through the call chain to the root cause; bugs.md is maintained automatically, no approval wait, no code changes |
 | `agent-debug` | `/cc-code:agent-debug` | Fix per the plan, run affected tests, all green = fixed |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | Before launch, drive a browser to click every page and button; FAILs auto-fixed |
-| `experience-summary` | `/cc-code:experience-summary` | Turn pitfalls into indexed experience notes you can look up next time |
+| `experience-summary` | `/cc-code:experience-summary` | Manually add one lesson: your words on the spot go to curator, which files them silently (normally experience is sedimented automatically) |
 | `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
 | `just-do-it` | `/cc-code:just-do-it` | Tiny change, one sentence, done: dev writes, qa verifies, one log entry, that's it |
 | `deploy` | `/cc-code:deploy` | Ship every component per the deployment contract; only qa's live smoke test counts; one-command rollback |
@@ -419,9 +428,9 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `project_resume` | Scan the codebase and write the project intro copy for you |
 | `login_auto` | A ready-made login suite: password / Google / email code + password reset |
 
-## Agents (5)
+## Agents (6)
 
-Five agents map one-to-one to cc-code roles (**role = agent**; the main thread only orchestrates), **independent of any specific project**; all project conventions defer to `.cc_code/active/project.md`, and test / build / self-check commands come only from its test-infra contract:
+Six agents map one-to-one to cc-code roles (**role = agent**; the main thread only orchestrates), **independent of any specific project**; all project conventions defer to `.cc_code/active/project.md`, and test / build / self-check commands come only from its test-infra contract:
 
 | agent | Model | cc-code Role | Responsibility |
 | --- | --- | --- | --- |
@@ -430,6 +439,7 @@ Five agents map one-to-one to cc-code roles (**role = agent**; the main thread o
 | `dev` | inherit | Dev | Implements per prd/ux/api/data; self-check commands come from project.md's test-infra contract |
 | `qa` | sonnet | QA (gray box) | Writes+runs layered tests, writes gates/bugs/test dir directly, structured FAIL list back to dev; still FAIL after 3 rounds → human decides |
 | `uiux` | inherit | UIUX (prototype worker) | Receives a single-page task order → paints P-n/M-n frames via pencil MCP → screenshot self-check → reports frameId; serves plan-uiux |
+| `curator` | sonnet | Curator (experience sediment, silent in background) | The only writer of every experience library: after settlement it runs three gates, classifies, appends, dedups, sleeps / archives, rebuilds INDEX; returns one line only; never touches active files or source |
 
 > Agents define "how to do"; cc-code defines "what to do + where"; `.cc_code/active/` is the only coupling interface.
 
@@ -467,11 +477,11 @@ Five agents map one-to-one to cc-code roles (**role = agent**; the main thread o
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
 ├── skills/           16 skill directories
-├── agents/           5 agents (pm / architect / dev / qa / uiux)
+├── agents/           6 agents (pm / architect / dev / qa / uiux / curator)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm)
-├── templates/        9 md skeletons (L0~L4 + bugs.md debug sticky note)
+├── templates/        md skeletons (L0~L4 + bugs.md debug sticky note + experience INDEX / topic skeletons)
 ├── docs/             ARCHITECTURE.md
-└── no hooks/         (removed in 0.5.0, no automated mechanical work)
+└── hooks/            the only Stop hook (safety-net reminder for experience sediment: timestamps only, no AI, no network)
 ```
 
 ### Project side (generated by /cc-code:init)
@@ -495,10 +505,15 @@ project-root/
     ├── test/           ⭐ Test code (source, must be in repo; index base for affected precise regression)
     ├── images/          🔵 Screenshots (init migrates, flat storage)
     ├── scripts/         🔵 Scattered-script archive
-    ├── references/      🟢 Project-level experience library (experience-summary produces, INDEX + role on-demand)
+    ├── references/      🟢 Project-level experience library (curator maintains it automatically: INDEX + topic files + archive/ + log/, roles read on demand)
     ├── backup/          🧊 Cold data (change-log / milestone-log / retired/ originals / CLAUDE.md.legacy; gitignored)
     │   └── YYYY-MM/     On upgrade: pre-upgrade-<old>/ read-only snapshot + upgrade_audit.md + superseded/ relocated
     └── .cc_code_version 🔖 Field version stamp (decides whether init runs upgrade migration)
+
+Cross-project libraries (outside .cc_code/, created by init):
+~/.cc-code/
+    ├── lessons/         🟢 Personal library (curator writes, follows the person, same structure as the project library)
+    └── team/<repo>/     🟢 Team library (read-only; curator only clones and pulls)
 ```
 
 ## Role Serialization
@@ -510,30 +525,157 @@ PM ──► Architect ──► Dev ──► QA
 
 Each role's must-read / writable / forbidden permissions live only in `templates/Agent.md` §3 (single source; no copy here).
 
-## Experience Sediment (references)
+## Experience Sediment (fully automatic)
 
-**Design experience** exposed during pitfalls/troubleshooting/plan retros is sedimented into project-level references via `/cc-code:experience-summary`:
+Experience is sedimented by the **curator** agent, automatically and silently: the owner does nothing, confirms nothing, rules on nothing, and sees only one result line in the final report (nothing written when nothing changed). `/cc-code:experience-summary` is demoted to a manual entry you normally never need.
+
+### Who files it · when
+
+| Role | Part in experience sediment |
+| --- | --- |
+| **curator** | The **only writer** of every library: three gates, classify, append, dedup, sleep / archive, rebuild INDEX |
+| **qa** | Only marks "consecutive / regression" and the root-cause category on the same assertion row of the `gates.md` acceptance matrix; never files |
+| **Orchestrator** | Only dispatches and forwards reports verbatim; never writes a library |
+| **architect / dev** | Read experience as self-check questions; the completion report must carry one "adopted experience" line |
+| **pm / uiux** | Read no experience library |
 
 ```
-/cc-code:experience-summary
-       ↓
-Distill "must-answer questions + design rules" → user review → land
-       ↓
-.cc_code/references/[role]-[domain]-references.md
-  e.g.: architect-bull-redis-queue-references.md
-       ↓
-INDEX.md registers one line "when to read" → role scans index on task, reads only on hit (on-demand, not all)
+ Executor settles (all pass / three rounds still failing, handed to the owner)
+        │
+        ▼
+ Orchestrator dispatches curator in background ── forwards verbatim: this round's QA report,
+        │                                           dev fix report, adopted-experience lines
+        ▼
+ ① write start timestamp
+ ② record adoptions / invalidations, ③ record active day
+ ④ three gates ─► ⑤ five level questions ─► ⑥ dedup / restore / append (mechanical self-check first)
+ ⑦ dormancy / archive sweep ─► ⑧ pull team libraries (at most once per active day) ─► ⑨ rebuild INDEX
+        │
+        ▼
+ One result line ─► merged into the final report (nothing written if no change)
+
+ Safety net: orchestrator forgot ─► Stop hook sees acceptance record newer than the start timestamp ─► reminds to dispatch once
 ```
 
-- **Project-level**: follows the project, not into the plugin or global.
-- **Refined**: only "how to think/act during design/acceptance", ≤30 lines, no narrative trace.
-- **Exit value**: every rule must be actionable — can veto a plan based on it.
+agent-whole-qa is not wired in this release.
 
-## No-Hook Design
+### Three gates: worth writing?
 
-cc-code **uses no Stop Hook**. All `.cc_code/` files are written by AI in-conversation; no automated mechanical work.
+```
+ A mark on some assertion row of the acceptance matrix
+        │
+ ① Trigger? "consecutive" (failed last round, failed again) or "regression" (passed last round, failed now) ──no──► ignore
+        │yes
+ ② Root cause? "implementation defect" or "design omission" ──no (test itself wrong / environment / third party / spec ambiguity)──► not filed
+        │yes
+ ③ Evidence? a root cause · a source change · reproducible ──any missing──► skip (mark stays for next time)
+        │all present
+        ▼
+      classify
+```
 
-> Design history: early versions had a Stop Hook for `errors.md` cold slicing. From 0.5.0 `errors.md` was abolished (pitfalls go into commit messages / git blame, natural trace), the Hook lost its only job and was removed. Fits "one thing does only its own logic" — no logic, don't keep it.
+A processing log keeps the same mark from being handled twice. Evidence comes from the forwarded reports plus what curator may read: `active/gates.md`, `active/bugs.md`, `docs/qa/`; ⛔ never `backup/`.
+
+### How to classify: three levels
+
+| Level | Location | Who writes |
+| --- | --- | --- |
+| Project | `.cc_code/references/` | curator |
+| Personal | `~/.cc-code/lessons/` | curator |
+| Team | `~/.cc-code/team/<repo>/` | read-only; curator only clones and pulls (at most once per active day, time-boxed, failures skipped silently) |
+
+```
+ A lesson worth writing
+        │
+ Do collaborators need it? ──yes──► Project
+        │no
+ Still true without project nouns? ──no──► Project
+        │yes
+ Technology's own behavior, or this project's choice? ──project's choice──► Project
+        │technology's behavior
+ Would a different business hit it again? ──no──► Project
+        │yes
+ Would the answer flip under a different business / compliance / cost goal? ──yes (trade-off)──► Project only
+        │no
+        ▼
+     Personal          (when unsure, always Project)
+```
+
+### Structure: progressive disclosure
+
+All three levels share one structure:
+
+| File | Role |
+| --- | --- |
+| `INDEX.md` | Entry point. One line per topic: topic, when to read, live count, dormant entries; a derived file regenerated by curator every run |
+| `<topic>.md` | One file per topic, English kebab-case name (e.g. `async-queue.md`, `db-timezone.md`); same topic appends to the same file, an identical constraint is not added again - only one adoption is logged |
+| `archive/<same-topic>.md` | Archived entries, full text preserved |
+| `log/` | Append-only logs: adoption log, active-day log (project library also keeps a processing log and the start timestamp; personal library keeps the team-pull record) |
+
+Each entry has five fields, not a wasted word, no code:
+
+| Field | Content |
+| --- | --- |
+| Title | `<project>-<role>-<date>` (same-day duplicate gets -2) |
+| Background | What was being done |
+| Input | Conditions and dependencies at the time |
+| Output | What was expected |
+| What happened | What actually went wrong and why |
+| Constraint | One sentence that must be obeyed from now on; scope goes in parentheses at the end |
+
+Forbidden: assertion numbers, measured / expected values, secrets, accounts, customer names, internal addresses, code. Curator self-checks mechanically before writing and rewrites any hit.
+
+### Append-only · lifecycle
+
+Entry files are only appended to - never overwritten or deleted - by appending at the end, safe for concurrent sessions. An **active day** = a day on which a curator settlement ran in the library's scope (the personal library counts any project).
+
+| State | Criterion | Action |
+| --- | --- | --- |
+| Normal | Adopted within the last 7 active days (or just written) | — |
+| Dormant | 7 consecutive active days without adoption | Marked in INDEX, readers may skip it; adoption revives it |
+| Archived | 14 consecutive active days without adoption, or reported "not applicable / invalid" | Moved to the same-topic file under `archive/` (curator's only move; full text preserved); when the topic recurs, curator checks the archive first and restores if it can |
+
+### Who reads · when
+
+| Who | When | Reads |
+| --- | --- | --- |
+| architect | First dispatch at step 6 of plan-mvp / plan-feature; when plan-debug routes a contract error to it | The project / personal / team INDEX (skipped if absent), opens a topic only on a hit. Project level feeds the design directly; personal / team level is written into `project.md` §5 special constraints when the plan lands |
+| dev | When the executor's dispatch explicitly lists it | Project `references/INDEX.md` + `project.md` (including cross-project experience transcribed by architect) |
+| qa / pm / uiux | — | No experience library |
+
+Both architect's and dev's completion reports must carry one line "adopted experience: <entry title> / none / not applicable: <entry title>"; the orchestrator asks dev to supplement if it is missing and forwards these lines verbatim to curator (with the settlement material at executor settlement; after an architect lands a plan in plan-*, a separate adoption-only background curator run); adoptions are logged, "not applicable" is archived immediately.
+
+Priority: active files > project > personal > team; conflicts between experiences are reported on that line, never auto-resolved; experience is a self-check question, never the acceptance yardstick.
+
+### Team import · one-time setup · review
+
+- **Team import**: give a git address in the conversation and say it is team experience; the orchestrator dispatches curator to clone it into `~/.cc-code/team/<repo>/`. No new command.
+- **init configures it once**: creates the project and personal library skeletons and idempotently merges the required permissions into the generated project's `.claude/settings.local.json` (machine-local, not committed; existing settings are not broken), so writing the personal library and pulling the team library never prompt.
+- **Post-launch review**: if the total adoption count is still 0 thirty days after launch, review or retire the mechanism.
+
+## The Only Stop Hook
+
+cc-code has exactly **one** Stop hook, with a single job: the safety net for experience sediment. All other `.cc_code/` files are still written by AI in-conversation.
+
+```
+ Session wrap-up (Stop)
+      │
+      ▼
+ Already inside a hook continuation? ──yes──► exit at once (loop guard)
+      │no
+ Project has .cc_code/ and a start timestamp? ──no──► exit silently
+      │yes
+ Acceptance record newer than curator's start timestamp? ──no──► exit silently
+      │yes
+      ▼
+ Give the main session a non-error hint ─► orchestrator dispatches curator once in background (ignore if already dispatched)
+```
+
+- **Very fast**: compares two file timestamps only - no AI, no network.
+- **No false alarms**: curator's very first step writes the start timestamp.
+- **Only a reminder**: never errors, never blocks the main session.
+
+> Design history: early versions had a Stop Hook for `errors.md` cold slicing. From 0.5.0 `errors.md` was abolished (pitfalls go into commit messages / git blame, natural trace), the Hook lost its only job and was removed - fitting "one thing does only its own logic": no logic, don't keep it. From 1.10.0 experience sediment runs as a background agent, and "was curator really dispatched after settlement" is a **mechanically decidable** question (two timestamps), so this single hook returns, doing the safety net only.
 
 ## Scattered-File Migration
 

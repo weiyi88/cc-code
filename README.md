@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.9.3** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.10.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 宪法原则：**只对结果负责，不在乎过程**（结果是否符合需求是唯一尺子）。
@@ -20,12 +20,12 @@
 - [Codex CLI 适配（1.1.0）](#codex-cli-适配110)
 - [可选增强：codegraph](#可选增强codegraph)
 - [Skill 一览（16 个）](#skill-一览16-个)
-- [Agent（5 个）](#agent5-个)
+- [Agent（6 个）](#agent6-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
 - [角色串行](#角色串行)
-- [经验沉淀（references）](#经验沉淀references)
-- [无 Hook 设计](#无-hook-设计)
+- [经验沉淀（1.10.0 全自动）](#经验沉淀全自动)
+- [唯一的 Stop hook](#唯一的-stop-hook)
 - [散落物迁移](#散落物迁移)
 - [新手入门](#新手入门)
 - [License](#license)
@@ -89,10 +89,11 @@ PM ──► Architect ──► Dev ──► QA
 | `dev` | inherit（继承主会话） |
 | `qa` | sonnet |
 | `uiux` | inherit（继承主会话） |
+| `curator` | sonnet |
 
 谁写哪个文件见 `templates/Agent.md` §二 / §三，此处不抄副本。
 
-所有 agent 开 `memory: project`（记忆存在生成项目的 `.claude/agent-memory/<agent>/`，只记本角色经验）；项目约定永远从 `.cc_code/active/*` 读，不从记忆读。Codex 端本版只保证生成链不坏（inherit 档继承父会话，不写 model 行）。
+除 curator 外，所有 agent 开 `memory: project`（记忆存在生成项目的 `.claude/agent-memory/<agent>/`，只记本角色经验）；项目约定永远从 `.cc_code/active/*` 读，不从记忆读。Codex 端本版只保证生成链不坏（inherit 档继承父会话，不写 model 行）。
 
 ### 并行泳道（1.6.0）：角色串行 ≠ 单线程
 
@@ -178,6 +179,14 @@ PM ──► Architect ──► Dev ──► QA
              过期内容 → backup/retired/<源文件名>.md（原文整段搬走, 一字不丢）
 ```
 
+**1.10.0：** 经验沉淀交给新增的 **curator** agent，全自动、静默，主人零操作、零确认、零裁决，最终报告只多一行结果（无变化不写）。
+- 执行器（agent-mvp / agent-feature / agent-debug / just-do-it）每次结算后，主控后台派 curator；qa 只在验收矩阵上标「连续 / 回归」与根因类别，curator 过三道筛后按级别分库，architect / dev 按渐进式披露读 INDEX 并在完成报告里写「采纳经验」一行。
+- 经验库三级同构：项目 `.cc_code/references/`、个人 `~/.cc-code/lessons/`、团队 `~/.cc-code/team/<仓库名>/`（只读）；只追加不覆盖，7 个活跃日未采纳休眠、14 个归档。
+- 新增唯一的 **Stop hook** 做保底（只比时间戳，不调 AI、不联网），漏派 curator 时提醒主会话补派；agent 5 → 6。
+- `init` 一次配好：建经验库骨架，并幂等合并 `.claude/settings.local.json` 权限，写个人库、拉团队库不弹确认。
+- `/cc-code:experience-summary` 改为手动入口：把你当场的话原样交给 curator。
+- codex 暂不适配（生成链照常、校验不破）；agent-whole-qa 本次不接入。
+
 **1.9.3：** 升级与迁移也严守单一写者——`init` 按文件派 pm / architect / qa 回填，主控只分拣、只派、不写；`Agent.md` / `CLAUDE.md` 由 init 脚本按插件模板覆盖；pm 不读 milestone-log。
 
 **1.9.2：** 修 1.9.1 的落地缺口——主控 `allowed-tools` 不含浏览器工具，生命周期改为「首个 qa 开（owner）/ 收口 qa 关（closer）」；qa 协议与 Workflow 脚本补上 owner / closer、失联只上报不自建、产物显式落盘；PREFLIGHT 自动识别唯一浏览器工具，`Workflow` 纳入工具白名单；`project.md` §六 增加「QA 数据隔离」契约。
@@ -232,7 +241,7 @@ PM ──► Architect ──► Dev ──► QA
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill 与 5 个配套 agent。
+安装后自动获得 `/cc-code:*` 命令族、16 个 skill、6 个配套 agent 与 1 个 Stop hook。
 
 ## 完整生命周期
 
@@ -280,12 +289,12 @@ PM ──► Architect ──► Dev ──► QA
 
 ────────── 任意时刻 ──────────
 
-/cc-code:experience-summary  踩坑/复盘 → 提炼设计准则 → references/ 资料库
+/cc-code:experience-summary  手动补一条经验（你当场的话原样交给 curator；平时全自动，无需调用）
 /cc-code:init                插件升级后再跑一次：场域迁移 + 手册刷新到最新
 ```
 
 **主线是 6 个 skill 三对配对串起来**：规划（商讨落盘定稿）→ 执行（纯机器推进）→ 全量验收。
-`cc-code` skill 在背后管运行时协议（角色路由 + 分层），`init` 是入场。无 Stop Hook，所有状态由 AI 顺手写。
+`cc-code` skill 在背后管运行时协议（角色路由 + 分层），`init` 是入场。仅一个 Stop hook 做经验整理保底，其余状态由 AI 顺手写。
 
 ## 快速开始
 
@@ -318,7 +327,7 @@ codex plugin add cc-code@cc-code-marketplace
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex   # 或指向本仓库 scripts/init.sh
 ```
 
-`--codex` 做三件事：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）、`.codex/hooks.json + gate.sh`（plan 写盘拦截）、`.codex/agents/*.toml`（五角色沙箱；源已删除的旧角色 toml 会被清掉）。**首次运行 codex 会要求在 `/hooks` 里审查信任 gate.sh —— trust 一次即生效。**
+`--codex` 做三件事：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）、`.codex/hooks.json + gate.sh`（plan 写盘拦截）、`.codex/agents/*.toml`（六角色沙箱；源已删除的旧角色 toml 会被清掉）。**首次运行 codex 会要求在 `/hooks` 里审查信任 gate.sh —— trust 一次即生效。**
 
 ### Codex 侧的 plan 笼子
 
@@ -401,7 +410,7 @@ $cc-code:plan-mvp 触发
 | `plan-debug` | `/cc-code:plan-debug` | 出 bug 后顺着代码调用链查到根因，bugs.md 自动整理、不等批准，不写码 |
 | `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
-| `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
+| `experience-summary` | `/cc-code:experience-summary` | 手动补一条经验：你当场说的话原样交给 curator 静默归档（平时经验全自动整理） |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 | `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
 | `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数，出事一键回滚 |
@@ -413,9 +422,9 @@ $cc-code:plan-mvp 触发
 | `project_resume` | 扫描代码库，替你写一段项目介绍文案 |
 | `login_auto` | 一套现成方案装好登录注册：密码/谷歌/邮箱验证码+改密 |
 
-## Agent（5 个）
+## Agent（6 个）
 
-五个 agent 与 cc-code 角色一一对应（**角色 = agent**，主控只编排），**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`；测试 / 构建 / 自检命令只认其中的测试基建契约：
+六个 agent 与 cc-code 角色一一对应（**角色 = agent**，主控只编排），**独立于任何具体项目**，所有项目约定一律 defer 到 `.cc_code/active/project.md`；测试 / 构建 / 自检命令只认其中的测试基建契约：
 
 
 
@@ -426,6 +435,7 @@ $cc-code:plan-mvp 触发
 | `dev` | inherit | Dev | 按 prd/ux/api/data 实现代码；自检命令来自 project.md 测试基建契约 |
 | `qa` | sonnet | QA（灰盒） | 写+跑分层测试，直接写 gates/bugs/测试目录，结构化 FAIL 清单回 dev，≤3 轮仍 FAIL 交人决策 |
 | `uiux` | inherit | UIUX（原型工人） | 收单页任务单 → pencil MCP 画 P-n/M-n 帧 → 截图自检 → 报 frameId；服务 plan-uiux |
+| `curator` | sonnet | Curator（经验整理，后台静默） | 所有经验库的唯一写者：结算后过三道筛、分级、追加、去重、休眠 / 归档、重建 INDEX；只回一行结果；不碰 active 与源码 |
 
 > agent 定义「怎么干」，cc-code 定义「干什么+在哪干」，`.cc_code/active/` 是唯一耦合接口。
 
@@ -463,11 +473,11 @@ $cc-code:plan-mvp 触发
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
 ├── skills/           16 个 skill 目录
-├── agents/           5 个 agent（pm / architect / dev / qa / uiux）
+├── agents/           6 个 agent（pm / architect / dev / qa / uiux / curator）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）
-├── templates/        9 个 md 骨架（L0~L4 + bugs.md debug 施工便签）
+├── templates/        md 骨架（L0~L4 + bugs.md debug 施工便签 + 经验库 INDEX / 主题文件骨架）
 ├── docs/             ARCHITECTURE.md
-└── 无 hooks/         （0.5.0 砍除，无自动化机械活）
+└── hooks/            唯一的 Stop hook（经验整理保底提醒：只比时间戳，不调 AI、不联网）
 ```
 
 ### 项目侧（/cc-code:init 生成）
@@ -491,10 +501,15 @@ cc-code/
     ├── test/           ⭐ 测试代码（源码，必须入库；affected 精准回归的索引基础）
     ├── images/          🔵 截图（init 迁移，扁平存放）
     ├── scripts/         🔵 散落脚本归档
-    ├── references/      🟢 项目级经验资料库（experience-summary 产出，INDEX 索引 + 角色按需读）
+    ├── references/      🟢 项目级经验库（curator 全自动整理：INDEX + 主题文件 + archive/ + log/，角色按需读）
     ├── backup/          🧊 冷数据（change-log / milestone-log / retired/ 退役原文 / CLAUDE.md.legacy；默认不入库）
     │   └── YYYY-MM/     升级时：pre-upgrade-<旧版>/ 只读快照 + upgrade_audit.md + superseded/ 归位物
     └── .cc_code_version 🔖 场域版本戳（决定 init 是否走升级迁移）
+
+跨项目经验库（不在 .cc_code/ 里，init 建好）：
+~/.cc-code/
+    ├── lessons/         🟢 个人库（curator 写，跟人走，结构同项目库）
+    └── team/<仓库名>/   🟢 团队库（只读，curator 只负责克隆与拉取）
 ```
 
 ## 角色串行
@@ -506,30 +521,157 @@ PM ──► Architect ──► Dev ──► QA
 
 各角色「必读 / 可写 / 禁读」权限只写在 `templates/Agent.md` §三（单一出处，此处不抄副本）。
 
-## 经验沉淀（references）
+## 经验沉淀（全自动）
 
-开发中踩坑/排障/方案复盘暴露的**设计经验**，用 `/cc-code:experience-summary` 沉淀为项目级 references：
+经验沉淀由 **curator** agent 全自动、静默完成：主人零操作、零确认、零裁决，只在最终报告看到一行结果（无变化不写）。`/cc-code:experience-summary` 退为手动入口，平时不用。
+
+### 谁整理 · 何时整理
+
+| 角色 | 在经验沉淀里做什么 |
+| --- | --- |
+| **curator** | 所有经验库的**唯一写者**：过三道筛、分级、追加、去重、休眠 / 归档、重建 INDEX |
+| **qa** | 只在 `gates.md` 验收矩阵的同一断言行标「连续 / 回归」与根因类别；不整理 |
+| **主控** | 只派单、原样转交报告；不写经验库 |
+| **architect / dev** | 读经验当自检问题，完成报告必含一行「采纳经验」 |
+| **pm / uiux** | 不读任何经验库 |
 
 ```
-/cc-code:experience-summary
-       ↓
-提炼「必答问题 + 设计准则」→ 主人过目 → 落盘
-       ↓
-.cc_code/references/[角色]-[事件域]-references.md
-  例：architect-bull-redis-queue-references.md
-       ↓
-INDEX.md 登记一行「何时读」→ 角色接到任务先扫索引，命中才读（按需，非全读）
+ 执行器结算（全部通过 / 三轮仍未通过交人）
+        │
+        ▼
+ 主控后台派 curator ── 原样转交：本次验收报告、dev 修复报告、采纳经验行
+        │
+        ▼
+ ① 写开工时间戳
+ ② 记采纳 / 失效，③ 记活跃日
+ ④ 三道筛 ─► ⑤ 级别五问 ─► ⑥ 去重 / 恢复 / 追加（写前机械自检）
+ ⑦ 休眠 / 归档扫描 ─► ⑧ 团队库拉取（每活跃日最多一次）─► ⑨ 重建 INDEX
+        │
+        ▼
+ 一行结果 ─► 并入最终报告（无变化不写）
+
+ 保底：主控漏派 ─► Stop hook 发现验收记录比开工时间戳新 ─► 提醒补派一次
 ```
 
-- **项目级**：跟随项目走，不进插件、不进全局。
-- **精炼**：只写「设计/验收时怎么思考、怎么做」，≤30 行，禁溯源流水账。
-- **准出价值**：每条准则必须可执行 —— 能据此否决一个方案。
+agent-whole-qa 本次不接入。
 
-## 无 Hook 设计
+### 三道筛：值不值得写
 
-cc-code **不使用 Stop Hook**。所有 `.cc_code/` 文件都由 AI 在对话内顺手写，无自动化机械活。
+```
+ 验收矩阵某断言行的标记
+        │
+ ① 触发？「连续」（上一轮败、这轮又败）或「回归」（上一轮过、这轮败） ──否──► 忽略
+        │是
+ ② 根因？「实现缺陷」或「设计遗漏」 ──否（测试自身错 / 环境 / 第三方 / 规格歧义）──► 不整理
+        │是
+ ③ 证据？有根因 · 有源码改动 · 可复现 ──缺一──► 跳过（标记留着，下次再看）
+        │齐
+        ▼
+      进入分级
+```
 
-> 设计沿革：早期版本有 Stop Hook 做 `errors.md` 冷切片。0.5.0 起 `errors.md` 废除（坑写进 commit message / git blame，天然留痕），Hook 失去唯一职责，一并砍除。符合「一个东西只做自己的逻辑」—— 没逻辑就别留。
+处理日志防止同一标记重复处理。证据来自主控转交的报告，以及 curator 可读的 `active/gates.md`、`active/bugs.md`、`docs/qa/`；⛔ 不读 `backup/`。
+
+### 怎么分类：三个级别
+
+| 级别 | 位置 | 谁写 |
+| --- | --- | --- |
+| 项目 | `.cc_code/references/` | curator |
+| 个人 | `~/.cc-code/lessons/` | curator |
+| 团队 | `~/.cc-code/team/<仓库名>/` | 只读；curator 只负责克隆与拉取（每个活跃日最多一次，限时，失败静默跳过） |
+
+```
+ 一条值得写的教训
+        │
+ 协作者需要吗？ ──是──► 项目
+        │否
+ 去掉项目名词还成立吗？ ──否──► 项目
+        │是
+ 技术自身行为，还是本项目选择？ ──本项目选择──► 项目
+        │技术自身行为
+ 换业务会再犯吗？ ──否──► 项目
+        │是
+ 换业务 / 合规 / 成本目标，答案会反转吗？ ──会（取舍型）──► 只进项目
+        │不会
+        ▼
+      个人            （拿不准一律项目）
+```
+
+### 结构：渐进式披露
+
+三级同一套结构：
+
+| 文件 | 作用 |
+| --- | --- |
+| `INDEX.md` | 入口。每个主题一行：主题、何时读、有效条数、休眠条目；派生物，每次由 curator 重新生成 |
+| `<主题>.md` | 一个主题一个文件，英文 kebab-case 文件名（如 `async-queue.md`、`db-timezone.md`）；同主题追加进同一文件，约束与已有条目相同则不新增，只记一次采纳 |
+| `archive/<同名主题>.md` | 归档条目，原文完整保留 |
+| `log/` | 追加日志：采纳日志、活跃日日志（项目库另有处理日志与开工时间戳，个人库另有团队拉取记录） |
+
+每条经验五个字段，不允许一个废字、不加代码：
+
+| 字段 | 内容 |
+| --- | --- |
+| 标题 | `<项目>-<角色>-<日期>`（同日重复末尾加 -2） |
+| 背景 | 当时在做什么 |
+| 输入 | 当时的条件和依赖 |
+| 输出 | 期望得到什么 |
+| 发生什么 | 实际错在哪、为什么错 |
+| 约束 | 以后必须遵守的一句话；有适用范围写在句末括号里 |
+
+禁写：断言编号、实测数值 / 期望值、密钥、账号、客户名、内部地址、代码；curator 写入前机械自检，命中则改写成不含这些的版本。
+
+### 只追加 · 生命周期
+
+条目文件只追加不覆盖、不删除，追加用末尾直接追加的方式，多会话并发安全。**活跃日** = 该库所在范围当天有 curator 结算运行（个人库按任意项目）。
+
+| 状态 | 判据 | 动作 |
+| --- | --- | --- |
+| 正常 | 近 7 个活跃日内被采纳过（或刚写入） | — |
+| 休眠 | 连续 7 个活跃日未被采纳 | INDEX 标注，读者可跳过；被采纳即恢复 |
+| 归档 | 连续 14 个活跃日未被采纳，或被报告「不适用 / 失效」 | 搬到 `archive/` 同名主题文件（curator 唯一的搬运动作，原文完整保留）；同主题再出现新事件时先查归档，能恢复就恢复 |
+
+### 谁读 · 何时读
+
+| 谁 | 何时 | 读什么 |
+| --- | --- | --- |
+| architect | plan-mvp / plan-feature 第 6 步首次派它；plan-debug 因契约错路由派它时 | 项目 / 个人 / 团队三处 INDEX（不存在跳过），命中主题才打开。项目级直接用于设计；个人 / 团队级在方案落盘时写进 `project.md` §五 特殊约束 |
+| dev | 执行器派单明确列出 | 项目 `references/INDEX.md` + `project.md`（含 architect 转写的跨项目经验） |
+| qa / pm / uiux | — | 不读任何经验库 |
+
+architect 与 dev 的完成报告都必含一行「采纳经验：<条目标题> / 无 / 不适用：<条目标题>」，dev 缺这一行主控续接补；主控把这些行原样转给 curator（执行器结算时随结算材料；plan-* 里 architect 落盘后另派一次只记采纳的后台 curator），采纳记入日志，「不适用」立即归档。
+
+优先级：active 文件 ＞ 项目 ＞ 个人 ＞ 团队；经验之间冲突写进那一行上报，不自动取舍；经验只当自检问题，不当验收尺子。
+
+### 团队导入 · 一次配好 · 复查
+
+- **团队导入**：在对话里给出 git 地址并说明是团队经验，主控派 curator 克隆到 `~/.cc-code/team/<仓库名>/`；不新增命令。
+- **init 一次配好**：建好项目与个人经验库骨架，并向生成项目的 `.claude/settings.local.json`（本机生效、不入 git）幂等合并所需权限（不破坏已有设置），之后写个人库、拉团队库不弹确认。
+- **上线复查**：上线后 30 天总采纳次数为 0，则复查或下线这套机制。
+
+## 唯一的 Stop hook
+
+cc-code 只有**一个** Stop hook，职责单一：经验整理的保底提醒。其余 `.cc_code/` 文件仍由 AI 在对话内顺手写。
+
+```
+ 会话收尾（Stop）
+      │
+      ▼
+ 已处于 hook 续跑中？ ──是──► 立即退出（防循环）
+      │否
+ 项目有 .cc_code/ 且有开工时间戳？ ──否──► 静默退出
+      │是
+ 验收记录修改时间 新于 curator 开工时间戳？ ──否──► 静默退出
+      │是
+      ▼
+ 给主会话一条非错误提示 ─► 主控后台补派一次 curator（已派过则忽略）
+```
+
+- **极快**：只比两个文件的时间戳，不调 AI、不联网。
+- **不误报**：curator 第一步就写开工时间戳。
+- **只是提醒**：永不报错、不卡住主会话。
+
+> 设计沿革：早期版本有 Stop Hook 做 `errors.md` 冷切片。0.5.0 起 `errors.md` 废除（坑写进 commit message / git blame，天然留痕），Hook 失去唯一职责，一并砍除——符合「一个东西只做自己的逻辑」，没逻辑就别留。1.10.0 起经验整理由 agent 后台完成，而「执行器结算后是否真的派了 curator」恰好是一件**机械可判**的事（比两个时间戳），于是重新引入这唯一的一个 hook，只做保底。
 
 ## 散落物迁移（init 判定链）
 
