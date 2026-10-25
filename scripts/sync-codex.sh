@@ -97,12 +97,13 @@ MODEL_MAP = {
     "opus": ('"gpt-5.4"', '"high"'),
     "inherit": (None, None),  # 不写 model 行 → 继承父会话(Codex 模型映射本版不重设计)
 }
-SANDBOX_MAP = {  # 引擎级角色权限: 五角色都要落盘(pm/architect 写规划文件, qa 写 gates/bugs/测试), 一律可写
+SANDBOX_MAP = {  # 引擎级角色权限: 六角色都要落盘(pm/architect 写规划文件, qa 写 gates/bugs/测试), 一律可写
     "pm": "workspace-write",
     "architect": "workspace-write",
     "dev": "workspace-write",
     "qa": "workspace-write",
     "uiux": "workspace-write",
+    "curator": "workspace-write",   # 经验库唯一写者（后台静默整理）
 }
 
 def toml_str(s: str) -> str:

@@ -54,12 +54,12 @@ disable-model-invocation: true
 ### ① Dev 段（agent: dev）
 | 项 | 内容 |
 | --- | --- |
-| 范围 | bugs.md 只读本次 B-n 条目；prd / ux 只读期望出处命中的断言 / 判定项；data / api 只读命中小节（读写权限以 `Agent.md` §三 为准） |
+| 范围 | bugs.md 只读本次 B-n 条目；prd / ux 只读期望出处命中的断言 / 判定项；data / api 只读命中小节（读写权限以 `Agent.md` §三 为准）；派单另列 `.cc_code/references/INDEX.md`（经验索引，命中主题才打开；规则见 `Agent.md` §四第 7 条） |
 | 做 | 只按 B-n 方案修：根因处修复 + 按「爆炸半径」里的技术备注（文件清单）逐文件核对连带；遵循 project.md 约定；⛔ 不重构无关代码；实现细节缺信息可自行决定并写进报告 |
 | 冲突 | 发现 B-n 方案要动契约（data / api）或需求（prd / ux）→ 停下，不动，在报告「冲突上报」里用业务语言写（技术细节另列）；主控把 dev 的冲突上报原样交人（见「编排器行为准则」） |
 | 探针 | B-n「需加探针」非「无」时：先按其加临时日志，每条带标记 `CC-PROBE-B<n>`，走 `project.md` §七 门面（DEBUG 级）→ 复现取证 → 修复 → ⛔ 交 QA 前删光（`rg CC-PROBE-B<n>` 零命中） |
 | 跑 | Agent(dev) → 自检：按 `project.md` §六 测试基建契约登记的命令，依次跑代码规范检查、类型检查、单测、e2e（有哪些跑哪些，⛔ 不自带命令） |
-| 输出 | 修复代码 + 完成报告（文件清单 + 自检 pass/fail） |
+| 输出 | 修复代码 + 完成报告（文件清单 + 自检 pass/fail + 「采纳经验」一行，格式见 `Agent.md` §四第 7 条） |
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准（静默） |
 
 ### ② QA 段（agent: qa，灰盒）
@@ -103,9 +103,12 @@ disable-model-invocation: true
     ▼
  ④ 主控更新 status.md（下一步清空 B-n 指向，或指向遗留待办）
     ▼
- ⑤ 报告：修复交付（用例通过 + 回归范围 + 回归测试位置）
+ ⑤ 后台派 curator（规则见 active/Agent.md §四第 7 条、§五「派 curator」）
+    ▼
+ ⑥ 报告：修复交付（用例通过 + 回归范围 + 回归测试位置）
 ```
 
+- **3 轮仍 FAIL 交人时同样后台派 `curator`**（每次结算都派，规则同上）。
 - 追溯 = retired 原文 + milestone-log 一行 + 留守的回归测试。
 - **不跑 agent-whole-qa、不做全量回归** —— bug 修复的验收面就是 B-n 用例 + affected 精准回归面；全量清算只属于 MVP 收口或主人显式调用 `/cc-code:agent-whole-qa`。
 
@@ -116,6 +119,7 @@ disable-model-invocation: true
 - **你是编排器**：按阶段派对应 agent，不在主控里替角色思考，不扮演任何角色。
 - **纯执行定位**：发现 B-n 条目缺漏（方案说不清 / 爆炸半径为空 / 根因存疑，但状态标成了待修复）→ 停下报告交人，⛔ 绝不现场重新诊断（那是 `/cc-code:plan-debug` 的职责）。
 - **subagent 不能问用户**：dev / qa 要问人的事一律交回主控，由主控交人。
+- **dev 完成报告缺「采纳经验」一行** → 续接同一个 dev 补（规则见 `active/Agent.md` §五）。
 - **契约 / 需求出错**：dev 或 qa 发现根因其实是契约错 / 需求错 → 停下，主控把 dev 的冲突上报原样交人（dev 已用业务语言写）；主人拍板后契约错派 `architect` 改 L3、需求错派 `pm` 改 prd / ux，改完再续跑本命令。主控自己不改。
 - **每次切阶段前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进；校准静默，不打扰人。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。

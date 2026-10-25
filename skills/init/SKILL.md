@@ -30,7 +30,7 @@ disable-model-invocation: true
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" "$(pwd)"
 ```
 
-脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/ references/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ `bugs.md`（0.13.0 起，debug 链施工便签，常态为空）+ `references/INDEX.md` 索引 + **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版）+ **版本戳**。Track C 搬散落物 + 补建缺失的 `bugs.md` + 刷新手册 + **主控跑 D4 轻量骨架体检（只读报告，不改文件）**。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的 `references/` 与 `bugs.md`）。
+脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/ references/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ `bugs.md`（0.13.0 起，debug 链施工便签，常态为空）+ `references/` 经验库骨架（`INDEX.md` + `archive/` + `log/`，见下「经验库与权限」）+ **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版）+ **版本戳**。Track C 搬散落物 + 补建缺失的 `bugs.md` + 刷新手册 + 补建经验库骨架与权限 + **主控跑 D4 轻量骨架体检（只读报告，不改文件）**。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的经验库骨架与 `bugs.md`，D2.5 之后合并权限）。
 
 子命令（供 AI 在升级阶段调用）：
 
@@ -38,6 +38,21 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" "$(pwd)"
 | --- | --- |
 | `bash init.sh --relocate <相对路径...>` | 冗余归位：`mv` 进 `backup/YYYY-MM/superseded/`。**零删除**，且拒绝归位规范 8 文件 |
 | `bash init.sh --stamp` | 盖版本戳。**仅在 D5 校验门全过后才允许调用** |
+
+### 经验库与权限（⭐1.10.0 新增，三轨通用，脚本机械动作，幂等）
+
+经验沉淀由 curator 静默完成，init 只负责把它要用的地方和权限一次配好。规则出处 `Agent.md` §四 第 7 条，整理细则见 `agents/curator.md`，本命令不复述。
+
+| 脚本动作 | 位置 | 说明 |
+| --- | --- | --- |
+| 建项目经验库 | `.cc_code/references/` | `INDEX.md` + `archive/` + `log/`（`adoption.md` `active-days.md` `processed.md` `started` `reminded`）；缺什么补什么，已有的一个字不动；旧主题文件原样保留 |
+| 建个人经验库 | `~/.cc-code/lessons/` | 同结构（`log/` 里改为 `adoption.md` `active-days.md` `team-pull.md`）；建失败只告警，不挡 init |
+| 合并项目权限 | `.claude/settings.local.json`（含本机绝对路径，只对本机生效，默认不入 git） | 加入 `permissions.additionalDirectories` 的 `$HOME/.cc-code`（展开后的绝对路径），以及 `permissions.allow` 的 `~/.cc-code/**` 读与改、项目库 `.cc_code/references/**` 的改、`printf` 追加（追加目标另按改文件规则检查）、团队库克隆与精确匹配的快进拉取两条 git 命令。已有设置原样保留，重复运行不重复加 |
+
+- 合并工具：有 `jq` 用 `jq`，没有退 `python3`；两者都没有就只告警并打印要手动加的条目，不动文件。
+- 改动已有 `settings.local.json` 前，原文件快照到 `backup/YYYY-MM/settings.local.json.pre-merge`；文件不是合法 JSON 则不碰，只告警。
+- 团队库 `~/.cc-code/team/<仓库名>/` 不由脚本建，主人给出 git 地址时由 curator 克隆。
+- `log/started` 是 curator 的开工时间戳，`log/reminded` 是 Stop hook 的「已提醒」记号；插件 Stop hook（`hooks/hooks.json` → `hooks/curator-reminder.sh`，随插件注册，不由 init 安装）只比它们与 `gates.md` 的修改时间。
 
 散落物迁移采用**「默认不动」判定链**（任一命中即跳过）：① 保护白名单 → ② **git 已追踪**（最强判据：人 commit 过 = 不是垃圾）→ ③ 被 package.json/CI/Dockerfile/源码引用 → 三关全过才做正向识别（名字像临时物/过程报告才搬）→ ④ 都不匹配则**原地保留**并记入 `backup/YYYY-MM/needs_review.md` 交人工判断。搬走的记入 `migration_manifest.md`。同时把 `.cc_code/backup/` 追加进根 `.gitignore`。
 
@@ -120,7 +135,7 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
 ```
 
-产物三件：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）｜`.codex/hooks.json + hooks/gate.sh`（plan-lock 写盘拦截）｜`.codex/agents/*.toml`（pm/architect/dev/qa/uiux 角色沙箱，唯一源 `agents/*.md` 的生成物；重跑会清掉源已删除的旧角色 toml，如 1.8.0 删除的旧综合规划角色）。
+产物三件：`AGENTS.md → CLAUDE.md` 软链（宪法双端同源）｜`.codex/hooks.json + hooks/gate.sh`（plan-lock 写盘拦截）｜`.codex/agents/*.toml`（pm/architect/dev/qa/uiux/curator 角色沙箱，唯一源 `agents/*.md` 的生成物；重跑会清掉源已删除的旧角色 toml，如 1.8.0 删除的旧综合规划角色）。
 
 告知主人两件事（一次性）：① codex 首跑会在 `/hooks` 要求审查信任 gate.sh，trust 一次生效；② codex 侧 plan 笼子用法 = 先 `/plan`（内建只读），或 `touch .cc_code/.runtime/plan-lock` 开护栏、出关 `rm`。⛔ 非.codex 用户不问不做（零打扰）。
 
@@ -335,7 +350,7 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --relocate \
 | 规范外已废除 | `errors.md` | ✅ 归位（内容在 D1 快照 + superseded） |
 | 规范 8 文件本体 | `active/prd.md` 等 | ❌ 脚本会**拒绝**，绝不归位 |
 | `backup/` | 全部 | ❌ 绝不动，冷数据是最后防线 |
-| `references/` | 全部 | ❌ 经验资料库，绝不动（0.8.0 起脚本 D2 自动补建） |
+| `references/` | 全部 | ❌ 经验资料库，绝不动（脚本 D2 只补建缺失的骨架，条目由 curator 写） |
 | `docs/` `images/` `scripts/` `tests/` | 全部 | ❌ 只在报告里清点，交主人处置 |
 | 项目源码 / 测试目录 | `src/` 等 | ❌ Dev 域，绝不碰 |
 

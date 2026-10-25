@@ -24,7 +24,7 @@ cc-code 的处方：**把记忆、状态、规则全部外部寄存到 `.cc_code
 
 ```
 pm ──► architect ──► dev ──► qa          旁路：uiux（只画前端原型）
-(需求)   (架构)      (编码)   (验收)
+(需求)   (架构)      (编码)   (验收)           后台：curator（结算后静默整理经验）
 
 主控 = 编排者：派 agent、原样转问、原样续接你的回答；
          不读代码、不替你回答、不代写任何角色的文件（含 init 升级迁移，要改一律派该文件的写者 agent），只记坐标和里程碑
@@ -48,7 +48,7 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 | **L4 验收** | `active/gates.md` | QA 实测结果 + FAIL 清单（dev 禁读） |
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，修完搬走） |
 | — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） |
-| — | `references/` | 项目级经验资料库（INDEX 索引，agent 按需读；含 bull-redis-queue 示例） |
+| — | `references/` | 项目级经验库（curator 全自动整理；INDEX 索引，architect / dev 按需读）。个人库 `~/.cc-code/lessons/`、团队库 `~/.cc-code/team/` 在项目外；主题文件写法范本见插件 `templates/references-example-async-queue.md` |
 | — | `docs/qa/` | QA 全量报告 |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md / `retired/` 退役原文（人看历史，AI 工作时禁读） |
 | — | `.cc_code_version` | 场域版本戳 |
@@ -105,7 +105,7 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
 | `plan-debug` | `/cc-code:plan-debug` | 出 bug 后先由 QA 复现取证并当场记进 bugs.md，再由工程师只读查到根因，记录自动整理、不等你批准；只在需要你拍板时才停下问你 |
 | `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
-| `experience-summary` | `/cc-code:experience-summary` | 把踩过的坑写成经验笔记并编号索引，下次直接翻 |
+| `experience-summary` | `/cc-code:experience-summary` | 手动补一条经验：你当场说的话原样交给 curator 静默归档（平时经验全自动整理） |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 | `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
 | `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数，出事一键回滚 |
@@ -160,7 +160,7 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 ### 任意时刻
 
 ```
-/cc-code:experience-summary  ← 踩了有价值的坑 → 沉淀成 references
+/cc-code:experience-summary  ← 想当场补一条自动流程没抓到的经验 → 原样交给 curator（平时全自动，不用调用）
 /cc-code:init                ← 插件升级后再跑一次，自动迁移场域（零删除）
 ```
 
@@ -201,29 +201,43 @@ AI：定位 B-1 → Dev 修 → QA 复验（B-1 用例 + affected 回归 + 留�
     → gates 记 ✅ → QA 把 B-1 原文搬进 backup/retired/bugs.md → milestone-log 一行
 ```
 
-### 示例 4：踩坑沉淀
+### 示例 4：踩坑沉淀（全自动，你什么都不用做）
 
 ```
-你：（发现 Redis 重启后队列任务变僵尸，复盘完）
-你：/cc-code:experience-summary
-AI：提炼「必答三问 + 5 条设计准则」→ 给你过目
-你：确认
-AI：落 references/architect-bull-redis-queue-references.md + 登记 INDEX
-    → 下次任何架构设计涉及队列时，architect 会先读它
+你：/cc-code:agent-feature
+AI：Dev 写 → QA 验：同一条断言连着两轮没过（QA 标「连续」，根因：实现缺陷）→ Dev 修好 → 全部通过
+    （结算）主控后台派 curator，你不用管
+    最终报告多一行：经验沉淀：新增 1 条（项目 1）
+    → 下次任何架构设计涉及同类主题时，architect 会先看到它
+你：（想当场补一条自动流程没抓到的）/cc-code:experience-summary 队列任务在 Redis 重启后会变僵尸，要有恢复机制
+AI：原话原样交给 curator，它静默归档，只回一行结果
+你：（团队有共享经验库）把 git 地址发给 AI 并说「这是团队经验」→ 克隆到 ~/.cc-code/team/，之后只读
 ```
 
 ---
 
 ## 六、references 经验库怎么用
 
+经验由 **curator** 在每次执行器结算后后台静默整理，你零操作；它是所有经验库的唯一写者，qa 只在验收矩阵上做标记。
+
 ```
-agent 接到任务 → 先扫 references/INDEX.md → 命中主题才读对应文件
-未命中 → 一个都不读，零负担
+执行器结算 → 主控后台派 curator → 三道筛（连续/回归 → 实现缺陷或设计遗漏 → 证据齐）
+          → 分级（项目 / 个人）→ 追加进主题文件 → 重建 INDEX → 最终报告多一行结果（无变化不写）
+漏派 → 唯一的 Stop hook 只比时间戳，提醒主控补派
 ```
 
-- 文件命名：`[角色]-[事件域]-references.md`（如 `architect-bull-redis-queue-references.md`）
-- 内容准则：只写「设计/验收时怎么思考、怎么做」，≤30 行，每条能据此否决一个方案
-- 新增入口：永远走 `/cc-code:experience-summary`，不手写
+| 级别 | 位置 | 说明 |
+| --- | --- | --- |
+| 项目 | `.cc_code/references/` | 跟项目走；architect / dev 读 |
+| 个人 | `~/.cc-code/lessons/` | 跟人走；curator 写，architect 读，经 architect 转写进 `project.md` §五 才影响开发 |
+| 团队 | `~/.cc-code/team/<仓库名>/` | 只读；把 git 地址发给 AI 并说明是团队经验，由 curator 克隆 |
+
+- **渐进式披露**：每级一个 `INDEX.md`（每个主题一行：主题、何时读、有效条数、休眠条目）+ 按主题的资料文件（如 `async-queue.md`）+ `archive/`。读的人先扫 INDEX，命中主题才打开，未命中一个都不读，零负担。
+- **条目五字段**：背景、输入、输出、发生什么、约束；不写断言编号、数值、密钥、客户名、内部地址、代码。
+- **只追加**：不覆盖不删除；7 个活跃日未被采纳 → 休眠（读者可跳过，被采纳即恢复）；14 个活跃日未被采纳或被报告「不适用」→ 归档到 `archive/`，原文保留。
+- **谁读**：architect（规划阶段首次派出时）读三处 INDEX；dev 读项目 INDEX；qa / pm / uiux 不读。完成报告里的「采纳经验」一行就是采纳记录。
+- **优先级**：active 文件 ＞ 项目 ＞ 个人 ＞ 团队；经验只当自检问题，不当验收尺子。
+- **新增入口**：平时不用管；想当场补一条走 `/cc-code:experience-summary`，原话原样交给 curator。
 
 ---
 

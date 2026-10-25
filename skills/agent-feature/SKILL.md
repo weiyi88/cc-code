@@ -60,11 +60,11 @@ disable-model-invocation: true
 ### ① Dev 段（agent: dev）
 | 项 | 内容 |
 | --- | --- |
-| 范围 | prd 只读 F-n 命中模块小节 + §1.5 命中断言；ux 只读命中 U 项；data / api 只读命中契约小节（读写权限以 `Agent.md` §三 为准） |
+| 范围 | prd 只读 F-n 命中模块小节 + §1.5 命中断言；ux 只读命中 U 项；data / api 只读命中契约小节（读写权限以 `Agent.md` §三 为准）；派单另列 `.cc_code/references/INDEX.md`（经验索引，命中主题才打开；规则见 `Agent.md` §四第 7 条） |
 | 做 | 只按增量范围实现：改写命中模块 + 新增/补齐测试；遵循 project.md 约定；⛔ 不重构无关代码；实现细节缺信息可自行决定并写进报告 |
 | 冲突 | 需求或契约（prd / ux / api / data）有冲突 → 停下，不动，在报告「冲突上报」里用业务语言写（技术细节另列）；主控把 dev 的冲突上报原样交人（见「编排器行为准则」） |
 | 跑 | Agent(dev) → 自检：按 `project.md` §六 测试基建契约登记的命令，依次跑代码规范检查、类型检查、单测、e2e（有哪些跑哪些） |
-| 输出 | 增量代码 + 测试（落 `project.md` §六 声明的测试根）+ 完成报告（文件清单 + 自检 pass/fail） |
+| 输出 | 增量代码 + 测试（落 `project.md` §六 声明的测试根）+ 完成报告（文件清单 + 自检 pass/fail + 「采纳经验」一行，格式见 `Agent.md` §四第 7 条） |
 | ⭐ 完成后 | **算精准回归面**：`codegraph affected <本段改动的源文件...>` → 测试文件清单传给 ②QA 段；契约里登记的非常规命名测试，按 `project.md` §六 登记的 glob 补跑，合并去重即「本段回归范围」 |
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准（静默） |
 
@@ -96,6 +96,7 @@ disable-model-invocation: true
 
 - **主控**在 `backup/milestone-log.md` 追加一行（格式见 `active/Agent.md` 归档规范），⛔ 不写进 `status.md`。
 - 主控顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」（下一步清空 F-n 指向，或指向遗留待办）；`gates.md` 由 qa 写。
+- **后台派 `curator`**（QA PASS 或 3 轮仍 FAIL 交人，每次结算都派；规则见 `active/Agent.md` §四第 7 条，派发与结果并入方式见 §五「派 curator」）。
 - 报告：F-n 增量交付（断言 PASS 清单 + 回归范围）。
 - **不跑 agent-whole-qa、不做全量回归** —— 增量的验收面就是 affected 精准回归面；全量清算只属于 MVP 收口（`/cc-code:agent-mvp`）或主人显式调用 `/cc-code:agent-whole-qa`。
 
@@ -106,6 +107,7 @@ disable-model-invocation: true
 - **你是编排器**：按阶段派对应 agent，不在主控里替角色思考，不扮演任何角色。
 - **纯执行定位**：发现增量文档缺漏 / 自相矛盾 / 断言查无内容 → 停下，主控把 dev 的冲突上报原样交人（dev 已用业务语言写），⛔ 绝不现场发明需求（那是 `/cc-code:plan-feature` 的职责）。主人裁决后：契约问题派 `architect` 改、需求问题派 `pm` 改，再续跑；主控自己不改。
 - **subagent 不能问用户**：dev / qa 要问人的事一律交回主控，由主控交人。
+- **dev 完成报告缺「采纳经验」一行** → 续接同一个 dev 补（规则见 `active/Agent.md` §五）。
 - **每次切阶段前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进；校准静默，不打扰人。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准。

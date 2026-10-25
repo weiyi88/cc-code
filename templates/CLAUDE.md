@@ -47,6 +47,7 @@
 ```
 pm ──► architect ──► dev ──► qa          旁路：uiux（只被 plan-uiux 派）
 (逻辑)   (契约)      (编码)   (验收)       主控 = 编排者，只传话、只写 status / 里程碑行
+                                         结算后：curator 后台静默整理经验（唯一写者）
 ```
 
 每个 agent 的「必读 / 可写 / 禁读」只在 `.cc_code/active/Agent.md` §三 写一次（单一出处，此处仅指向）。
@@ -68,7 +69,7 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，常态为空） |
 | — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md / `retired/` 退役原文（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） |
-| — | `references/` | 项目级经验资料库（INDEX 索引，agent 按需读） |
+| — | `references/` | 项目级经验资料库（INDEX 渐进式披露 + 主题文件 + `archive/` + `log/`；curator 结算后全自动整理，architect / dev 按需读，规则见 `active/Agent.md` §四第 7 条） |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） |
 | — | `images/` | 截图（扁平存放） |

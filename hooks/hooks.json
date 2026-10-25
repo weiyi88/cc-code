@@ -1,0 +1,16 @@
+{
+  "description": "cc-code Stop hook：经验整理保底提醒（只比时间戳，不调 AI、不联网）",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/curator-reminder.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

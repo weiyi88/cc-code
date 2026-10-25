@@ -20,7 +20,7 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 
 ## 会话开启协议（每次必执行）
 
-1. **分工挂载** — Read `.cc_code/active/Agent.md`，认清编排者与 5 个 agent 的分工、各 agent 的权限卡片，绝对服从禁读名单。
+1. **分工挂载** — Read `.cc_code/active/Agent.md`，认清编排者与 6 个 agent 的分工、各 agent 的权限卡片，绝对服从禁读名单。
 2. **状态同步** — Read `.cc_code/active/status.md`（当前坐标）。
 3. **业务执行** — 仅按 `Agent.md` §三 对应 agent 的权限读写文件，禁止越权。
 
@@ -40,7 +40,7 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 
 ## agent 权限
 
-5 个 agent：`pm` / `architect` / `dev` / `qa` / `uiux`。**每个 agent 的必读 / 可写 / 禁读只以 `.cc_code/active/Agent.md` §三 为准、codegraph 权限只以其 codegraph 权限矩阵为准**，本 skill 不抄副本。
+6 个 agent：`pm` / `architect` / `dev` / `qa` / `uiux` / `curator`。**每个 agent 的必读 / 可写 / 禁读只以 `.cc_code/active/Agent.md` §三 为准、codegraph 权限只以其 codegraph 权限矩阵为准**，本 skill 不抄副本。
 
 > 主控（跑命令的主会话）是编排者：只传话，不扮演任何 agent；它的写权限与两个显式例外见 `active/Agent.md` §一。
 > 测试目录与全部测试 / 构建 / 自检命令以 `project.md` 的测试基建契约为准，不硬编码。
@@ -75,6 +75,6 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 
 > debug 链的分界：**需求模糊**走 plan-feature；**需求明确但实现错了**走 debug 链。根因落在契约 / 需求上、找不到期望出处、复现不了 → qa 把 B-n 写成「待裁决」，停下交主人裁决。`bugs.md` 是施工便签（B-n 独立序列，每条带状态：待诊断 / 待裁决 / 待修复，agent-debug 只接待修复；修复通过后原文搬 `backup/retired/bugs.md`，常态为空；写者 = qa）。
 
-规划命令（plan-mvp / plan-feature）**严格先 pm 后 architect**，各是独立 agent、各有全新上下文：主控只传话——把 agent 交回的「下一个问题」原样展示给主人，把主人原话原样续接给同一个 agent；需求、技术方案各经主人批准一次后才落盘。`dev` / `qa` agent 服务执行命令，`uiux` 只服务 `plan-uiux`。主控不扮演任何 agent，派发约定见 `Agent.md` §五。
+规划命令（plan-mvp / plan-feature）**严格先 pm 后 architect**，各是独立 agent、各有全新上下文：主控只传话——把 agent 交回的「下一个问题」原样展示给主人，把主人原话原样续接给同一个 agent；需求、技术方案各经主人批准一次后才落盘。`dev` / `qa` agent 服务执行命令，`uiux` 只服务 `plan-uiux`，`curator` 只服务执行器结算、architect 落盘后的采纳记账、团队经验导入与 `/cc-code:experience-summary` 手动整理（后台静默整理经验库，规则见 `Agent.md` §四第 7 条）。主控不扮演任何 agent，派发约定见 `Agent.md` §五。
 
 阶段性增量验收用 `qa`；**MVP 收口前的全量验收 + 修复闭环用 `/cc-code:agent-whole-qa`**（编排器：逐页逐按钮逐接口穷尽测试，分模块 fan-out，FAIL 自动回环给 dev，≤3 轮）。
