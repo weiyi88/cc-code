@@ -11,15 +11,17 @@
 
 ```
 skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
-agents/       5 个 .md → pm / architect / dev / qa / uiux（角色 = agent：主控只编排、派谁谁就是当前角色；uiux 为 pen 链绘制 agent）
+agents/       6 个 .md → pm / architect / dev / qa / uiux / curator（角色 = agent：主控只编排、派谁谁就是当前角色；uiux 为 pen 链绘制 agent；curator 为经验整理 agent，后台静默，是经验库唯一写者）
+hooks/        hooks.json + curator-reminder.sh（唯一的 Stop hook：经验整理保底提醒，只比时间戳，不调 AI、不联网）
 scripts/     init.sh + sync-codex.sh（codex 生成器）+ verify-codex.sh（codex 漂移校验）
-templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ references-INDEX.md → init 时 cp 进 .cc_code/
+templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ references-INDEX.md（init 时 cp 进 .cc_code/references/）+ references-example-async-queue.md（主题文件写法范本，不拷贝）
 assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→ init.sh --codex 落用户项目
 ```
 
 > 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`。
 > 0.5.0 起删除 `hooks/`（Stop Hook 机制废除）与 `templates/errors.md` —— 所有 `.cc_code/` 文件由 AI 顺手写，无自动化机械活。
 > 1.1.0 起 `assets/codex/` 回归 hooks —— 性质不同：0.5.0 删的是「自动写文件」的机械活，1.1.0 加的是「拦写操作」的守门护栏。
+> 1.10.0 起重新引入**唯一的 Stop hook**（`hooks/`，经验整理保底：只比 `gates.md` 与 curator 开工时间戳，不调 AI、不联网、同一次改动最多提醒一次）；0.5.0 的废除沿革保留，该 hook 不写任何文件内容。
 
 ## Codex 适配生成链（1.1.0）
 
@@ -35,7 +37,7 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    templates/CLAUDE.md           ──► templates/AGENTS.md(软链)
 ```
 
-映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)，`inherit` 不写 model 行（继承父会话；本版不重设计 Codex 模型映射）；角色沙箱 pm/architect/dev/qa/uiux 五个一律 workspace-write（都要落盘）。源 `agents/*.md` 删除后，sync 清掉对应旧 toml，`init.sh --codex` 也会把用户项目里残留的旧 toml 搬走（零 rm）。
+映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)，`inherit` 不写 model 行（继承父会话；本版不重设计 Codex 模型映射）；角色沙箱 pm/architect/dev/qa/uiux/curator 六个一律 workspace-write（都要落盘）。源 `agents/*.md` 删除后，sync 清掉对应旧 toml，`init.sh --codex` 也会把用户项目里残留的旧 toml 搬走（零 rm）。
 
 **codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-mvp / plan-feature 首行「引擎分支」条款（plan-debug 不进 plan 模式，不开护栏）让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
 
@@ -61,8 +63,8 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    ① 换个角色还成立吗？
         ├─ 成立   ──────► templates/Agent.md §四 强制执行协议（全员通用区）
         └─ 不成立 ──────► templates/Agent.md §三 对应那张角色卡
-   ② pm / architect / dev / qa / uiux 这五个 agent 需要吗？
-        └─ 需要   ──────► 追加写进 agents/{pm,architect,dev,qa,uiux}.md
+   ② pm / architect / dev / qa / uiux / curator 这六个 agent 需要吗？
+        └─ 需要   ──────► 追加写进 agents/{pm,architect,dev,qa,uiux,curator}.md
                           （subagent 独立上下文，读不到 Agent.md，
                             自带系统提示词才是它的必经之路 → 不算副本）
    ③ 约束的是「产物长什么样」吗？

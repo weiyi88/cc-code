@@ -53,6 +53,7 @@ qa 把 B-n 的状态写成 `待裁决`，并用**业务语言写一句要主人�
 
 - `dev` 在本命令内**只读诊断**：不改 `src/`、不改测试、不写 `bugs.md`。plan 模式不再兜底，这一条靠主控任务说明明文约束（见下）。
 - `architect` / `pm` 只在铁律 2 路由命中、主人裁决后才被派，各改自己的层。
+- 因 ① 契约错派 `architect` 时，任务说明读清单另加三处经验 INDEX（`references/INDEX.md`、`~/.cc-code/lessons/INDEX.md`、`~/.cc-code/team/<仓库名>/INDEX.md`，不存在跳过）；用法与「采纳经验」一行见 `active/Agent.md` §四第 7 条，本命令不复述；该 architect 落盘完成后，主控后台派一次 curator 记采纳（见 `Agent.md` §五「派 curator」）。
 
 ---
 

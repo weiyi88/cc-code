@@ -92,7 +92,7 @@ Step4 续接同一个 pm 落盘：prd + ux（取 F-n 号）
 Step5 ⭐ 重新进入规划模式
   │
 Step6 派 architect（全新上下文）
-  │     读：status、prd、ux、references/INDEX、代码索引与代码 ＋ 主人原话
+  │     读：status、prd、ux、三处经验 INDEX（项目 / 个人 / 团队，不存在跳过）、代码索引与代码 ＋ 主人原话
   │     architect 自己做代码侦察（见第三节），主控一个字不碰
   │
 Step7 问答循环（对象换成 architect）
@@ -276,9 +276,11 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 首派 pm | `active/status.md`、`active/prd.md`、`active/ux.md`（`backup/retired/prd.md`、`backup/change-log.md` 由 pm 按自己卡片授权自行读，任务说明不列） | 下一个问题或一条冲突（一次一个）。每个需求点先落三态格；冲突按四选一摆给主人；通顺 = 逻辑通顺 + 配置有默认值 + 断言可判真假；通顺后交回待落盘摘要（逻辑图 + 原型双联 + 差异表需求侧，每行含落盘文件与写者） |
 | 续接 pm | 同上 | 下一个问题 / 冲突；或「需求已通顺 + 待落盘摘要」 |
 | pm 落盘 | 同上 | 落盘 prd.md、ux.md（就地改写，取 F 号，追加 change-log），回报落盘清单、F 号、新断言号 |
-| 首派 architect | `active/status.md`、`active/prd.md`、`active/ux.md`、`references/INDEX.md`、代码索引与代码 | 每个需求点的代码现状、爆炸半径、目录对账、测试影响；契约漂移与契约冲突一次一条交回；需求写不通就交回业务语言冲突；通顺后交回待落盘摘要（差异表技术列 + 技术方案要点） |
+| 首派 architect | `active/status.md`、`active/prd.md`、`active/ux.md`、`references/INDEX.md`、`~/.cc-code/lessons/INDEX.md`、`~/.cc-code/team/<仓库名>/INDEX.md`（三处经验索引，不存在则跳过）、代码索引与代码 | 每个需求点的代码现状、爆炸半径、目录对账、测试影响；契约漂移与契约冲突一次一条交回；需求写不通就交回业务语言冲突；通顺后交回待落盘摘要（差异表技术列 + 技术方案要点） |
 | 续接 architect | 同上 | 下一个问题 / 冲突；或「技术方案已通顺 + 待落盘摘要」 |
-| architect 落盘 | 同上 | 落盘 project.md、data.md、api.md（就地改写，含 §九 泳道，追加 change-log），回报落盘清单 |
+| architect 落盘 | 同上 | 落盘 project.md、data.md、api.md（就地改写，含 §九 泳道；采纳的跨项目经验写进 project.md §五 特殊约束；追加 change-log），回报落盘清单与「采纳经验」一行 |
+
+> 经验的读法、转写、「采纳经验」行格式与优先级单一出处 = `active/Agent.md` §四第 7 条，本命令不复述。architect 落盘完成后，主控后台派一次 curator 记采纳（派发方式见 `Agent.md` §五「派 curator」）。
 
 ---
 

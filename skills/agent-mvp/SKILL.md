@@ -54,10 +54,11 @@ disable-model-invocation: true
 ### ① Dev 段（agent: dev）
 | 项 | 内容 |
 | --- | --- |
+| 读 | 派单明确列出 `.cc_code/references/INDEX.md`（经验索引，命中主题才打开；规则见 `Agent.md` §四第 7 条） |
 | 做 | 按规格实现代码 + 三层测试；遵循 project.md 约定；实现细节缺信息可自行决定并写进报告 |
 | 冲突 | 需求或契约（prd / ux / api / data）有冲突 → 停下，不动，在报告「冲突上报」里用业务语言写（技术细节另列）；主控把 dev 的冲突上报原样交人（见「编排器行为准则」） |
 | 跑 | Agent(dev) → 自检：按 `project.md` §六 测试基建契约登记的命令，依次跑代码规范检查、类型检查、单测、e2e（有哪些跑哪些） |
-| 输出 | 业务代码 + 测试（落 `project.md` §六 声明的测试根）+ 完成报告（文件清单 + 自检 pass/fail） |
+| 输出 | 业务代码 + 测试（落 `project.md` §六 声明的测试根）+ 完成报告（文件清单 + 自检 pass/fail + 「采纳经验」一行，格式见 `Agent.md` §四第 7 条） |
 | ⭐ 完成后 | **算精准回归面**：`codegraph affected <本段改动的源文件...>` → 得测试文件清单，传给 ②QA 段。契约里登记的非常规命名测试，按 `project.md` §六 登记的 glob 补跑，合并去重后即「本段回归范围」 |
 | ✅ 完成后 | 执行 `/cc-code:cc-code` 校准 |
 
@@ -106,6 +107,7 @@ disable-model-invocation: true
 - QA PASS 后，**主控**在 `backup/milestone-log.md` 追加一行（格式见 `active/Agent.md` 归档规范），⛔ 不写进 `status.md`。
 - 主控顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」；`gates.md` 由 qa 写（两个文件都按下方铁律处置）。
 - 执行 `/cc-code:cc-code` 校准，确认进入下一阶段。
+- **后台派 `curator`**（QA PASS 或 3 轮仍 FAIL 交人，每次结算都派；规则见 `active/Agent.md` §四第 7 条、§五）；结果并入报告的方式见 `active/Agent.md` §五「派 curator」。
 
 > ⭐ **写 active 前必过「就地更新 + 搬运归档」**（规则单一出处 = `active/Agent.md` §四第 5 条），各写者只动自己负责的文件。
 
@@ -124,6 +126,7 @@ disable-model-invocation: true
 - **你是编排器**：按当前阶段派对应 agent，不在主控里替角色思考，不扮演任何角色。
 - **纯执行定位**：发现需求/契约缺漏或自相矛盾 → 停下，主控把 dev 的冲突上报原样交人（dev 已用业务语言写），⛔ 绝不现场发明需求补洞（那是 `/cc-code:plan-mvp` 的职责）。主人裁决后：契约问题派 `architect` 改、需求问题派 `pm` 改，再续跑；主控自己不改。
 - **subagent 不能问用户**：dev / qa 要问人的事一律交回主控，由主控交人。
+- **dev 完成报告缺「采纳经验」一行** → 续接同一个 dev 补（规则见 `active/Agent.md` §五）。
 - **每次切阶段前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准。

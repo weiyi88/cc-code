@@ -38,12 +38,15 @@ Do not output this list. Use it internally to track your work.
 
 严格按 **当前项目的 cc_code 约定** 实现，禁止套用其他项目的既定习惯（框架、ORM、组件库、导入规范、i18n 方案等）。技术约定看 `project.md`，数据契约看 `data.md`，接口契约看 `api.md`，三者并列、互不替代。记忆里的内容不是约定，约定永远从 `.cc_code/active/*` 读。
 
+经验库的读法与用法见 `Agent.md` §四第 7 条（单一出处，此处不复述）。
+
 **必读约定源（按需，不全读）：**
 - `.cc_code/active/project.md` — 技术栈 / 编码宪法 / 目录规约 / 特殊约束 / 测试基建契约
 - `.cc_code/active/data.md` — 数据契约（涉及表 / 字段 / 模型时；只读不改）
 - `.cc_code/active/api.md` — 接口契约（实现路由时；只读不改）
 - `.cc_code/active/ux.md` — 视觉规格 + 交互五态矩阵（画 UI 与实现交互时）
 - `.cc_code/active/prd.md` — 需求与验收标准
+- `.cc_code/references/INDEX.md` — 项目级经验索引（仅当任务单明确列出时读；先扫索引，命中主题才开主题文件，休眠条目可跳过）
 
 **通用铁律（与项目无关，恒成立）：**
 - **导入规范以 project.md + 现有可运行文件为准**：开工前先读一个可运行文件确认导入惯例（扩展名、路径别名、type-only 导入等），不套用其他项目习惯。
@@ -125,6 +128,7 @@ bug 修复场景：
 - 改动文件：逐个列全
 - 自检：代码规范 / 类型 / 单测 → pass 或 fail
 - 越界需求：文件 + 原因；没有就写「无」
+- 采纳经验：一行，格式见 `Agent.md` §四第 7 条；缺则主控续接你补
 - 未完成 / 风险：没有就写「无」
 
 ## 记忆（memory: project）

@@ -41,11 +41,11 @@ disable-model-invocation: true
 
 | 项 | 内容 |
 | --- | --- |
-| 读 | 仅需求涉及的代码文件（最小集） |
+| 读 | 仅需求涉及的代码文件（最小集）；项目有 `.cc_code/` 时派单另列 `.cc_code/references/INDEX.md`（经验索引，命中主题才打开；规则见 `Agent.md` §四第 7 条），没有 `.cc_code/` 不列 |
 | 做 | 只按主人原话实现；⛔ 不顺手重构无关代码、不擅自扩大范围 |
 | 自检 | 有 `.cc_code/` 且 `project.md` §六「测试基建契约」登记了命令 → 按契约跑；没有契约 → 跳过（不补基建、⛔ 不自带命令） |
 | 冲突 | 主人原话与项目既有需求 / 契约（若有）明显冲突 → 停下，交回主控，由主控交人，⛔ 不自己拍板 |
-| 输出 | 改动文件清单 + 每个文件干了啥 + 自检结果 |
+| 输出 | 改动文件清单 + 每个文件干了啥 + 自检结果；有 `.cc_code/` 时加「采纳经验」一行（格式见 `Agent.md` §四第 7 条），缺则主控续接 dev 补 |
 
 ## ② QA 段（agent: qa）
 
@@ -62,6 +62,8 @@ disable-model-invocation: true
 | :--- | :--- |
 | 项目有 `.cc_code/active/gates.md` | **qa** 在 gates.md 的「just-do-it 记录」小节就地更新：只留最近一条，上一条原文整段搬 `backup/retired/gates.md`（规则出处 = `active/Agent.md` §四第 5 条） |
 | 项目没有 `.cc_code/` | ⛔ 不落盘、⛔ 不在项目根另起 `gates.md` 或任何记录文件；qa 把五件套交回，主控原样呈给主人，对话即记录 |
+
+**结算后台派 curator（仅项目有 `.cc_code/` 时）**：PASS 或 2 轮仍 FAIL 交人，都由主控后台派一次（规则见 `.cc_code/active/Agent.md` §四第 7 条、§五）；结果并入报告的方式见 `active/Agent.md` §五「派 curator」。本命令的 qa 不填验收矩阵的「连续 / 回归」标记（只留最近一条记录），所以这里通常只做采纳记账。没有 `.cc_code/` 不派。
 
 五件套（qa 产出）：
 

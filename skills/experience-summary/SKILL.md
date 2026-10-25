@@ -1,62 +1,34 @@
 ---
 name: experience-summary
-description: 把踩过的坑写成经验笔记并编号索引，下次直接翻
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, ToolSearch
+description: 手动整理经验：把你当场说的话原样交给 curator，由它静默归档进经验库
+allowed-tools: Read, Agent, SendMessage, ToolSearch
 disable-model-invocation: true
 ---
 
-# /cc-code:experience-summary — 项目级开发经验沉淀器
+# /cc-code:experience-summary — 手动经验入口
 
-> 把「这次踩的坑」变成「下次的准出门槛」。
-> 落点是**项目级** `.cc_code/references/`（跟随项目走，不进插件、不进全局）。
+> 经验平时由 curator 在每次结算后自动整理，主人零操作。
+> 这条命令只给一种场合：**你想当场补一条自动流程没抓到的经验**。
 
-## ⛔ 五条铁律
-
-1. **项目级唯一落点**：只写当前项目 `.cc_code/references/`，⛔ 禁写插件目录、全局 `~/.claude/`。
-2. **命名规范**：`[角色]-[具体事件域]-references.md`
-   - 角色 = agent 名，小写：`architect` / `dev` / `qa` / `pm` / `uiux`
-   - 事件域 = 技术或流程主题，kebab-case，不含日期
-   - ✅ `architect-bull-redis-queue-references.md`
-   - ❌ `arch-xp.md`（无事件域）❌ `20260807-bug-references.md`（含日期）
-3. **内容精炼**：只写「设计/验收时应该怎么思考、怎么做」，⛔ 禁写溯源叙事、清理修复过程、流水账。
-4. **按需读取**：必须登记 `.cc_code/references/INDEX.md`（按角色分组，一行式「何时读」），⛔ 禁要求角色每次全读。
-5. **不越权**：⛔ 禁改 `active/` 任何文件（Agent.md 权限表、status.md、prd 等）——references 是补充资料，不是状态机。`Agent.md` 是插件规范文件（唯一写者 = init 脚本，升级时整份覆盖），⛔ 不往里挂东西；想让某角色按需读 INDEX，把要加的约定交给主人，由主人定夺后派 architect 写进 `project.md` 特殊约束（主控不代笔）。
-
-## 执行流程
+## 它做什么
 
 ```
-① 定位角色      本次经验归谁：architect / dev / qa / pm / uiux
-② 提炼准则      从对话/踩坑中抽出「必答问题 + 设计准则」
-                每条准则 = 一句话规则 + 一句话为什么
-③ 主人过目      先输出草稿给主人看，确认后才落盘（禁先斩后奏）
-④ 落盘          写 .cc_code/references/[角色]-[事件域]-references.md
-⑤ 登记索引      更新 .cc_code/references/INDEX.md（无则新建）：
-                | 文件 | 何时读 |
-⑥ 挂载提示      若该角色没有读 INDEX 的约定，告诉主人要加的那一行（落 project.md 特殊约束，由 architect 写；⛔ 不改 Agent.md）
+  主人：/cc-code:experience-summary <当场说的话>
+        │
+        ▼
+  主控：把主人的话【原样】交给 curator（后台派单，不改写、不总结、不替它分级）；本回合不等结果
+        │
+        ▼
+  curator：自己决定写不写、写到哪一级、怎么写；静默完成
+        │
+        ▼
+  主控：curator 完成的通知到达后，把它那一行原样告诉主人（「无变化」就只说没有新增）；
+        这是主人主动发起的入口，所以无论有无变化都回一句，不适用 `Agent.md` §五 的「无变化不出声」
 ```
 
-## 文件模板
+## 主控怎么做
 
-```markdown
-# [角色] 事件域经验标题
-
-> 何时读：一句话触发条件（如「设计异步队列/中间件时必读」）。
-> 由 /cc-code:experience-summary 沉淀，索引见 INDEX.md。
-
-## 必答 N 问（准出门槛）
-
-1. 故障场景 A → 谁兜底？
-2. 故障场景 B → 谁消费？
-（答不出 → 方案不准进下一角色）
-
-## 设计准则
-
-- **加粗规则**：一句话解释为什么。
-- ……
-```
-
-## 质量标准
-
-- 全文 ≤ 30 行；读一遍 ≤ 2 分钟。
-- 准则必须可执行（能据此否决一个方案），禁空泛口号（如「注意性能」）。
-- 同一事件域已有文件 → 更新该文件，不开新文件。
+- 任务说明只写两样：**主人原话**，以及「手动整理：按 curator 规范第二节『手动整理』处理」。
+- ⛔ 主控不判断值不值得写、不分级、不命名主题、不读写任何经验库——这些全是 curator 的事。
+- 整理细则（分级、条目格式、去重、自检、生命周期）和经验的使用规则，只在 `curator` agent 规范与 `Agent.md` §四第 7 条各写一次，本文件不复述。
+- 主人没说内容：这是本命令**唯一允许的追问**——只回一句请他把要记的话直接说出来，其余不追问细节。

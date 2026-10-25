@@ -66,7 +66,7 @@ Step4 续接同一个 pm 落盘：prd + ux（旧版归档）
      ↓ ════════ 技术阶段 ════════
 Step5 ⭐ 重新进入规划模式
 Step6 派 architect（全新上下文）
-      读：status、prd、ux、references/INDEX、代码索引与代码 ＋ 主人原话
+      读：status、prd、ux、三处经验 INDEX（项目 / 个人 / 团队，不存在跳过）、代码索引与代码 ＋ 主人原话
       交回：下一个问题（一次一个）
      ↓
 Step7 问答循环（同 Step2，对象换成 architect）
@@ -124,9 +124,11 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 首派 pm | `active/status.md`、`active/prd.md`、`active/ux.md` | 下一个问题（一次一个；有明确选项就列出选项） |
 | 续接 pm | 同上 | 下一个问题；或「需求已通顺 + 待落盘摘要」 |
 | pm 落盘 | 同上 | 落盘 prd.md、ux.md，回报落盘清单 |
-| 首派 architect | `active/status.md`、`active/prd.md`、`active/ux.md`、`references/INDEX.md`、代码索引与代码 | 下一个问题（一次一个）；发现需求冲突就交回冲突 |
+| 首派 architect | `active/status.md`、`active/prd.md`、`active/ux.md`、`references/INDEX.md`、`~/.cc-code/lessons/INDEX.md`、`~/.cc-code/team/<仓库名>/INDEX.md`（三处经验索引，不存在则跳过）、代码索引与代码 | 下一个问题（一次一个）；发现需求冲突就交回冲突 |
 | 续接 architect | 同上 | 下一个问题；或「技术方案已通顺 + 待落盘摘要」 |
-| architect 落盘 | 同上 | 落盘 project.md、data.md、api.md（含 §九 阶段与泳道），回报落盘清单 |
+| architect 落盘 | 同上 | 落盘 project.md、data.md、api.md（含 §九 阶段与泳道；采纳的跨项目经验写进 project.md §五 特殊约束），回报落盘清单与「采纳经验」一行 |
+
+> 经验的读法、转写、「采纳经验」行格式与优先级单一出处 = `active/Agent.md` §四第 7 条，本命令不复述。architect 落盘完成后，主控后台派一次 curator 记采纳（派发方式见 `Agent.md` §五「派 curator」）。
 
 ---
 
