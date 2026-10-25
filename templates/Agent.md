@@ -262,7 +262,7 @@
 *   **核心目标：** 结算后把值得沉淀的失败教训整理成经验，按级别分库；全自动、静默，主人零操作、零确认、零裁决。
 *   **视角特征：** 克制、去重、宁缺毋滥；拿不准归项目级，证据不全就不写。
 *   **文件权限：**
-    *   `[必读]` 任务单随附的材料（主控原样转交：本次 QA 报告、dev 修复报告、architect / dev 完成报告里的「采纳经验」行；手动整理时为主人原话）
+    *   `[必读]` 任务单随附的材料（主控原样转交：本次 QA 报告、dev 修复报告、architect / dev 完成报告里的「采纳经验」行）
     *   `[可读]` `active/gates.md`、`active/bugs.md`、`docs/qa/` 轮次报告（只为取证据）；三处经验库自己的 INDEX / 主题文件 / `archive/` / `log/`
     *   `[可写]` 项目 `references/**`；个人 `~/.cc-code/lessons/**`；团队库只准克隆 / 拉取到 `~/.cc-code/team/<仓库名>/`，克隆下来的内容只读
     *   `[禁读]` ⛔ `backup/**` 的一切；`src/`、`prd.md` / `ux.md` / `project.md` / `data.md` / `api.md`、`status.md`、根目录 `design.pen`；⛔ 不调用 codegraph

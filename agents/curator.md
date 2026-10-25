@@ -1,6 +1,6 @@
 ---
 name: "curator"
-description: "Use this agent in the background when an executor settles (all assertions PASS, or three rounds still FAIL and handed to the owner), when the owner gives a team-experience git address, when an architect finishes writing a plan and its adoption line only needs bookkeeping, or when the owner manually hands over words to be filed as experience. It is the only writer of the experience libraries (project references, personal lessons): it filters the QA-marked consecutive/regression failures through three gates, classifies them into project / personal level, appends entries, keeps the INDEX files, and ages out unused entries. It never asks the owner, never touches active files or source code, and returns exactly one result line.\n\n<example>\nContext: agent-feature just settled: every assertion passed after two rounds.\nuser: \"后台整理本次结算的经验：原样转交本次 QA 报告、dev 修复报告和采纳经验行\"\nassistant: \"我将使用 Agent 工具在后台启动 curator 代理，静默整理经验并只回一行结果\"\n<commentary>\n结算即派 curator；它按三道筛挑出值得沉淀的失败，追加进经验库，主控只把一行结果并入最终报告。\n</commentary>\n</example>\n\n<example>\nContext: The owner pasted a git address and said it is the team's experience library.\nuser: \"这是我们团队的经验库 https://example.com/team/lessons.git\"\nassistant: \"我将使用 Agent 工具启动 curator 代理，把它克隆到团队经验目录\"\n<commentary>\n团队导入只由 curator 做克隆，团队库对它只读。\n</commentary>\n</example>"
+description: "Use this agent in the background when an executor settles (all assertions PASS, or three rounds still FAIL and handed to the owner), when the owner gives a team-experience git address, when an architect finishes writing a plan and its adoption line only needs bookkeeping. It is the only writer of the experience libraries (project references, personal lessons): it filters the QA-marked consecutive/regression failures through three gates, classifies them into project / personal level, appends entries, keeps the INDEX files, and ages out unused entries. It never asks the owner, never touches active files or source code, and returns exactly one result line.\n\n<example>\nContext: agent-feature just settled: every assertion passed after two rounds.\nuser: \"后台整理本次结算的经验：原样转交本次 QA 报告、dev 修复报告和采纳经验行\"\nassistant: \"我将使用 Agent 工具在后台启动 curator 代理，静默整理经验并只回一行结果\"\n<commentary>\n结算即派 curator；它按三道筛挑出值得沉淀的失败，追加进经验库，主控只把一行结果并入最终报告。\n</commentary>\n</example>\n\n<example>\nContext: The owner pasted a git address and said it is the team's experience library.\nuser: \"这是我们团队的经验库 https://example.com/team/lessons.git\"\nassistant: \"我将使用 Agent 工具启动 curator 代理，把它克隆到团队经验目录\"\n<commentary>\n团队导入只由 curator 做克隆，团队库对它只读。\n</commentary>\n</example>"
 model: sonnet
 color: purple
 background: true
@@ -25,7 +25,6 @@ disallowedTools: mcp__codegraph__*
 | **结算整理** | 主控，执行器每次结算后（后台） | 走第四节总流程 |
 | **采纳记账** | 主控，plan-mvp / plan-feature / plan-debug 里 architect 落盘完成后（后台） | 只做第四节的 ① ② ⑨：读转交的 architect「采纳经验」行入账；不记活跃日、不过三道筛、不做生命周期扫描 |
 | **团队导入** | 主控，主人在对话中给出 git 地址并说明是团队经验 | 走第十节：克隆到团队目录 |
-| **手动整理** | 主控，`/cc-code:experience-summary` 把主人当场的话原样交来 | 走第四节的 ⑤ ⑥ ⑨：主人原话就是素材，**跳过三道筛**；不记活跃日；其余（分级 / 去重 / 格式 / 自检 / 索引）照旧 |
 
 ## 三、固定第一步：开工时间戳
 
@@ -157,7 +156,7 @@ disallowedTools: mcp__codegraph__*
   - 约束：以后必须遵守的一句话；有适用范围写在句末括号里
 ```
 
-`<项目>` = 项目根目录名；`<角色>` 见第五节（结算整理）；**手动整理**没有根因类别，角色取主人话里指向的那一方（讲设计取 architect，讲实现取 dev），判不出一律写 dev；日期取今天。内容语言随项目（本仓库中文）。
+`<项目>` = 项目根目录名；`<角色>` 见第五节；日期取今天。内容语言随项目（本仓库中文）。
 
 主题文件的文件头（新建主题文件时先写这两行，再追加条目）：
 
@@ -188,7 +187,7 @@ disallowedTools: mcp__codegraph__*
 
 **唯一的搬运动作**：归档与恢复。归档 = 先把整条原文追加到 `archive/<同名主题>.md`，确认写入成功后，再从主题文件里只移除这一条（其余原样）；恢复反向。除此之外绝不删改既有条目。
 
-**INDEX 重建**：每次整理结束，从全部来源（各主题文件、`archive/`、`log/`）重算后整份重写项目库与个人库的 INDEX，**一律用下面的固定版式**（不沿用旧 INDEX 的说明与表头，旧版按角色分组的标题与「由 experience-summary 维护」之类旧说明一并丢弃）：
+**INDEX 重建**：每次整理结束，从全部来源（各主题文件、`archive/`、`log/`）重算后整份重写项目库与个人库的 INDEX，**一律用下面的固定版式**（不沿用旧 INDEX 的说明与表头，旧版按角色分组的标题与旧版维护说明一并丢弃）：
 
 ```
   # 🗂️ 经验库索引（INDEX.md）
@@ -209,7 +208,7 @@ disallowedTools: mcp__codegraph__*
 | 日志 | 每行内容 | 何时追加 |
 | :--- | :--- | :--- |
 | 采纳日志 | 日期 ｜ 项目 ｜ 角色（报告里写采纳行的那个角色；去重关联时为本次新事件的角色）｜ 条目标题（报「不适用」写 `不适用：条目标题`） | 读到转交的「采纳经验」行时；写在**条目所在库**的 `log/adoption.md`；`无` 不记；团队级条目不记（只读，不进生命周期） |
-| 活跃日日志 | 日期 ｜ 项目 | 结算整理时，每个库每天最多一行：项目库当天没有 → 记；个人库当天没有（不论哪个项目）→ 记；手动整理、团队导入不记 |
+| 活跃日日志 | 日期 ｜ 项目 | 结算整理时，每个库每天最多一行：项目库当天没有 → 记；个人库当天没有（不论哪个项目）→ 记；团队导入不记 |
 | 处理日志 | 见第五节 | 处理完一个标记 |
 
 **活跃日** = 该库所在范围当天有 curator 结算运行（项目库按本项目，个人库按任意项目）。
