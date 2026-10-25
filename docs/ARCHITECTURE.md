@@ -10,7 +10,7 @@
 ## 资产分布
 
 ```
-skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
+skills/      15 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
 agents/       6 个 .md → pm / architect / dev / qa / uiux / curator（角色 = agent：主控只编排、派谁谁就是当前角色；uiux 为 pen 链绘制 agent；curator 为经验整理 agent，后台静默，是经验库唯一写者）
 hooks/        hooks.json + curator-reminder.sh（唯一的 Stop hook：经验整理保底提醒，只比时间戳，不调 AI、不联网）
 scripts/     init.sh + sync-codex.sh（codex 生成器）+ verify-codex.sh（codex 漂移校验）

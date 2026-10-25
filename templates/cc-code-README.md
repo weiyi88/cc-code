@@ -89,7 +89,7 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 
 ---
 
-## 三、Skill 一览（16 个）
+## 三、Skill 一览（15 个）
 
 ### 框架核心（管流程）
 
@@ -105,7 +105,6 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 | `agent-whole-qa` | `/cc-code:agent-whole-qa` | 上线前开浏览器把每个页面每个按钮全点一遍，FAIL 自动修 |
 | `plan-debug` | `/cc-code:plan-debug` | 出 bug 后先由 QA 复现取证并当场记进 bugs.md，再由工程师只读查到根因，记录自动整理、不等你批准；只在需要你拍板时才停下问你 |
 | `agent-debug` | `/cc-code:agent-debug` | 按修复方案改代码，跑相关测试全绿才算修好 |
-| `experience-summary` | `/cc-code:experience-summary` | 手动补一条经验：你当场说的话原样交给 curator 静默归档（平时经验全自动整理） |
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 | `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事 |
 | `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数，出事一键回滚 |
@@ -160,7 +159,6 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 ### 任意时刻
 
 ```
-/cc-code:experience-summary  ← 想当场补一条自动流程没抓到的经验 → 原样交给 curator（平时全自动，不用调用）
 /cc-code:init                ← 插件升级后再跑一次，自动迁移场域（零删除）
 ```
 
@@ -209,8 +207,6 @@ AI：Dev 写 → QA 验：同一条断言连着两轮没过（QA 标「连续」
     （结算）主控后台派 curator，你不用管
     最终报告多一行：经验沉淀：新增 1 条（项目 1）
     → 下次任何架构设计涉及同类主题时，architect 会先看到它
-你：（想当场补一条自动流程没抓到的）/cc-code:experience-summary 队列任务在 Redis 重启后会变僵尸，要有恢复机制
-AI：原话原样交给 curator，它静默归档，只回一行结果
 你：（团队有共享经验库）把 git 地址发给 AI 并说「这是团队经验」→ 克隆到 ~/.cc-code/team/，之后只读
 ```
 
@@ -237,7 +233,7 @@ AI：原话原样交给 curator，它静默归档，只回一行结果
 - **只追加**：不覆盖不删除；7 个活跃日未被采纳 → 休眠（读者可跳过，被采纳即恢复）；14 个活跃日未被采纳或被报告「不适用」→ 归档到 `archive/`，原文保留。
 - **谁读**：architect（规划阶段首次派出时）读三处 INDEX；dev 读项目 INDEX；qa / pm / uiux 不读。完成报告里的「采纳经验」一行就是采纳记录。
 - **优先级**：active 文件 ＞ 项目 ＞ 个人 ＞ 团队；经验只当自检问题，不当验收尺子。
-- **新增入口**：平时不用管；想当场补一条走 `/cc-code:experience-summary`，原话原样交给 curator。
+- **没有手动入口**：经验只从验收里真实发生过、已修好的错自动整理，你什么都不用做。
 
 ---
 
