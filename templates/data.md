@@ -1,8 +1,8 @@
 # 📊 数据契约 (data.md)
 
-> 本文件由 [Architect] 角色维护。承载 interface 定义、字段规则、原型↔真实切换约定。
-> **Dev / QA 必读；PM 禁读**（PM 不关心接口细节，避免被技术约束带偏、污染需求纯粹性）。
-> 来源：V0 原型 `docs/api.md` / 产品规格 §数据模型。Architect 须把散落的 interface 提炼至此，作为数据层唯一真相源。
+> 本文件由 architect agent 维护。承载 interface 定义、字段规则、原型↔真实切换约定。
+> **dev / qa 必读；pm 禁读**（pm 不关心接口细节，避免被技术约束带偏、污染需求纯粹性）。
+> 来源：V0 原型 `docs/api.md` / 产品规格 §数据模型。architect 须把散落的 interface 提炼至此，作为数据层唯一真相源。
 
 ### ⛔ 写入纪律（active = 最新 + 最完整 + 最纯净）
 
@@ -20,7 +20,7 @@
 > 新增字段时同步更新本段 + 第二节字段规则 + 第五节 DB 列对齐。
 
 ```typescript
-// 示例结构（Architect 按 V0 原型 api.md 填充）：
+// 示例结构（architect 按 V0 原型 api.md 填充）：
 // interface Task {
 //   id: string
 //   type: 'brief' | 'single' | 'batch'
@@ -29,7 +29,7 @@
 // }
 ```
 
-[待 Architect 填写]
+[待 architect 填写]
 
 ## 二、 字段规则矩阵
 
@@ -40,7 +40,7 @@
 ## 三、 原型 ↔ 真实切换约定
 
 > 原型阶段前端用 `useState` 持有 mock（形状 = 上述 interface）；真实联调阶段替换为 `fetch` / API 调用，**形状不变**。
-> Architect 须在此背书「interface 字段 ↔ DB 列」对齐关系，Dev 切原型→真实时只换数据源、不改形状。
+> architect 须在此背书「interface 字段 ↔ DB 列」对齐关系，Dev 切原型→真实时只换数据源、不改形状。
 
 | 字段/功能 | 原型阶段 | 真实联调 | 切换方式 |
 | --- | --- | --- | --- |
@@ -57,7 +57,7 @@
 ## 五、 DB 列对齐表
 
 > interface 字段与实际 schema 列的对齐关系。跨 ORM 栈（如 Prisma + Drizzle 并存）时尤其重要——
-> Architect 须保证两栈列名与本表一致，或在此记录差异。
+> architect 须保证两栈列名与本表一致，或在此记录差异。
 
 | interface 字段 | schema 列 | 表 | ORM 栈 |
 | --- | --- | --- | --- |

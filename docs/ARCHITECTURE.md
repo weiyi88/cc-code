@@ -11,15 +11,18 @@
 
 ```
 skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
-agents/       3+1 个 .md → prd-plan / dev / qa / uiux（uiux 为 pen 链绘制 agent）
+agents/       6 个 .md → pm / architect / dev / qa / uiux / curator（角色 = agent：主控只编排、派谁谁就是当前角色；uiux 为 L2 双文件写者，只在规划侧出场；curator 为经验整理 agent，后台静默，是经验库唯一写者）
+hooks/        hooks.json + curator-reminder.sh（唯一的 Stop hook：经验整理保底提醒，只比时间戳，不调 AI、不联网）
 scripts/     init.sh + sync-codex.sh（codex 生成器）+ verify-codex.sh（codex 漂移校验）
-templates/   9 个 .md 骨架（L0~L4 八件 + bugs.md debug 施工便签）+ references-INDEX.md → init 时 cp 进 .cc_code/
+templates/   10 个 .md 骨架（L0~L4 九件 + bugs.md debug 施工便签）+ references-INDEX.md（init 时 cp 进 .cc_code/references/）+ references-example-async-queue.md（主题文件写法范本，不拷贝）
 assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→ init.sh --codex 落用户项目
 ```
 
 > 历史沿革：早期版本有 `commands/` 目录，现已全部并入 `skills/`。
 > 0.5.0 起删除 `hooks/`（Stop Hook 机制废除）与 `templates/errors.md` —— 所有 `.cc_code/` 文件由 AI 顺手写，无自动化机械活。
 > 1.1.0 起 `assets/codex/` 回归 hooks —— 性质不同：0.5.0 删的是「自动写文件」的机械活，1.1.0 加的是「拦写操作」的守门护栏。
+> 1.10.0 起重新引入**唯一的 Stop hook**（`hooks/`，经验整理保底：只比 `gates.md` 与 curator 开工时间戳，不调 AI、不联网、同一次改动最多提醒一次）；0.5.0 的废除沿革保留，该 hook 不写任何文件内容。
+> 1.11.0 起新增**前端与视觉子系统**：`plan-uiux` ⇄ `agent-uiux` 一对新命令、`templates/design.md`、四份共用参考（`ui-gates` / `frontend-forms` / `dev-qa-loop` / `assertions`，后者由 agent-whole-qa 参考迁址）；pen 主链降级为方向卡可选介质。
 
 ## Codex 适配生成链（1.1.0）
 
@@ -35,18 +38,68 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    templates/CLAUDE.md           ──► templates/AGENTS.md(软链)
 ```
 
-映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)；角色沙箱 prd-plan/qa = read-only，dev/uiux = workspace-write。
+映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)，`inherit` 不写 model 行（继承父会话；本版不重设计 Codex 模型映射）。uiux 自 1.11.0 起为 **opus** 档（L2 双文件 + 方向卡与样板板），Codex 侧即 gpt-5.4 + effort high。角色沙箱 pm/architect/dev/qa/uiux/curator 六个一律 workspace-write（都要落盘）。源 `agents/*.md` 删除后，sync 清掉对应旧 toml，`init.sh --codex` 也会把用户项目里残留的旧 toml 搬走（零 rm）。
 
-**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-* 首行「引擎分支」条款让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
+**闸门覆盖（1.11.0）**：除协议体 `cc-code` 外，每个命令都必须在 frontmatter 显式声明 `disable-model-invocation: true`，并由 sync 生成 `skills/<name>/agents/openai.yaml`；新增命令 `agent-uiux` 同样生成。`verify-codex.sh` 会逐个命令核对「显式闸门 + Codex 闸门配置」，缺一即 FAIL —— 漏写闸门会让生成链静默跳过，Codex 端可被隐式调用。
+
+**codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-mvp / plan-feature 首行「引擎分支」条款（plan-debug 不进 plan 模式，不开护栏）让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
 
 ## 寻址约定
 
 - 插件内文件引用统一用 `$CLAUDE_PLUGIN_ROOT/...`。
 - skill 内部配套文件用相对路径（如 `agent-whole-qa` 的 `references/*.md`）。
 
+## 前端与视觉子系统（1.11.0）
+
+> 目标：生成项目的前端**剔除 AI 味、有格调、视觉对齐**（元素在栅格、边缘、基线、间距上对整齐）。
+> 基本单位是**项目**：一个项目可含网页 / 移动 / 后台多端，只用一个组件库家族、各端用家族对应版本、全项目一份 `design.md`，数值灌进各端主题。
+
+### 五段链路
+
+```
+ pm ──► uiux ──► architect ──► dev ──► qa
+(推断端与形态) (ux.md + design.md) (家族与视觉基建契约) (生成主题/实现页面) (视觉第四层)
+   │           │                     │                     │                  │
+ prd.md    L2 双文件             project.md §一.1/§六/§九   主题文件是生成物      V 段 + 基线 + 合集板
+          （只在规划侧）          （不读 design.md）        （禁手改）          （唯一写判词的人）
+```
+
+| 边界 | 唯一出处 |
+| :--- | :--- |
+| 十种形态、默认栈、家族决策、三旋钮、翻译表 | 插件 `skills/cc-code/references/frontend-forms.md` |
+| 视觉判词、规则号、阈值、允许值集合、基线纪律、`gates.md` V 段写法 | 插件 `skills/cc-code/references/ui-gates.md` |
+| 一轮定义、按失败项计轮、≤3 轮、升级包、任务单最小字段 | 插件 `skills/cc-code/references/dev-qa-loop.md` |
+| 页面 / 五态 / 断点 / 转场的断言写法 | 插件 `skills/cc-code/references/assertions.md`（1.11.0 起从 agent-whole-qa 迁址，语义未变） |
+| 设计规格章节 | `templates/design.md`（生成项目 `.cc_code/active/design.md`） |
+
+### 两个模式与一个视觉门
+
+```
+ plan-uiux（人参与）                              agent-uiux（纯机器）
+ ─────────────────                              ────────────────
+ 模式一 定风格：方向卡（有条件）→ design.md 草稿    只接「风格：已定未实现」
+        → 风格样板板 → 自检 → 主人「定了」→ 锁定     dev 重生成主题 + 调长相布局
+ 模式二 改版：qa 现状体检 → 目标 design.md          qa 全量五态回归 + 全页视觉 + 基线对比
+        → 改前改后对照样板板 →「定了」→ 改版待实现   ≤3 轮；PASS 后冻结新基线
+```
+
+- **唯一视觉门 = 主人说「定了」**；`design.md` §0 状态四值（草稿 / 已锁定 / 改版待实现 / 不适用（无前端））与 `status.md`「风格：」五值一一对应（对应关系只写在 `templates/design.md` §0.2）。
+- **uiux 只在规划侧**：`plan-mvp` / `plan-feature` / `plan-uiux` 派它，任何 `agent-*` 都不派。风格落地由 dev 执行，改版落地由 `agent-uiux` 执行，验收由 qa 执行。
+- **执行器的开工视觉门按阶段判定**：本阶段涉及页面且 `design.md` 未锁 → 拒跑；纯后端 / 无 UI 阶段放行并标「不适用」；老项目冷启动只豁免一次。
+- **三个检查时机**（名称固定）：现状体检（qa，模式二）／锁定前（uiux 自检；agent-mvp 视觉地基 qa 复核）／开发后（qa，各执行命令）。真正的视觉判词从「锁定前 · 复核」开始。
+- **pen 降级**：旧 `design.pen` 只作方向卡可选介质，**原地保留、不读不写不转换**；「加密禁读 / osascript 保存 / pen 底稿三步 / pen 导出格式」全部退役。
+
+### 视觉地基与基线
+
+- `project.md` §九 首个阶段固定为**视觉地基**：主题入口 + 全局框架 + 组件陈列页（不上线路由）；业务页面泳道在视觉门过之前不开工。
+- 视觉测试 `.cc_code/test/visual/`、截图基线 `.cc_code/test/visual/baseline/`、允许值集合：**qa 独占写、入 git**；`init.sh` 只建目录并写忽略注释，⛔ 不许用 `*.png` / `screenshots/` 全局通配忽略截图。
+- 运行时视觉检查（浏览器层）只在 qa 与并行泳道的**汇合回归**跑；泳道内 qa 只回逻辑层报告。
+
+---
+
 ## 状态机
 
-详见 `skills/cc-code/SKILL.md`。核心：所有 `.cc_code/` 文件都由 AI 在对话内顺手写（需理解力），无自动化机械活。`status.md` 长度由 AI 自管（里程碑保留最近 10 条）。
+详见 `skills/cc-code/SKILL.md`。核心：所有 `.cc_code/` 文件都由 AI 在对话内顺手写（需理解力），无自动化机械活。`status.md` 只答坐标 / 卡点 / 下一步，长度恒定一屏；里程碑一律落 `backup/milestone-log.md`。
 
 ## 规则归属：单一出处（SSOT）分层 — 0.13.1 立规
 
@@ -61,8 +114,8 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    ① 换个角色还成立吗？
         ├─ 成立   ──────► templates/Agent.md §四 强制执行协议（全员通用区）
         └─ 不成立 ──────► templates/Agent.md §三 对应那张角色卡
-   ② dev / qa / prd-plan 这三个 subagent 需要吗？
-        └─ 需要   ──────► 追加写进 agents/{dev,qa,prd-plan}.md
+   ② pm / architect / dev / qa / uiux / curator 这六个 agent 需要吗？
+        └─ 需要   ──────► 追加写进 agents/{pm,architect,dev,qa,uiux,curator}.md
                           （subagent 独立上下文，读不到 Agent.md，
                             自带系统提示词才是它的必经之路 → 不算副本）
    ③ 约束的是「产物长什么样」吗？
@@ -73,15 +126,19 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 | 规则性质 | 唯一出处 | 覆盖谁 | 传导机制 |
 | :--- | :--- | :--- | :--- |
 | 全员行为 / 输出条款 | `templates/Agent.md` §四 | 所有角色 + 编排器主控 | 校准协议必读 `Agent.md` |
-| 角色专属权限 / 能力 | `templates/Agent.md` §三 角色卡 | 该角色 | 「当前激活角色」开关只加载那一张 |
-| subagent 自带纪律 | `agents/{dev,qa,prd-plan}.md` | 该 subagent | 系统提示词 |
+| 角色专属权限 / 能力 | `templates/Agent.md` §三 角色卡（角色权限只写这一处，其他地方一句指针） | 该角色 | 角色 = 被派出的 agent，各 agent 只读到自己那一张 |
+| subagent 自带纪律 | `agents/{pm,architect,dev,qa,uiux,curator}.md` | 该 subagent | 系统提示词 |
 | 产物格式纪律 | 该文件模板头部 | 写它的角色 | 写前必读该文件 |
 | 编排纪律（串行 / ≤3 轮 / 拒跑 / 增量定位） | `skills/*/SKILL.md` 正文 | 编排器主控自己 | 命令本体 |
-| 多个执行器共用的编排纪律（并行泳道） | `skills/cc-code/references/parallel-lanes.md` | agent-mvp / agent-feature / agent-whole-qa 主控 | 执行器正文一行指针，⛔ 不复述 |
+| 多个执行器共用的编排纪律（并行泳道） | `skills/cc-code/references/parallel-lanes.md` | agent-mvp / agent-feature / agent-uiux / agent-whole-qa 主控 | 执行器正文一行指针，⛔ 不复述 |
+| 前端视觉判词 / 规则号 / 阈值 / 允许值集合 / 基线纪律 / `gates.md` V 段写法（1.11.0） | `skills/cc-code/references/ui-gates.md` | pm / uiux / architect / dev / qa 与全部执行器 | 各文件一行指针，⛔ 不复述规则内容 |
+| 十种形态 / 默认栈 / 家族决策 / 三旋钮 / 格调范式卡 / 灵感配额 / 片段五步 / 原话→数值翻译（1.11.0） | `skills/cc-code/references/frontend-forms.md` | pm / uiux / architect / dev / qa | 各文件一行指针 |
+| 开发 → 测试循环协议（一轮定义 / 按失败项计轮 / ≤3 轮 / 升级包 / 任务单字段）（1.11.0） | `skills/cc-code/references/dev-qa-loop.md` | 各执行器主控 / dev / qa | 执行器一行指针 |
+| 页面五态 / 元素 9 类 / 接口 5 类 / 全局断言（1.11.0 从 agent-whole-qa 参考迁入共享参考，语义未变） | `skills/cc-code/references/assertions.md` | qa / dev | agent-whole-qa 内的旧位置退役，其余命令引用新路径 |
 | 触发闸门 | frontmatter `disable-model-invocation` | Claude Code 引擎 | 引擎强制 |
 
-**角色隔离靠「当前激活角色」开关，不靠拆文件** —— 未激活角色的规则物理上在同一文件，
-但被开关挡在外面，一个字都不会污染当前角色。
+**角色隔离靠「角色 = agent」（独立上下文），不靠开关、也不靠拆文件** —— 主控是编排者、不扮演任何角色，
+只传话与写 status；每个角色在自己的 agent 里干活，别的角色的规则一个字都不会污染它。
 
 ### 触发闸门只认 frontmatter
 
@@ -113,7 +170,8 @@ codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
 | 泳道表格式 + 四条拆分铁律 | `templates/project.md` §九 表头 | Architect 写（plan-mvp / plan-feature）· 执行器只读 |
 | 栅栏 / 体检 / 退回 / 汇合回归 / 写回纪律 | `skills/cc-code/references/parallel-lanes.md` | 三个执行器主控 |
 | dev 泳道纪律（只准写 / 自检范围 / 文件清单列全） | `agents/dev.md`「泳道模式」 | dev subagent |
-| qa 泳道纪律（断言范围 / 不跑浏览器层 / 只回报告） | `agents/qa.md`「泳道模式」 | qa subagent |
+| qa 泳道纪律（断言范围 / 不跑浏览器层 / 只回报告 / 运行时视觉检查只在汇合回归） | `agents/qa.md`「泳道模式」 | qa subagent |
+| whole-qa fan-out 的 Workflow 脚本 | `skills/agent-whole-qa/references/whole-qa.workflow.js` | agent-whole-qa 主控传 args · Workflow 引擎执行 |
 
 ```
  §九 没写泳道 / 体检不过 ──► 单线程（1.5.x 行为，老项目零影响）
@@ -121,7 +179,7 @@ codegraph MCP server **只暴露 `codegraph_explore` 一个工具**。
                            → 没过的泳道单独退回 → 全过后汇合回归 → 阶段结算
 ```
 
-> 选型：栅栏同步（不选各泳道各跑各的，后者会让「当前激活角色」出现多个值）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。
+> 选型：栅栏同步（不选各泳道各跑各的，后者会让进度坐标与写者出现多头）；同一工作区 + 只准写边界（不选每泳道一个 git worktree，免合并步骤；冲突多了再升级）。`agent-debug` / `just-do-it` 不并行。`agent-whole-qa` 按功能模块 fan-out，不读 §九；泳道只服务 `agent-mvp` / `agent-feature` / `agent-uiux`（运行时视觉检查只在汇合回归跑）。
 
 ## 散落物迁移（init.sh 的判定链）
 
@@ -150,10 +208,10 @@ Track D 的顺序是 **归档 → 清点 → 迁移 → 校验 → 归位 → �
 
 ```
 D1 cp 快照 → backup/YYYY-MM/pre-upgrade-<旧版>/   原位不动，中断不瘸
-D2 机械清点 → upgrade_audit.md（四类差异）
-D3 AI 按层判据迁移内容                            理解力活
-D4 AI 补齐 Agent.md 缺失规范段
-D5 ⛔校验门：未着落清单非空即停手
+D2 机械清点 → upgrade_audit.md（四类差异 + 前端与视觉探测）
+D3 按文件派写者迁移（prd→pm；ux/design→uiux；project/data/api→architect；gates/bugs→qa）  理解力活
+D4 各写者按 templates/ 骨架补段（Agent.md / CLAUDE.md / AGENTS.md 已由脚本机械覆盖）
+D5 ⛔校验门：未着落清单 / 骨架缺失清单非空即停手
 D6 mv 归位 → backup/YYYY-MM/superseded/
 D7 盖戳（未过 D5 不许盖）
 ```

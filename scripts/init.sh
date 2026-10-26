@@ -4,6 +4,8 @@
 #       bash init.sh --relocate <相对路径...>   冗余归位（mv 进 backup/superseded/，零删除）
 #       bash init.sh --stamp                    盖场域版本戳
 #       bash init.sh --codex                    分发 codex 护栏（AGENTS.md + hooks + agents）
+# 脚本只做机械动作：建目录 / 快照 / 对不存在的文件复制模板骨架 / 盖版本戳；
+# 不改任何已存在的角色文件内容（规范文件 Agent.md / CLAUDE.md / AGENTS.md 除外：先快照再覆盖）。
 set -euo pipefail
 
 # 参数解析：首参以 -- 开头即子命令（项目根取 cwd），否则视为项目根
@@ -24,9 +26,9 @@ PLUGIN_VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1
                   "$PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)"
 PLUGIN_VERSION="${PLUGIN_VERSION:-unknown}"
 
-# 规范 8 文件（L0~L4），升级清点的分母；bugs.md 为 debug 链施工便签（0.13.0 起，
-# 新建与升级都补建，但不计入「规范位缺失」分母 —— 常态为空，缺了无碍主流程）
-CANON="Agent.md status.md prd.md ux.md project.md data.md api.md gates.md"
+# 规范 9 文件（L0~L4），升级清点的分母；design.md 是 L2 视觉半边（1.11.0 起，唯一写者 uiux）。
+# bugs.md 为 debug 链施工便签（0.13.0 起，新建与升级都补建，但不计入「规范位缺失」分母 —— 常态为空，缺了无碍主流程）
+CANON="Agent.md status.md prd.md ux.md design.md project.md data.md api.md gates.md"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 log()  { echo -e "${GREEN}[cc-code]${NC} $1"; }
@@ -55,7 +57,7 @@ SHOT_RE='(screenshot|screen-shot|screen_shot|snap|capture|Snipaste|CleanShot|图
 
 # ══════════════════════════════════════════════════════════════════════════
 # bugs.md 补建（0.13.0 新增）—— debug 链（plan-debug / agent-debug）的施工便签。
-# 只补建缺失，绝无脑覆盖（里面可能有 OPEN 状态的 B-n 条目）。
+# 只补建缺失，绝无脑覆盖（里面可能有未修复的 B-n 条目）。
 # ══════════════════════════════════════════════════════════════════════════
 ensure_bugs() {
   if [ ! -f "$TARGET/active/bugs.md" ]; then
@@ -65,23 +67,54 @@ ensure_bugs() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
+# 设计目录与截图基线目录（1.11.0 新增）—— 前端视觉链的落盘锚
+#   .cc_code/design/                 方向卡、风格样板板与其截图（uiux 写，入 git）
+#   .cc_code/test/visual/baseline/   截图基线（qa 独占写，入 git）
+# 只建目录、绝不动内容；两处都必须入库，忽略口径见 update_gitignore()。
+# ══════════════════════════════════════════════════════════════════════════
+ensure_design_dirs() {
+  local made=0 d
+  for d in "$TARGET/design" "$TARGET/test/visual/baseline"; do
+    [ -d "$d" ] || { mkdir -p "$d"; made=1; }
+  done
+  [ "$made" -eq 1 ] && \
+    log "已建设计目录 .cc_code/design/ 与截图基线目录 .cc_code/test/visual/baseline/（两者都入 git）"
+  return 0
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 机械前端探测（1.11.0 新增，升级轨与清点用）—— 只读，不改任何文件
+#   0 = 有前端；1 = 无前端
+#   信号一：package.json 含前端框架 / 编译链依赖
+#   信号二：源码里有页面组件文件（.tsx / .jsx / .vue / .svelte / .wxml）
+# 无前端 → design.md 只建骨架并标「不适用（无前端）」，⛔ 不派 uiux 做视觉迁移。
+# ══════════════════════════════════════════════════════════════════════════
+has_frontend() {
+  local pj="$PROJECT_ROOT/package.json" hit
+  if [ -f "$pj" ] && grep -Eq '"(react|react-dom|vue|nuxt|next|svelte|@angular/core|solid-js|preact|taro|@tarojs/[a-z-]+|uni-app|vite)"' "$pj"; then
+    return 0
+  fi
+  hit="$(find "$PROJECT_ROOT" -maxdepth 3 \
+       \( -name node_modules -o -name .git -o -name .cc_code -o -name dist -o -name build -o -name .next \) -prune -o \
+       -type f \( -name '*.tsx' -o -name '*.jsx' -o -name '*.vue' -o -name '*.svelte' -o -name '*.wxml' \) \
+       -print -quit 2>/dev/null || true)"
+  [ -n "$hit" ]
+}
+
+# ══════════════════════════════════════════════════════════════════════════
 # 使用手册刷新（每次 init 无条件同步最新版，防旧手册误导新手）
 # ══════════════════════════════════════════════════════════════════════════
 refresh_handbook() {
-  [ -f "$TEMPLATES/cc-code-README.md" ] && \
-    cp "$TEMPLATES/cc-code-README.md" "$TARGET/README.md" && \
+  # 手册版本号以插件版本覆盖模板里的版本头，避免手册与场域版本脱节
+  if [ -f "$TEMPLATES/cc-code-README.md" ]; then
+    sed "s/（cc-code [0-9][0-9.]*）/（cc-code ${PLUGIN_VERSION}）/" \
+      "$TEMPLATES/cc-code-README.md" > "$TARGET/README.md"
     log "已刷新 .cc_code/README.md 使用手册（当前版本 ${PLUGIN_VERSION}）"
-  # references 目录就位（0.8.0 新增经验资料库）
-  if [ ! -d "$TARGET/references" ]; then
-    mkdir -p "$TARGET/references"
-    [ -f "$TEMPLATES/references-INDEX.md" ] && \
-      cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
-    log "已建 references/ + INDEX.md（0.8.0 新增）"
-  elif [ ! -f "$TARGET/references/INDEX.md" ]; then
-    [ -f "$TEMPLATES/references-INDEX.md" ] && \
-      cp "$TEMPLATES/references-INDEX.md" "$TARGET/references/INDEX.md"
-    log "已补 references/INDEX.md（0.8.0 新增）"
   fi
+  # 设计目录与截图基线目录就位（1.11.0）
+  ensure_design_dirs
+  # 经验库骨架就位（项目级 references/ + 个人级 ~/.cc-code/lessons/，1.10.0 起由 curator 写）
+  ensure_experience_libs
   # backup/retired/ 就位（1.7.0 新增退役原文区）—— active 过期内容的唯一去处，
   # 「搬运不删除」铁律的落点。缺了这个目录，角色会退回「直接删」或「留在 active」。
   if [ ! -d "$TARGET/backup/retired" ]; then
@@ -91,20 +124,136 @@ refresh_handbook() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
-# design.pen 前端原型锚点（1.0.0 新增）—— pen 可视化原型链的落盘锚。
-# 只在 AI 问询主人「要 pen 原型吗」并得到肯定答复后创建（本函数不主动跑）。
-# 位置：项目根目录（与 CLAUDE.md 同级）—— .cc_code/ 是点开头隐藏目录，
-#       pen 客户端的文件选择器打不开；且 design.pen 是交付物不是内部状态，应进 git。
-# 形态：0 字节空文件。pen 应用打开它后首次保存（osascript Cmd+S）才写入真身。
-# ⛔ 绝不覆盖已存在的 design.pen（里面可能有主人 5 天没落盘的心血）。
+# 经验库骨架（1.10.0 新增）—— 项目级 .cc_code/references/ 与个人级 ~/.cc-code/lessons/
+# 同一套结构：INDEX.md + archive/ + log/（采纳日志 adoption.md、活跃日日志 active-days.md）。
+#   项目库另有 log/processed.md（curator 处理日志）、log/started（curator 开工时间戳，
+#   Stop hook 保底比的就是它的修改时间）与 log/reminded（Stop hook 的「已提醒」记号，
+#   同一次 gates 改动最多提醒一次）；个人库另有 log/team-pull.md（团队库拉取记录）。
+# 只补建缺失，已存在的一律不覆盖、不改。主题文件由 curator 按需新建，脚本不碰。
+# 团队库 ~/.cc-code/team/<仓库名>/ 由 curator 克隆，脚本不建。
+# 个人目录建失败（只读 HOME 等）只告警，不挡 init。
 # ══════════════════════════════════════════════════════════════════════════
-ensure_design_pen() {
-  if [ -e "$PROJECT_ROOT/design.pen" ]; then
-    log "根目录已存在 design.pen，跳过（不覆盖）"
+ensure_ref_tree() {   # $1=库根目录 $2=project|personal
+  local d="$1" kind="$2" f
+  mkdir -p "$d/archive" "$d/log" || return 1
+  if [ ! -f "$d/INDEX.md" ] && [ -f "$TEMPLATES/references-INDEX.md" ]; then
+    cp "$TEMPLATES/references-INDEX.md" "$d/INDEX.md"
+  fi
+  for f in adoption.md active-days.md; do
+    [ -f "$d/log/$f" ] || : > "$d/log/$f"
+  done
+  if [ "$kind" = project ]; then
+    for f in processed.md started reminded; do
+      [ -f "$d/log/$f" ] || : > "$d/log/$f"
+    done
+  else
+    [ -f "$d/log/team-pull.md" ] || : > "$d/log/team-pull.md"
+  fi
+}
+
+ensure_experience_libs() {
+  ensure_ref_tree "$TARGET/references" project
+  if ! ensure_ref_tree "${HOME}/.cc-code/lessons" personal 2>/dev/null; then
+    warn "个人经验库 ~/.cc-code/lessons/ 建立失败（HOME 不可写？），跳过；不影响主流程"
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 项目 .claude/settings.local.json 权限合并（1.10.0 新增）—— 让 curator 写个人库、拉团队库不弹确认
+# 写 settings.local.json 而非 settings.json：条目含本机绝对路径，local 文件只对本机生效、Claude Code 默认不入 git。
+# 合并两类条目（幂等：已有的不重复加，其余设置一个字不动、顺序保留）：
+#   permissions.additionalDirectories  $HOME/.cc-code（展开后的绝对路径，不依赖 ~ 展开）
+#   permissions.allow                  Read/Edit(~/.cc-code/**)          个人库、团队库读写（Edit 覆盖所有写文件工具）
+#                                      Edit(/.cc_code/references/**)     项目库（整份重写 INDEX、归档移除一条）
+#                                      Bash(printf *)                    curator 末尾追加；>> 目标另按上面的 Edit 规则检查
+#                                      Bash(git clone --depth 1 *)       团队库克隆（先 cd 进团队目录再执行）
+#                                      Bash(git pull --ff-only)          团队库快进拉取（先 cd 进该库再执行，精确匹配）
+# 路径写法依据 Claude Code 权限文档：~/path 表示 home 目录下路径，/path 表示相对项目根；
+#   Write(path) 规则永不匹配（只认 Edit / Read）；>> 目标以 ~ 开头或含通配符一律要确认，故 curator 追加必须用绝对路径。
+# 合并工具：jq 优先，无 jq 退 python3，都没有则只告警并打印要加的条目（不抢改）。
+# 改动前先把原文件快照进 backup/YYYY-MM/settings.local.json.pre-merge（零删除）。
+# 现有文件不是合法 JSON 对象 → 不碰，只告警。
+# ══════════════════════════════════════════════════════════════════════════
+PERM_DIRS_JSON="[\"${HOME}/.cc-code\"]"
+PERM_ALLOW_JSON='["Read(~/.cc-code/**)","Edit(~/.cc-code/**)","Edit(/.cc_code/references/**)","Bash(printf *)","Bash(git clone --depth 1 *)","Bash(git pull --ff-only)"]'
+
+merge_settings_json() {   # $1=现有文件 $2=输出文件；0=已写出 1=文件非法 2=无可用工具
+  local src="$1" out="$2"
+  if command -v jq >/dev/null 2>&1; then
+    jq -e 'type == "object"' "$src" >/dev/null 2>&1 || return 1
+    jq --argjson dirs "$PERM_DIRS_JSON" --argjson allow "$PERM_ALLOW_JSON" '
+      .permissions = (.permissions // {})
+      | .permissions.additionalDirectories =
+          ((.permissions.additionalDirectories // []) as $a | $a + ($dirs - $a))
+      | .permissions.allow =
+          ((.permissions.allow // []) as $a | $a + ($allow - $a))' "$src" > "$out" || return 1
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 -I - "$src" "$out" "$PERM_DIRS_JSON" "$PERM_ALLOW_JSON" <<'PYMERGE' || return 1
+import json, sys
+src, out, dirs, allow = sys.argv[1], sys.argv[2], json.loads(sys.argv[3]), json.loads(sys.argv[4])
+with open(src, encoding="utf-8") as f:
+    d = json.load(f)
+if not isinstance(d, dict):
+    sys.exit(1)
+perm = d.setdefault("permissions", {})
+for key, want in (("additionalDirectories", dirs), ("allow", allow)):
+    cur = perm.setdefault(key, [])
+    cur.extend(x for x in want if x not in cur)
+with open(out, "w", encoding="utf-8") as f:
+    json.dump(d, f, ensure_ascii=False, indent=2)
+    f.write("\n")
+PYMERGE
+  else
+    return 2
+  fi
+}
+
+ensure_experience_perms() {
+  local dir="$PROJECT_ROOT/.claude" file tmp rc YMN snap
+  file="$dir/settings.local.json"
+  YMN="$(date +%Y-%m)"
+  mkdir -p "$dir"
+  if [ ! -f "$file" ]; then
+    cat > "$file" <<JSONEOF
+{
+  "permissions": {
+    "additionalDirectories": [
+      "${HOME}/.cc-code"
+    ],
+    "allow": [
+      "Read(~/.cc-code/**)",
+      "Edit(~/.cc-code/**)",
+      "Edit(/.cc_code/references/**)",
+      "Bash(printf *)",
+      "Bash(git clone --depth 1 *)",
+      "Bash(git pull --ff-only)"
+    ]
+  }
+}
+JSONEOF
+    log "已建 .claude/settings.local.json（经验库读写与团队库拉取权限，curator 静默工作用）"
     return 0
   fi
-  touch "$PROJECT_ROOT/design.pen"
-  log "已创建根目录 design.pen（0 字节锚点，pen 应用首存后生效）"
+  tmp="$(mktemp "${TMPDIR:-/tmp}/cc-code-settings.XXXXXX")"
+  rc=0
+  merge_settings_json "$file" "$tmp" 2>/dev/null || rc=$?
+  if [ "$rc" -eq 0 ] && [ -s "$tmp" ]; then
+    if ! cmp -s "$file" "$tmp"; then
+      mkdir -p "$TARGET/backup/$YMN"
+      snap="$TARGET/backup/$YMN/settings.local.json.pre-merge"
+      [ -e "$snap" ] && snap="$snap.$(date +%H%M%S)"
+      cp "$file" "$snap"
+      cp "$tmp" "$file"
+      log "已合并经验库权限进 .claude/settings.local.json（原文件快照 → ${snap#"$PROJECT_ROOT"/.cc_code/}）"
+    fi
+  elif [ "$rc" -eq 2 ]; then
+    warn "无 jq 也无 python3，未改 .claude/settings.local.json。请手动加入："
+    warn "  permissions.additionalDirectories: $PERM_DIRS_JSON"
+    warn "  permissions.allow: $PERM_ALLOW_JSON"
+  else
+    warn ".claude/settings.local.json 不是合法 JSON 对象，未改动；修好后重跑 init 即可补权限"
+  fi
+  rm -f "$tmp"
 }
 
 IS_GIT_REPO=0
@@ -233,18 +382,44 @@ migrate_scattered() {
 update_gitignore() {
   local GI="$PROJECT_ROOT/.gitignore"
   touch "$GI"
-  if grep -qF '.cc_code/backup/' "$GI"; then
-    return 0
+  # 1.10.0：本机专属文件不入库（权限含本机绝对路径；两个时间戳每次结算都变，只给本机 hook 用）
+  if ! grep -qF '.claude/settings.local.json' "$GI"; then
+    {
+      echo ""
+      echo "# cc-code 本机专属（权限含本机路径 / hook 用时间戳），不入库"
+      echo ".claude/settings.local.json"
+      echo ".cc_code/references/log/started"
+      echo ".cc_code/references/log/reminded"
+    } >> "$GI"
+    log "已追加本机专属文件到 .gitignore"
   fi
-  {
-    echo ""
-    echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
-    echo ".cc_code/backup/"
-    echo ""
-    echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
-    echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
-  } >> "$GI"
-  log "已追加 .cc_code/backup/ 到 .gitignore"
+  if ! grep -qF '.cc_code/backup/' "$GI"; then
+    {
+      echo ""
+      echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
+      echo ".cc_code/backup/"
+      echo ""
+      echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
+      echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
+    } >> "$GI"
+    log "已追加 .cc_code/backup/ 到 .gitignore"
+  fi
+  # 1.11.0：只忽略临时产物子目录；设计目录与视觉基线必须入库。
+  # ⛔ 不许用 *.png / screenshots/ 这类全局通配 ignore 截图 —— 基线会一起消失。
+  if ! grep -qF '.cc_code/docs/qa/artifacts/' "$GI"; then
+    {
+      echo ""
+      echo "# cc-code 临时产物（只忽略临时子目录，⛔ 不许用 *.png / screenshots/ 全局通配）"
+      echo ".cc_code/docs/qa/artifacts/"
+      echo "coverage/"
+      echo "test-results/"
+      echo ""
+      echo "# ⛔ 必须入库：.cc_code/design/（方向卡、风格样板板与截图）"
+      echo "# ⛔ 必须入库：.cc_code/test/visual/ 与 baseline/（视觉测试与截图基线）"
+      echo "#    基线被 ignore → 视觉回归与主题漂移校验永久失效"
+    } >> "$GI"
+    log "已追加临时产物忽略规则（设计目录与截图基线仍入库）"
+  fi
 }
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -258,7 +433,7 @@ update_gitignore() {
 #   ⑤ 永不自动全量重建 —— index 可能耗时数分钟，只提示不执行
 #
 # ⛔ 本函数只探测、只建索引，绝不执行 npm i -g（全局安装是高风险操作，
-#    且脚本无法交互）。CLI 缺失时输出探测结果，由 AI 在 /cc-code:init
+#    且脚本无法交互）。CLI 缺失时输出探测结果，由主控在 /cc-code:init
 #    对话内用 AskUserQuestion 弹选择框，介绍收益后由人决定装不装。
 # ⛔ 任何分支都 return 0 —— init 永不因 codegraph 挂掉。
 # ══════════════════════════════════════════════════════════════════════════
@@ -318,6 +493,7 @@ archive_legacy() {
     SNAP="$SNAP-$(date +%H%M%S)"
   fi
   mkdir -p "$SNAP"
+  SNAP_DIR="$SNAP"   # 供 refresh_spec_files 复用同一个快照目录
 
   # active/ 全量 + .cc_code 根层散落 md（规范外冗余的主要藏身处）
   [ -d "$TARGET/active" ] && cp -R "$TARGET/active" "$SNAP/active"
@@ -329,13 +505,74 @@ archive_legacy() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
-# 升级 D2 —— 清点（四类差异，落 upgrade_audit.md 交 AI 迁移）
+# 升级 D1.5 —— 规范文件机械覆盖（1.9.3 新增）
+# Agent.md / 根目录 CLAUDE.md / AGENTS.md 是插件规范文件，唯一写者 = 本脚本：
+#   旧版先 cp 进 D1 快照目录的 spec/，再 cp 插件模板新版覆盖；内容已一致则不动。
+# 项目不自定义 Agent.md 权限（项目差异一律写 project.md，由 architect 落盘）。
+# ⛔ 只覆盖这三个规范文件；任何角色文件（prd/ux/design/project/data/api/gates/bugs/status）绝不碰。
+# ⛔ 零 rm：只 cp 快照 + cp 覆盖。
+# ══════════════════════════════════════════════════════════════════════════
+overwrite_spec() {   # $1=现有文件 $2=插件模板 $3=快照内文件名
+  local cur="$1" tpl="$2" name="$3"
+  [ -f "$tpl" ] || return 0
+  if [ -f "$cur" ] && cmp -s "$cur" "$tpl"; then return 0; fi
+  if [ -f "$cur" ]; then
+    mkdir -p "$SNAP_DIR/spec"
+    cp "$cur" "$SNAP_DIR/spec/$name"
+  fi
+  cp "$tpl" "$cur"
+  log "  规范文件已覆盖为插件新版：${name}（旧版快照 → backup/$(date +%Y-%m)/$(basename "$SNAP_DIR")/spec/${name}）"
+}
+
+refresh_spec_files() {
+  local agents="$PROJECT_ROOT/AGENTS.md"
+  overwrite_spec "$TARGET/active/Agent.md" "$TEMPLATES/Agent.md"  "Agent.md"
+  overwrite_spec "$PROJECT_ROOT/CLAUDE.md" "$TEMPLATES/CLAUDE.md" "CLAUDE.md"
+  # AGENTS.md：软链 → 指向 CLAUDE.md 即可；cc-code 旧版实体副本 → 快照后换成软链；
+  # 其它来源的 AGENTS.md 属项目自己的文件，原地不动
+  if [ -L "$agents" ]; then
+    [ "$(readlink "$agents")" = "CLAUDE.md" ] || ln -sfn CLAUDE.md "$agents"
+  elif [ -f "$agents" ]; then
+    if head -1 "$agents" | grep -qF "cc-code 工作流入口"; then
+      mkdir -p "$SNAP_DIR/spec"
+      cp "$agents" "$SNAP_DIR/spec/AGENTS.md"
+      ln -sfn CLAUDE.md "$agents"
+      log "  规范文件已换成软链：AGENTS.md → CLAUDE.md（旧版快照 → spec/AGENTS.md）"
+    else
+      warn "  AGENTS.md 不是 cc-code 生成的，原地保留（不覆盖）"
+    fi
+  fi
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D2.5 —— 缺失骨架补建（只补不存在的，已存在的角色文件一个字不动）
+# ══════════════════════════════════════════════════════════════════════════
+fill_missing_skeleton() {
+  local base
+  for base in status.md prd.md ux.md design.md project.md data.md api.md gates.md; do
+    if [ ! -f "$TARGET/active/$base" ] && [ -f "$TEMPLATES/$base" ]; then
+      if [ "$base" = design.md ] && ! has_frontend; then
+        # 机械探测无前端：只建骨架并把状态行标成「不适用（无前端）」，⛔ 不派 uiux
+        awk 'BEGIN{done=0}
+             /^\| \*\*状态\*\* \|/ && !done { print "| **状态** | 不适用（无前端） |"; done=1; next }
+             { print }' "$TEMPLATES/design.md" > "$TARGET/active/design.md"
+        log "  缺失骨架已补建（机械探测无前端，状态标「不适用（无前端）」）：active/design.md"
+      else
+        cp "$TEMPLATES/$base" "$TARGET/active/$base"
+        log "  缺失骨架已补建（空模板，内容由该文件写者填）：active/$base"
+      fi
+    fi
+  done
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 升级 D2 —— 清点（四类差异，落 upgrade_audit.md 交各文件写者 agent 迁移）
 # ══════════════════════════════════════════════════════════════════════════
 audit_layout() {
-  local YM AUDIT rows_missing rows_stray rows_extra rows_ok f base
+  local YM AUDIT rows_missing rows_stray rows_extra rows_ok rows_front f base
   YM="$(date +%Y-%m)"
   AUDIT="$TARGET/backup/$YM/upgrade_audit.md"
-  rows_missing=""; rows_stray=""; rows_extra=""; rows_ok=""
+  rows_missing=""; rows_stray=""; rows_extra=""; rows_ok=""; rows_front=""
   local _old; _old="$(read_stamp)"
 
   # ① 规范位在否
@@ -369,10 +606,25 @@ audit_layout() {
   # ④ references 目录就位检查（0.8.0 新增经验资料库）→ 统一走 refresh_handbook
   refresh_handbook
 
+  # ⑤ 前端与视觉机械探测（1.11.0）—— 只报，不迁；迁移是 uiux 的理解力活
+  #   ① 旧设计系统段：老 ux.md 把色值 / 字体 / 圆角 / 阴影塞在 ux.md 里，需迁 design.md
+  if [ -f "$TARGET/active/ux.md" ] && has_frontend && \
+     grep -qE '^#{2,4}[^#].*(设计系统|视觉规格|样式规范|色彩|字体|圆角|阴影)' "$TARGET/active/ux.md"; then
+    rows_front+="| \`active/ux.md\` | **旧设计系统段**（色值 / 字体 / 圆角 / 阴影） | 由 uiux 原文整段迁入 \`active/design.md\` 对应小节，再从 ux.md 移除 |"$'\n'
+  fi
+  #   ② 旧 pen 项目：design.pen 存在 → 主链已退役，原地保留、不读不写不转换
+  if [ -e "$PROJECT_ROOT/design.pen" ]; then
+    rows_front+="| \`design.pen\`（根目录） | **遗留 design.pen**（pen 主链 1.11.0 起退役） | 原地保留：⛔ 不读不写不转换；视觉事实源改为 \`active/design.md\`（uiux 补） |"$'\n'
+  fi
+  #   ③ 无前端：只建骨架并标「不适用（无前端）」，不派 uiux
+  if ! has_frontend; then
+    rows_front+="| \`active/design.md\` | **机械探测：无前端** | 只建骨架并标「不适用（无前端）」，⛔ 不派 uiux 做视觉迁移 |"$'\n'
+  fi
+
   {
     echo "# 升级清点报告 ($(date +%Y-%m-%d))"
     echo ""
-    echo "> 由 init.sh 自动生成（机械清点）。**内容迁移是理解力活，由 AI 按 /cc-code:init 第 2C 步执行。**"
+    echo "> 由 init.sh 自动生成（机械清点）。**内容迁移是理解力活，由各文件的写者 agent 按 /cc-code:init 第 2C 步执行（主控只派不写）。**"
     echo "> ⛔ 本次升级全程零删除：迁移校验通过后，旧物 \`mv\` 进 \`backup/$YM/superseded/\`。"
     echo ""
     echo "旧形态：\`${_old:-无版本戳}\`  →  目标：\`$PLUGIN_VERSION\`"
@@ -392,6 +644,10 @@ audit_layout() {
     echo "## ④ 规范位已就位（仍需 AI 校验缺失段落）"; echo ""
     echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
     [ -n "$rows_ok" ] && printf '%s' "$rows_ok" || echo "| — | 无 | — |"
+    echo ""
+    echo "## ⑤ 前端与视觉探测（机械，只报不迁）"; echo ""
+    echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
+    [ -n "$rows_front" ] && printf '%s' "$rows_front" || echo "| — | 无 | — |"
   } > "$AUDIT"
 
   log "D2 清点完成 → backup/$YM/upgrade_audit.md"
@@ -411,7 +667,7 @@ relocate_superseded() {
   for rel in "$@"; do
     src="$TARGET/$rel"
     [ -e "$src" ] || { warn "  跳过（不存在）：$rel"; continue; }
-    # 规范 8 文件本体绝不归位
+    # 规范 9 文件本体绝不归位
     if printf ' %s ' $CANON | grep -qF " $(basename "$rel") " && [ "${rel#active/}" != "$rel" ]; then
       warn "  ⛔ 拒绝：$rel 是规范位文件，绝不归位"; continue
     fi
@@ -432,7 +688,6 @@ relocate_superseded() {
 # 子命令入口（供 AI 在升级 D6 / D7 阶段调用）
 #   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
 #   bash init.sh --stamp                    盖场域版本戳
-#   bash init.sh --design-pen               建根目录 design.pen 锚点（1.0.0 pen 链）
 #   bash init.sh --codex                    分发 codex 护栏: AGENTS.md 软链 + hooks(plan-lock 拦截) + agents(角色沙箱)
 # ══════════════════════════════════════════════════════════════════════════
 case "$SUBCMD" in
@@ -448,12 +703,25 @@ case "$SUBCMD" in
       "$PLUGIN_ROOT/assets/codex/hooks/hooks.json" > "$CODEX_DIR/hooks.json"
     cp "$PLUGIN_ROOT/assets/codex/hooks/gate.sh" "$CODEX_DIR/hooks/gate.sh"
     chmod +x "$CODEX_DIR/hooks/gate.sh"
-    # ③ 角色沙箱: 4 个 custom agent（生成物, 唯一源 agents/*.md）
+    # ③ 角色沙箱: 6 个 custom agent（生成物, 唯一源 agents/*.md）
+    #    先清旧: 目标里带 AUTO-GENERATED 头、但插件源已不存在的 toml（如 1.8.0 删掉的旧综合规划角色）
+    #    ⛔ 零 rm —— mv 进 backup/YYYY-MM/superseded/（无 .cc_code 时退到 .codex/agents.stale/）
+    STALE_DIR="$TARGET/backup/$(date +%Y-%m)/superseded"
+    [ -d "$TARGET" ] || STALE_DIR="$CODEX_DIR/agents.stale"
+    for old in "$CODEX_DIR"/agents/*.toml; do
+      [ -f "$old" ] || continue
+      head -n1 "$old" | grep -q "AUTO-GENERATED by scripts/sync-codex.sh" || continue
+      [ -f "$PLUGIN_ROOT/assets/codex/agents/$(basename "$old")" ] && continue
+      mkdir -p "$STALE_DIR"
+      mv "$old" "$STALE_DIR/codex-agent-$(basename "$old")"
+      log "  已清旧角色 $(basename "$old") → ${STALE_DIR#"$PROJECT_ROOT"/}/"
+    done
     cp "$PLUGIN_ROOT"/assets/codex/agents/*.toml "$CODEX_DIR/agents/"
     log "已分发 codex 护栏:"
     log "  AGENTS.md → CLAUDE.md 软链（宪法双端同源）"
     log "  .codex/hooks.json + hooks/gate.sh（plan-lock 写盘拦截）"
-    log "  .codex/agents/*.toml（dev/prd-plan/qa/uiux 角色沙箱）"
+    log "  .codex/agents/*.toml（pm/architect/dev/qa/uiux/curator 角色沙箱）"
+    log "  命令闸门 skills/*/agents/openai.yaml（16 个命令，含新命令 agent-uiux）随插件分发，本命令只落角色沙箱与 hooks"
     warn "codex 首次运行会对 gate.sh 要求信任审查 —— /hooks 里 trust 一次即生效。"
     warn "plan 模式用法: touch .cc_code/.runtime/plan-lock 开启; 出关向主人确认后 rm。"
     exit 0 ;;
@@ -466,16 +734,13 @@ case "$SUBCMD" in
     [ -d "$TARGET" ] || { warn "无 .cc_code/，无处盖戳"; exit 1; }
     stamp_version
     exit 0 ;;
-  --design-pen)
-    ensure_design_pen
-    exit 0 ;;
 esac
 
 # ══════════════════════════════════════════════════════════════════════════
 # 三轨闸门
 #   Track B 新建   —— 无 active/Agent.md
 #   Track C 已最新 —— 版本戳 == 插件版本，只搬散落物
-#   Track D 升级   —— 版本戳缺失/更旧，走 D1 归档 → D2 清点 → 交 AI 迁移
+#   Track D 升级   —— 版本戳缺失/更旧，走 D1 归档 → D2 清点 → D1.5 规范文件覆盖 → 缺失骨架补建 → 交写者 agent 迁移
 # ══════════════════════════════════════════════════════════════════════════
 if [ -f "$TARGET/active/Agent.md" ]; then
   OLD_STAMP="$(read_stamp)"
@@ -486,6 +751,7 @@ if [ -f "$TARGET/active/Agent.md" ]; then
     update_gitignore
     ensure_bugs
     refresh_handbook
+    ensure_experience_perms   # 1.10.0：curator 静默工作所需权限（幂等合并）
     ensure_codegraph
     exit 0
   fi
@@ -496,18 +762,25 @@ if [ -f "$TARGET/active/Agent.md" ]; then
 
   archive_legacy "${OLD_STAMP:-unstamped}"
   audit_layout
+  refresh_spec_files   # 1.9.3：Agent.md / CLAUDE.md / AGENTS.md 机械覆盖（先快照），角色文件一个字不动
+  fill_missing_skeleton # 缺的角色文件才补模板骨架；已存在的不碰
   migrate_scattered
   update_gitignore
   ensure_bugs
+  ensure_experience_perms   # 1.10.0：curator 静默工作所需权限（幂等合并；经验库骨架已由 D2 清点里的 refresh_handbook 补好）
   ensure_codegraph
 
   YM="$(date +%Y-%m)"
   warn ""
   warn "══════════ 脚手架侧完成，以下是 AI 的活 ══════════"
-  warn "AI 必须按 /cc-code:init 第 2C 步「升级迁移协议」继续："
-  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，把内容搬到规范位（一段不丢）"
-  warn "  D4 补层   按 templates/Agent.md 补齐缺失规范段，保留项目自定义权限"
-  warn "  D5 校验门 逐节核对，未全命中即停手报清单，禁止归位"
+  warn "主控必须按 /cc-code:init 第 2C 步「升级迁移协议」继续（主控只派不写）："
+  warn "  已完成    Agent.md / CLAUDE.md / AGENTS.md 已机械覆盖为插件新版（旧版在 D1 快照 spec/），脚本不改任何角色文件内容"
+  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，按文件派写者 agent（prd→pm；ux/design→uiux；project/data/api→architect；gates/bugs→qa），顺序 pm→uiux→architect→qa；status 主控自己写"
+  warn "  D4 补层   同上，各写者按 templates/ 骨架补齐自己的文件；design.md 归 uiux（⛔ 脚本不机械覆盖角色文件）"
+  if ! has_frontend; then
+    warn "  机械探测   本项目无前端 → design.md 只建骨架并标「不适用（无前端）」，⛔ 不派 uiux 做视觉迁移"
+  fi
+  warn "  D5 校验门 各写者自检交回，主控只跑机械检查（grep / 计数），未全命中即停手报清单，禁止归位"
   warn "  D6 归位   校验通过 → bash init.sh --relocate <路径...> 把旧物 mv 进 superseded/"
   warn "  D7 盖戳   bash init.sh --stamp"
   warn "⛔ 版本戳未盖前，下次 init 仍判为待升级 —— 迁移没做完不会被误认为完成。"
@@ -516,13 +789,15 @@ fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
 mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/backup/retired" "$TARGET/docs/qa" \
-         "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test"
+         "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test" \
+         "$TARGET/design" "$TARGET/test/visual/baseline"
 
-# 热区骨架（8 个 active 文件，按 L0~L4 分层）
+# 热区骨架（9 个 active 文件，按 L0~L4 分层）
 cp "$TEMPLATES/Agent.md"      "$TARGET/active/Agent.md"      # L0 控制
 cp "$TEMPLATES/status.md"     "$TARGET/active/status.md"     # L0 控制
 cp "$TEMPLATES/prd.md"        "$TARGET/active/prd.md"        # L1 意图
-cp "$TEMPLATES/ux.md"         "$TARGET/active/ux.md"         # L2 表现
+cp "$TEMPLATES/ux.md"         "$TARGET/active/ux.md"         # L2 表现（交互与布局）
+cp "$TEMPLATES/design.md"     "$TARGET/active/design.md"     # L2 表现（风格与长相，uiux 写）
 cp "$TEMPLATES/project.md"    "$TARGET/active/project.md"    # L3 实现
 cp "$TEMPLATES/data.md"       "$TARGET/active/data.md"       # L3 实现
 cp "$TEMPLATES/api.md"        "$TARGET/active/api.md"        # L3 实现
@@ -538,15 +813,15 @@ mkdir -p "$TARGET/backup/$(date +%Y-%m)"
 # 根目录 CLAUDE.md 入口引导（新/旧项目统一生成）
 #   - 旧项目：先备份 legacy → backup/YYYY-MM/CLAUDE.md.legacy，再覆盖
 #   - 新项目：直接生成
-#   注：旧 CLAUDE.md 的内容分拆（理解力活）由 AI 在 /cc-code:init 对话内完成，
-#       读取 backup 里的 legacy 按 init 的映射表归并到 active/ 各文件。
+#   注：旧 CLAUDE.md 的内容分拆（理解力活）：主控在 /cc-code:init 内只做原文分拣，
+#       再按 pm → uiux → architect → qa 顺序派各文件写者落盘（主控不写角色文件）。
 LEGACY_CLAUDE="$PROJECT_ROOT/CLAUDE.md"
 YM="$(date +%Y-%m)"
 if [ -f "$LEGACY_CLAUDE" ]; then
   mkdir -p "$TARGET/backup/$YM"
   cp "$LEGACY_CLAUDE" "$TARGET/backup/$YM/CLAUDE.md.legacy"
   warn "检测到旧 CLAUDE.md，已备份至 .cc_code/backup/$YM/CLAUDE.md.legacy"
-  warn "→ AI 须读取该 legacy，按 /cc-code:init 映射表分拆归并到 active/ 各文件。"
+  warn "→ 主控须按 /cc-code:init 第 2A 步对该 legacy 做原文分拣，再派各文件写者落盘。"
 fi
 cp "$TEMPLATES/CLAUDE.md" "$LEGACY_CLAUDE"
 log "已生成根目录 CLAUDE.md（入口引导，纯协议不含业务状态）。"
@@ -554,14 +829,18 @@ log "已生成根目录 CLAUDE.md（入口引导，纯协议不含业务状态�
 # 散落物迁移 + .gitignore 联动
 migrate_scattered
 update_gitignore
+ensure_experience_perms   # ⭐1.10.0：curator 静默工作所需权限（经验库骨架已由 refresh_handbook 建好）
 ensure_codegraph   # ⭐0.10.0：codegraph 可选增强静默装载（任何分支都不阻塞）
 stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
-log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
-log "  docs/qa/     全量验收报告（agent-whole-qa 产出）"
+log "  active/   L0 Agent status │ L1 prd │ L2 ux design │ L3 project data api │ L4 gates"
+log "  docs/qa/     全量验收报告 + 合集板（agent-whole-qa / qa 产出）"
 log "  test/     ⭐测试代码（源码，必须入库；affected 精准回归的索引基础）"
+log "  test/visual/baseline/  截图基线（qa 独占写，必须入库）"
+log "  design/     方向卡与风格样板板（uiux 写，不是项目代码，必须入库）"
 log "  images/ scripts/  截图归档 + 散落脚本"
+log "  references/  项目经验库（INDEX + archive + log，curator 写）；个人库 ~/.cc-code/lessons/ 同结构"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"
 log "  根目录 CLAUDE.md  工作流入口引导"
 warn "让 AI Read 根目录 CLAUDE.md → 进入状态机循环。"

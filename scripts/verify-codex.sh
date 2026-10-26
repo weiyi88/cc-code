@@ -56,6 +56,16 @@ for pair in "${PAIRS[@]}"; do
   fi
 done
 
+# 源已删除的旧 toml（快照里有、重生成后消失）单独点名 —— sync 负责清, 这里只报
+if [[ -d "$SNAP/assets__codex__agents" ]]; then
+  for t in "$SNAP"/assets__codex__agents/*.toml; do
+    [[ -f "$t" ]] || continue
+    if [[ ! -f "$PLUGIN_ROOT/assets/codex/agents/$(basename "$t")" ]]; then
+      echo -e "${RED}  ✗ 过期 toml: $(basename "$t") —— 对应 agents/*.md 已删, 已由 sync 清除, 请再跑一次 verify 确认${NC}"
+    fi
+  done
+fi
+
 # skills 下的 openai.yaml 散点单独扫（快照打平在 SNAP/skills）
 yaml_drift=0
 while IFS= read -r f; do
@@ -83,6 +93,45 @@ if [[ "$n_skills" -ge 1 ]]; then
   echo -e "${GREEN}  ✓ skills 唯一源就位（$n_skills 个 SKILL.md）${NC}"
 else
   echo -e "${RED}  ✗ skills/ 下没有 SKILL.md —— 双端共用本体断供${NC}"; FAIL=1
+fi
+
+# ══════════════════════════════════════════════════════════════════════════
+# 5. 闸门覆盖：除协议体外，每个命令都要有显式调用闸门 + 对应 Codex 闸门配置
+#    - 显式调用闸门 = SKILL.md frontmatter 的 disable-model-invocation: true
+#    - Codex 闸门配置 = skills/<name>/agents/openai.yaml（sync 生成，内容为
+#      allow_implicit_invocation: false）
+#    - 协议体 cc-code 是自动加载的运行时协议，按设计不生成闸门（codex 默认
+#      implicit=true 即对齐 Claude 侧行为），登记在 GATE_EXEMPT，唯一豁免。
+#    缺一即 FAIL：漏写闸门会被 Codex 隐式调用，正文里写「只能手动触发」零作用。
+# ══════════════════════════════════════════════════════════════════════════
+GATE_EXEMPT="cc-code"
+gate_fail=0
+gate_n=0
+for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
+  [[ -f "$skill_md" ]] || continue
+  name="$(basename "$(dirname "$skill_md")")"
+  case " $GATE_EXEMPT " in *" $name "*) continue ;; esac
+  gate_n=$((gate_n + 1))
+
+  front="$(awk 'NR==1 && /^---$/{f=1; next} f && /^---$/{exit} f {print}' "$skill_md")"
+  if ! printf '%s\n' "$front" | grep -qE '^disable-model-invocation:[[:space:]]*true[[:space:]]*$'; then
+    echo -e "${RED}  ✗ 命令 $name 缺显式调用闸门（frontmatter 缺 disable-model-invocation: true）${NC}"
+    gate_fail=1
+    continue
+  fi
+  yaml="$PLUGIN_ROOT/skills/$name/agents/openai.yaml"
+  if [[ ! -f "$yaml" ]]; then
+    echo -e "${RED}  ✗ 命令 $name 缺 Codex 闸门配置（skills/$name/agents/openai.yaml）—— 重跑 scripts/sync-codex.sh${NC}"
+    gate_fail=1
+  elif ! grep -qE '^[[:space:]]*allow_implicit_invocation:[[:space:]]*false[[:space:]]*$' "$yaml"; then
+    echo -e "${RED}  ✗ 命令 $name 的 Codex 闸门配置未关闭隐式调用 —— 重跑 scripts/sync-codex.sh${NC}"
+    gate_fail=1
+  fi
+done
+if [[ "$gate_fail" -eq 0 ]]; then
+  echo -e "${GREEN}  ✓ 闸门覆盖完整（$gate_n 个命令均有显式闸门 + Codex 配置；协议体 cc-code 豁免）${NC}"
+else
+  FAIL=1
 fi
 
 [[ "$FAIL" -eq 0 ]] && echo -e "${GREEN}[verify-codex] 全过${NC}" \

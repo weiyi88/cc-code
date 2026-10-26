@@ -1,7 +1,7 @@
 # 报告模板
 
 > 被 `agent-whole-qa` 的 ❸ 阶段引用。落盘 `.cc_code/docs/qa/<YYYY-MM-DD>-round-N.md`（温数据，完整版）；
-> `gates.md` 只写「本轮结论 + Critical + 覆盖率」三段摘要（热数据保持精简）。
+> `gates.md` 就地更新 §一 + §二 全矩阵（A / U / V 三段逐行）+ §三~§六（热数据保持精简）；完整证据留在本报告。
 
 ---
 
@@ -9,6 +9,7 @@
 
 **Verdict: {PASS | FAIL | 未收敛 | 已升级}**
 BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
+基线版本: `<基线目录>` + `<冻结日期 / 空=首轮建基线>`　合集板: `docs/qa/<日期>-vs-board.md`
 
 ## 一、覆盖率（分母取 inventory 锁定值）
 
@@ -18,8 +19,11 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 | 可交互元素 | | | | | | |
 | 接口 | | | | | | |
 | 页面五态 | | | | | | |
+| 视觉 V 行 | | | | | | |
+| └ 视觉组合（子行） | V 行 × 视口 × 亮暗 | | | | | 只记组合覆盖，⛔ 不乘进 V 主行 |
 
-> ⛔ 「覆盖率 100%」只有在 SKIPPED = 0 时才能写。有 SKIPPED 必须在第五节逐条列明。
+> ⛔ 「覆盖率 100%」只有在 SKIPPED = 0 时才能写。有 SKIPPED 必须在第六节逐条列明。
+> 视觉分母口径唯一出处 = `skills/cc-code/references/ui-gates.md` §8.2；⛔ 不按「视口 × 亮暗」乘开 V 行。
 
 ## 二、断言追溯矩阵
 
@@ -27,17 +31,17 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 
 | 断言 ID | 模块·功能（中文） | Verdict | 测试位置 / 证据 | 实测结果 |
 | --- | --- | --- | --- | --- |
-| A1 | 登录 · 会话过期登出 | ✅ PASS | `tests/api/auth.test.ts::登录成功` | 1/1 pass |
+| A1 | 登录 · 会话过期登出 | ✅ PASS | `<测试根>/api/auth.test.ts::登录成功` | 1/1 pass |
 | A2 | 登录 · 重复提交防护 | ❌ FAIL | `docs/qa/shots/m1-a2.png` | 按钮未禁用，连点产生 3 次提交 |
 | A7 | 订单 · 过期订单可见性 | ⚠️ UNVERIFIABLE | — | 需 seed 一个过期订单，当前无样本 |
 | A9 | 看板 · 卡片拖拽 | 🚫 VOID | — | prd.md 已标作废 |
 
 ## 三、元素级结果
 
-| 元素 ID | 页面 | 类型 | testid | 同构组 | Verdict | 失败断言 | 证据 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| E12 | `/dashboard` | button | `btn-submit` | 唯一 | ❌ | A3｜看板-重复提交防护 | `shots/e12.png` |
-| E45 | `/list` | button | `row-del` | N=137, 实测 3 | ✅ | — | `shots/e45.png` |
+| 元素 ID | 页面 | 类型 | testid | 同构组 | 视口（断点适用） | Verdict | 失败断言 | 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| E12 | `/dashboard` | button | `btn-submit` | 唯一 | 全断点 | ❌ | A3｜看板-重复提交防护 | `shots/e12.png` |
+| E45 | `/list` | button | `row-del` | N=137, 实测 3 | 全断点 | ✅ | — | `shots/e45.png` |
 
 ## 四、接口级结果
 
@@ -53,14 +57,36 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 | 代码有契约无 | | 影子接口，Architect 需补 `api.md` |
 | 运行时额外 | | 外部服务 / 未纳管 |
 
-## 五、SKIPPED 清单（禁止静默截断）
+## 五、视觉结果（V 段）
+
+> 规则号、组码、阈值、判词纪律的唯一出处 = `skills/cc-code/references/ui-gates.md`；本表只装判词与证据。
+> **判词只认机器检查**（Playwright 测试 / axe / 截图比对 / Lighthouse）。视觉模型看图只进合集板，⛔ 不写进本表。
+
+| V 行号 | 页面 | 端 | 组 | 视口 | 亮暗 | Verdict | 基线差异（实测 / 允许） | 候选 / 回归 | 规则号 + 证据 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| V2.06 | `/pricing` | web | 06 视觉对齐 | 1440 | 亮 | ❌ FAIL | 顶部差 3px / ≤1px | 回归 | `VH-06.01`｜`align.spec::pricing-cards-top` |
+| V2.09 | `/pricing` | web | 09 响应式与可访问性 | 390 | 亮 | ✅ PASS | 0.2% / ≤1% | — | `VH-09.01`｜`a11y.spec::mobile-overflow` |
+| V0.09 | 全站 | web | 09 性能 | 1440 | — | ⚠️ UNVERIFIABLE | 未登记门限 | — | `VH-09.08`｜Lighthouse 只记录 |
+
+**基线纪律**（唯一出处 = `ui-gates.md` §七）：
+
+```
+范围外差异超阈值   → 候选 / 回归 列写「回归」→ 进 Critical，回 dev（⛔ 不改基线迁就）
+范围内差异超阈值   → 写「候选」，文件名带 -candidate、标「主人未目视」
+无基线的新页 / 首轮 → 写「候选」，VH-09.07 标 UNVERIFIABLE、不进分母
+失败轮              → ⛔ 冻结 / ⛔ 更新 / ⛔ 改阈值；本表只记，不冻
+```
+
+**人判（VS）只作建议**：不写进本表，进合集板（`docs/qa/<日期>-vs-board.md`），一条一行「VS 号 + 页面 + 视口 + 亮暗 + 截图 + 一句观察」；⛔ 不进 PASS / FAIL、不进分母、不触发回环。
+
+## 六、SKIPPED 清单（禁止静默截断）
 
 | # | 项 | 原因 | 解锁需要 |
 | --- | --- | --- | --- |
 | 1 | `POST /api/pay` | 副作用不可逆，无隔离环境 | 独立测试库 + mock 支付网关 |
 | 2 | `/user/[id]` | 缺样本数据 | seed 一个用户 |
 
-## 六、冗余检测（该有的反面）
+## 七、冗余检测（该有的反面）
 
 > vibecoding 多次修改易留死代码/孤儿/重复。不算 FAIL，但必须列出交清理。
 > 详见 `docs/qa/<日期>-inventory.md` 的冗余检测段。
@@ -74,7 +100,9 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 
 ---
 
-## 七、Critical Failures（回 dev 必修）
+## 八、Critical Failures（回 dev 必修）
+
+> 允许 `A` / `U` / `V` 三类编号。V 项**必须写规则号**（如 `VH-06.01`）与证据（测试文件::用例 / 截图路径 / axe 节点 / Lighthouse 报告），否则不成立；VS 人判类 ⛔ 不进本节。
 
 ### 1. [A2｜登录-重复提交] <一句话标题>
 *   **Required：** <`prd.md` 原文>
@@ -84,32 +112,44 @@ BASE_URL: `<url>`　清单: `docs/qa/<日期>-inventory.md`
 *   **证据：** `<截图 / console 日志 / 网络记录>`
 *   **Fix direction：** <一句，指向需求而非设计意见>
 
-## 八、Minor Failures（应修，不阻塞 Verdict）
+### 2. [V2.06｜`/pricing`｜组 06 视觉对齐] <一句话标题>
+*   **Required：** `<VH-06.01>` 并排卡片顶部边缘差 ≤1px（允许值取自 `ui-gates.md`）
+*   **Actual：** 三列卡片顶部差 3px（实测）
+*   **Repro：** `visual` 门命令 + `align.spec::pricing-cards-top`
+*   **涉及文件：** `<file:line>`
+*   **证据：** `docs/qa/shots/pricing-1440-light.png` + 测试用例名
+*   **Fix direction：** <一句，指向设计数值 / 规则，不写实现方案>
+
+## 九、Minor Failures（应修，不阻塞 Verdict）
 
 | # | 项 | 描述 |
 | --- | --- | --- |
 
-## 九、ESCALATE（dev 修不动，需人决策）
+## 十、ESCALATE（dev 修不动，需人决策）
 
 | # | 项 | 卡在哪 | 需要什么决策 |
 | --- | --- | --- | --- |
 
-## 十、轮次与收敛
+## 十一、轮次与收敛
 
-| 轮次 | Critical | Minor | 新增 FAIL | 结论 |
-| --- | --- | --- | --- | --- |
-| 1 | 12 | 5 | — | 递减中 |
-| 2 | 4 | 3 | 0 | 递减中 |
-| 3 | 1 | 2 | 0 | 达轮次上限 → 升级 |
+| 轮次 | Critical | 其中视觉 VH | Minor | 新增 FAIL | 结论 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 12 | 3 | 5 | — | 递减中 |
+| 2 | 4 | 1 | 3 | 0 | 递减中 |
+| 3 | 1 | 0 | 2 | 0 | 达轮次上限 → 升级 |
 
 ```
-收敛判定：
+收敛判定（只看机器判词，VH 与 A / U 同权）
   递减且无新增 且 ≤3 轮  → 继续
   未递减                → 停止，报「未收敛」
   有新增 FAIL            → 停止，报震荡点，建议回滚本轮
   > 3 轮                → 停止，标记升级
+  视觉基线差异超阈值      → 计入本轮 FAIL；失败轮 ⛔ 不许冻结 / 更新基线凑绿
+  VS 人判                → 不进本表、不进分母，只进合集板
 ```
 
-## 十一、Not in Scope
+## 十二、Not in Scope
 
 *   代码风格 / 架构 / 性能 / 命名 —— 除非 `prd.md` 或 `api.md` 明确要求。
+*   视觉**审美**（`VS` 人判）不作验收判词，只进合集板；视觉**硬阈值**（`VH` / `VM`）不在此限，按 `skills/cc-code/references/ui-gates.md` 执行。
+*   小程序视觉规则包第一版推迟、原生 App 第一版不承诺，分别标「推迟」「无法判定」。
