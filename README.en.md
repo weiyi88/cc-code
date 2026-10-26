@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.11.0** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.12.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -20,7 +20,7 @@
 - [Quick Start](#quick-start)
 - [Codex CLI Support (1.1.0)](#codex-cli-support-110)
 - [Optional Enhancement: codegraph](#optional-enhancement-codegraph)
-- [Skill List (16)](#skill-list-16)
+- [Skill List (17)](#skill-list-17)
 - [Agents (6)](#agents-6)
 - [File Layering (L0~L4)](#file-layering-l0l4)
 - [Directory Architecture](#directory-architecture)
@@ -156,6 +156,7 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
 | `agent-whole-qa` | ✅ by default | module fan-out | multiple qas; multiple devs in fix rounds | right after inventory; Workflow on Claude Code, falls back to multiple Agent calls when unavailable | modules / fix groups ≤3 |
 | `just-do-it` | ❌ | — | — | too small to be worth a lane | 1 |
 | `deploy` | ❌ | — | — | single serial command | 1 |
+| `pr` | ❌ | — | — | single serial command | 1 |
 
 **Three things never run at once**: dev and qa (separated by two barriers), two phases, two writers on the same ledger.
 
@@ -205,6 +206,8 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
                process artifacts not persisted (change-log one line) · per-round acceptance details → docs/qa/
                retired content → backup/retired/<source>.md (moved verbatim, nothing lost)
 ```
+
+**1.12.0:** adds `/cc-code:pr` — hands accepted changes to an external review platform: a conventional commit → push a feature branch → open a merge request with the description (what changed / how it was tested / how to roll back / linked spec / blast radius, plus a decision log for high risk), then stops. qa gains "submission evidence": it reruns the commands for this increment's assertions and writes the raw output and screenshots into an evidence file, which the orchestrator pastes into the description verbatim. The orchestrator's single explicit exception becomes "version-control operations"; delivery happens only inside the pr command and never touches the main branch. Rejections and production bugs still go through the debug / feature chains. The entry file `CLAUDE.md` is trimmed to 100 lines. Skills 16 → 17, agents stay 6.
 
 **1.11.0:** the full frontend UI/UX chain ships — pm infers ten possible frontend forms from the owner's product sketch (no questionnaire), with React + Next.js + the shadcn family as defaults; one project uses exactly one component-library family and one `active/design.md` (the visual half of L2, written by uiux), whose values feed each end's theme. Adds `plan-uiux` (mode one: settle style / mode two: restyle; the only visual gate is the owner saying "定了") and `agent-uiux` (turns a settled-but-unimplemented style into code); uiux moves to opus and appears on the planning side only. qa gains a **visual fourth layer** (VH/VM/VS three-level verdicts, screenshot baselines, theme drift, collection board), and `agent-mvp`'s first phase is fixed as the **visual foundation**. The pen main chain is demoted to an optional medium for direction cards (an old `design.pen` stays in place, never read, written or converted). Skills 15 → 16, agents stay 6, template skeletons 9 → 10.
 
@@ -364,7 +367,7 @@ pm ──► uiux ──► architect ──► dev ──► qa
 /plugin install cc-code
 ```
 
-After install you get the `/cc-code:*` command family, 16 skills, 6 companion agents, and one Stop hook.
+After install you get the `/cc-code:*` command family, 17 skills, 6 companion agents, and one Stop hook.
 
 ## Full Lifecycle
 
@@ -390,6 +393,9 @@ Session open (2 steps)  Read Agent.md (permission table) → status.md (set coor
        ↓
 /cc-code:agent-whole-qa      Full acceptance (assertions + five states + elements + interfaces + visual fourth layer,
                        FAIL≤3-round loop; fixes grouped by file, in parallel; the collection board never blocks)
+       ↓
+/cc-code:pr            Deliver to the review platform (conventional commit → push feature branch → open a merge
+                       request with the description, then stop; for projects on an external pipeline, which reviews and merges)
        ↓
 /cc-code:deploy        Launch (reads the deployment contract in project.md, any platform mix; qa smoke-tests
                        production with 390 / 1440 screenshots and performance sampling; rollback to revert)
@@ -488,7 +494,7 @@ $cc-code:plan-mvp fires
 
 - Claude's `allowed-tools` allowlist has no Codex equivalent; role sandboxes (`sandbox_mode`) carry the main permission boundary.
 - Claude tool names like `EnterPlanMode` mentioned in skill bodies are ignored by Codex — write safety is backstopped by the guard above; flow safety relies on following the sequence.
-- The 16 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected). The new `agent-uiux` command's explicit gate is produced by the generation chain, and `verify-codex.sh` checks gate coverage for every command.
+- The 17 skill descriptions may be auto-shortened by Codex's context budget (slightly weaker implicit triggering; explicit `$` invocation is unaffected). The new `pr` command's explicit gate is produced by the generation chain, and `verify-codex.sh` checks gate coverage for every command.
 
 ## Optional Enhancement: codegraph
 
@@ -531,7 +537,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 2. **Tests must import the source under test** — static `import` ✅ dynamic `await import()` ✅ pure HTTP-interface scripts ⛔ (no import edge to trace).
 3. **Non-standard names must register a glob** — defaults match `*.spec.*` / `*.test.*` / `__tests__/`; others need `--filter`.
 
-## Skill List (16)
+## Skill List (17)
 
 **Framework Core (manages flow)**
 
@@ -551,6 +557,7 @@ The test-infrastructure contract is registered in `active/project.md` §6. Three
 | `short` | `/cc-code:short` | One-sentence answers (≤50 chars) for simple questions, nothing more |
 | `just-do-it` | `/cc-code:just-do-it` | Tiny change, one sentence, done: dev writes, qa verifies, one log entry; frontend files get a static scan only (record only) |
 | `deploy` | `/cc-code:deploy` | Ship every component per the deployment contract; only qa's live smoke test counts (including 390 / 1440 screenshots and performance sampling); one-command rollback |
+| `pr` | `/cc-code:pr` | One click to deliver: accepted changes get a conventional commit, a pushed feature branch and a merge request with the five-part description; evidence comes only from qa's measured output |
 
 **Tool Attachments (do work, unrelated to state machine)**
 
@@ -610,7 +617,7 @@ Six agents map one-to-one to cc-code roles (**role = agent**; the main thread on
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 skill directories
+├── skills/           17 skill directories
 ├── agents/           6 agents (pm / architect / dev / qa / uiux / curator)
 ├── scripts/          init.sh (three-track scaffold + scattered-file migration + upgrade archive/audit/relocate, zero rm) / sync-codex.sh / verify-codex.sh
 ├── templates/        md skeletons (L0~L4 nine items (incl. design.md) + bugs.md debug sticky note + experience INDEX / topic skeletons)

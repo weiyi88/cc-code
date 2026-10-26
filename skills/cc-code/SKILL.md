@@ -45,7 +45,7 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 6 个 agent：`pm` / `architect` / `dev` / `qa` / `uiux` / `curator`。**每个 agent 的必读 / 可写 / 禁读只以 `.cc_code/active/Agent.md` §三 为准、codegraph 权限只以其 codegraph 权限矩阵为准**，本 skill 不抄副本。
 > `uiux` 只在 `plan-mvp` / `plan-feature` / `plan-uiux` 出场，⛔ 不出现在任何 `agent-*` 命令；风格落地由 `agent-uiux` 编排 dev → qa，不派 uiux。
 
-> 主控（跑命令的主会话）是编排者：只传话，不扮演任何 agent；它的写权限与**唯一显式例外**（git 提交）见 `active/Agent.md` §一。
+> 主控（跑命令的主会话）是编排者：只传话，不扮演任何 agent；它的写权限与**唯一显式例外**（版本库操作：git 提交，与 `/cc-code:pr` 的交付）见 `active/Agent.md` §一。
 > 测试目录与全部测试 / 构建 / 自检命令以 `project.md` 的测试基建契约为准，不硬编码。
 
 ## 热数据写入分工
@@ -90,6 +90,8 @@ description: 含 .cc_code/ 的项目自动加载的流程管家：规划→开�
 > **并行泳道**：`project.md` §九 写了泳道时，执行命令在阶段 / 增量内同角色多人并发（协议见本 skill 的 `references/parallel-lanes.md`）；没写则单线程。
 
 > 上线：`/cc-code:deploy`（单命令，读 `project.md` §八 部署契约，qa 线上冒烟写 `gates.md` §八；`rollback` 子命令回退）。
+>
+> 交付审查平台：`/cc-code:pr`（已验收的改动 → 规范 commit → 推送功能分支 → 带描述建合并请求；qa 出提交证据，主控只搬运；提交后停手，打回照常走 debug / feature 链）。
 
 > debug 链的分界：**需求模糊**走 plan-feature；**需求明确但实现错了**走 debug 链。根因落在契约 / 需求上、找不到期望出处、复现不了 → qa 把 B-n 写成「待裁决」，停下交主人裁决。`bugs.md` 是施工便签（B-n 独立序列，每条带状态：待诊断 / 待裁决 / 待修复，agent-debug 只接待修复；修复通过后原文搬 `backup/retired/bugs.md`，常态为空；写者 = qa）。
 
