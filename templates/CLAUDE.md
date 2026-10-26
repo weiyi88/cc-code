@@ -16,7 +16,7 @@
 **只对结果负责，不在乎过程。** agent 写代码很快，唯一要问的是：结果符合需求吗？
 
 ```
-   尺子   ── 结果对照需求（prd / ux / api / data），由 qa 用测试取证；不审实现过程
+   尺子   ── 结果对照需求（prd / ux / design / api / data），由 qa 用测试取证；不审实现过程
    落盘   ── 只存结论（是什么、错在哪、影响什么、怎么修）；过程不落盘
    对主人 ── 只讲结果和影响（业务语言），不讲怎么实现
    人介入 ── 只在结果对不上需求、或需求本身要改时；其余流程自行推进
@@ -25,14 +25,15 @@
 ## ⚖️ 五大铁律（贯穿全会话）
 
 1. **上下文最小化** — 只读当前任务所需最小文件集，禁止全量读取。
-2. **决策串行** — 严守 pm → architect → dev → qa，派哪个 agent 就是哪个角色，禁止越权、禁止主控代笔（含 init / 升级 / 迁移：要改某角色文件，一律派它的写者 agent，主控自己不 Edit / Write）。
+2. **决策串行** — 严守 pm → uiux → architect → dev → qa，派哪个 agent 就是哪个角色，禁止越权、禁止主控代笔（含 init / 升级 / 迁移：要改某角色文件，一律派它的写者 agent，主控自己不 Edit / Write）。
 3. **记忆外部化** — 进度/踩坑/归档全部落到 `.cc_code/` 静态文件，禁止凭记忆作答。
 4. **active 三判据** — `active/` 永远保持**最新 + 最完整 + 最纯净**：
 
 ```
    最新   ── 同一对象只有一处描述且是当前态 ⛔禁新开「增量 F-n」章节, 就地改写
-   最完整 ── 每个待验维度都有稳定编号: A(prd §1.5) 管逻辑/链路/接口, U(ux §2.3) 管 UI/五态
-   最纯净 ── 只答「现在是什么」; 过程不落盘(change-log 留痕), 逐轮验收→docs/qa/
+   最完整 ── 每个待验维度都有稳定编号: A(prd §1.5) 管逻辑/链路/接口,
+             U(ux §2.3) 管 UI/五态, V(gates §2.4 V 段) 管视觉(页面 × 适用规则组)
+   最纯净 ── 只答「现在是什么」; 过程不落盘(change-log 留痕), 逐轮验收→.cc_code/docs/qa/
              过期内容 → backup/retired/<源文件名>.md（原文整段搬走, 一字不丢）
 ```
 
@@ -45,9 +46,11 @@
 ## 🔁 agent 串行流水线
 
 ```
-pm ──► architect ──► dev ──► qa          旁路：uiux（只被 plan-uiux 派）
-(逻辑)   (契约)      (编码)   (验收)       主控 = 编排者，只传话、只写 status / 里程碑行
-                                         结算后：curator 后台静默整理经验（唯一写者）
+pm ──► uiux ──► architect ──► dev ──► qa
+(逻辑) (交互+长相) (契约)     (编码)   (验收)
+                                     主控 = 编排者，只传话、只写 status / 里程碑行
+                                     结算后：curator 后台静默整理经验（唯一写者）
+                                     风格实现：agent-uiux 编排 dev → qa（不派 uiux）
 ```
 
 每个 agent 的「必读 / 可写 / 禁读」只在 `.cc_code/active/Agent.md` §三 写一次（单一出处，此处仅指向）。
@@ -59,15 +62,18 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 | 层 | 文件 | 用途 |
 | :-- | :--- | :--- |
 | **L0** | `active/Agent.md` | 最高宪法：agent 分工 + 权限卡片 + 谁写哪个文件 |
-| | `active/status.md` | 当前坐标 + 卡点 + 下一步（里程碑不落此文件） |
-| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 |
-| **L2** | `active/ux.md` | 视觉规格 + 交互五态矩阵 |
-| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录 / 测试基建契约 / 部署契约 / 阶段与泳道） |
+| | `active/status.md` | 当前坐标 + 卡点 + 下一步（含「风格：」坐标行；里程碑不落此文件） |
+| **L1** | `active/prd.md` | 分模块业务逻辑 + 规则 + 验收断言 + §〇 需求摘要（端与形态结论、推荐栈与家族） |
+| **L2** | `active/ux.md` | 交互与布局：前端形态表 / 页面清单 / ASCII 原型 / 组件清单 / 五态矩阵 / 断点布局 / 跨页流转 |
+| | `active/design.md` | 风格与长相：色彩 / 字体排版 / 间距栅格 / 形状深度 / 动效 / 图标图像 / 组件长相 / 各端主题映射 |
+| **L3** | `active/project.md` | 技术宪法（架构 / 选型 / 目录 / §一.1 前端组件库家族 / §六 视觉检查基建 / §九 视觉地基阶段 / 测试基建契约 / 部署契约 / 阶段与泳道） |
 | | `active/data.md` | 数据契约（interface ↔ DB 列） |
 | | `active/api.md` | 接口契约（method/path/入参/出参/错误码） |
-| **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单 |
+| **L4** | `active/gates.md` | QA 实测结果 + FAIL 清单（含 §2.4 V 段视觉结果） |
 | — | `active/bugs.md` | 未修复 bug 工作上下文（B-n 施工便签，常态为空） |
-| — | 根目录 `design.pen` | 前端可视化原型（pen 模式时视觉唯一出处；⭐加密文件只准 pencil MCP 读写） |
+| — | `.cc_code/design/` | 方向卡、风格样板板与样板板截图（`plan-uiux` 产物，不是项目代码；uiux 写） |
+| — | `.cc_code/test/visual/` | 视觉机器检查测试（qa 写）；`baseline/` 为截图基线（qa 独占写、入 git） |
+| — | `.cc_code/docs/qa/` | 逐轮验收报告与合集板（qa 写） |
 | — | `backup/` | 冷数据归档：change-log.md / milestone-log.md / `retired/` 退役原文（人看历史，AI 工作时禁读；格式见 `active/Agent.md` 归档规范） |
 | — | `references/` | 项目级经验资料库（INDEX 渐进式披露 + 主题文件 + `archive/` + `log/`；curator 结算后全自动整理，architect / dev 按需读，规则见 `active/Agent.md` §四第 7 条） |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） |
@@ -76,9 +82,9 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
 | — | `scripts/` | 散落脚本归档 |
 | — | `.cc_code_version` | 场域版本戳（决定 init 是否升级迁移） |
 
-> ⭐ `plan-feature` 是 MVP 交付后的**增量迭代支线**：主控只传话，先派 pm 把需求问通并经主人批准后落盘 L1 / L2，再派 architect 把技术方案问通并经主人批准后落盘 L3，均**就地收敛改写**对应小节（绝不碰 L4 与代码）。
+> ⭐ `plan-feature` 是 MVP 交付后的**增量迭代支线**：主控只传话，先派 pm 把需求问通并经主人批准后落盘 L1，再派 uiux 补新页的 `ux.md` / `design.md`（两档新版式规则见该命令正文），最后派 architect 把技术方案问通并经主人批准后落盘 L3，均**就地收敛改写**对应小节（绝不碰 L4 与代码）。
 >
-> 🖌️ **uiux 支线（前端可视化原型，可选）**：`/cc-code:plan-uiux`（风格锁 → 串行逐页派 uiux agent 画 design.pen → 主人逐页确认 → 自动保存）。分工：`ux.md` 是行为半边（清单/testid/流转/五态），`design.pen` 是视觉半边（布局/色值/组件长相），同一事实只落一处。
+> 🖌️ **uiux 支线（前端交互与长相，可选；只在规划侧）**：`/cc-code:plan-uiux` 两模式——模式一「定风格」（方向卡 → `design.md` 草稿 → 风格样板板 → 自检 → 主人「定了」→ 锁定）；模式二「改版」（qa 现状体检 → 目标 `design.md` → 改前改后对照样板板 → 「定了」）。分工判据：换一套皮肤仍成立 → `ux.md`（交互与布局）；换皮肤就会变 → `design.md`（风格与长相）。风格落地走 `/cc-code:agent-uiux`（编排 dev → qa），**不派 uiux**；旧项目根目录 `design.pen` 原地保留、不读不写不转换。
 >
 > 🐛 **debug 链路（bug 修复支线，需求明确但实现错了时用）**：`/cc-code:plan-debug`（不进 plan 模式，主控只传话：派 qa 复现取证并即时记 B-n → 派 dev 只读诊断 → qa 补全，记录不等批准；仅契约错 / 需求错 / 找不到期望出处 / 复现不了才停下交人裁决）→ `/cc-code:agent-debug`（只接 状态 = 待修复 的 B-n → dev 修 → qa 复测 + affected 精准回归，修复通过的硬条件 = 回归测试存在且通过）。与 `plan-feature` 的分界：那个处理**需求模糊**，debug 处理**需求明确但实现错了**；根因落在契约 / 需求上 → 主人裁决后由 architect / pm 改文档，再修。
 
@@ -89,14 +95,15 @@ pm ──► architect ──► dev ──► qa          旁路：uiux（只�
     ▲                                   │
     └───────── L4 验收 ◄────────────────┘
 
-  L4 只拿 L1 / L2 当尺子；codegraph 只准校准 L3，永不生成 L1 / L2 / L4
+  L4 只拿 L1 / L2 当尺子（L2 含 ux.md 与 design.md）；codegraph 只准校准 L3，永不生成 L1 / L2 / design / L4
 ```
 
-> 角色权限（pm 两产物边界等）唯一出处 = `active/Agent.md` §三，codegraph 谁能用到什么程度见其 codegraph 权限矩阵，此处不复述。索引由 init 静默建立、watcher 自动维护，人无需手动 sync。
+> 角色权限（pm 单产物边界、uiux 双文件边界等）唯一出处 = `active/Agent.md` §三，codegraph 谁能用到什么程度见其 codegraph 权限矩阵，此处不复述。索引由 init 静默建立、watcher 自动维护，人无需手动 sync。
 
 ## 📌 唯一真相源
 
 - 规则 → `.cc_code/active/prd.md`
+- 风格 → `.cc_code/active/design.md`（视觉数值唯一处）
 - 进度 → `.cc_code/active/status.md`
 - 契约 → `.cc_code/active/data.md` / `.cc_code/active/api.md`
 - 实测 → `.cc_code/active/gates.md`
