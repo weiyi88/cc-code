@@ -1,7 +1,7 @@
 {
   "name": "cc-code",
-  "version": "1.11.0",
-  "description": "给 AI 立规矩的开发工作流：规划→开发→测试→验收步步把关，16 个 skill 命令 + 6 个 agent 全程管到底，前端按一份设计规格锁风格、qa 视觉四层验收，仅一个 Stop hook 做保底，状态全落文件。双端支持 Claude Code / Codex。",
+  "version": "1.12.0",
+  "description": "给 AI 立规矩的开发工作流：规划→开发→测试→验收步步把关，17 个 skill 命令 + 6 个 agent 全程管到底，前端按一份设计规格锁风格、qa 视觉四层验收，验收通过一键规范交付合并请求，仅一个 Stop hook 做保底，状态全落文件。双端支持 Claude Code / Codex。",
   "skills": "./skills/",
   "author": {
     "name": "cc-code"

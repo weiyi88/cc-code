@@ -10,7 +10,7 @@
 ## 资产分布
 
 ```
-skills/      16 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
+skills/      17 个目录  → /cc-code:<name> 显式调用 或 自然语言自动触发
 agents/       6 个 .md → pm / architect / dev / qa / uiux / curator（角色 = agent：主控只编排、派谁谁就是当前角色；uiux 为 L2 双文件写者，只在规划侧出场；curator 为经验整理 agent，后台静默，是经验库唯一写者）
 hooks/        hooks.json + curator-reminder.sh（唯一的 Stop hook：经验整理保底提醒，只比时间戳，不调 AI、不联网）
 scripts/     init.sh + sync-codex.sh（codex 生成器）+ verify-codex.sh（codex 漂移校验）
@@ -23,6 +23,7 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 > 1.1.0 起 `assets/codex/` 回归 hooks —— 性质不同：0.5.0 删的是「自动写文件」的机械活，1.1.0 加的是「拦写操作」的守门护栏。
 > 1.10.0 起重新引入**唯一的 Stop hook**（`hooks/`，经验整理保底：只比 `gates.md` 与 curator 开工时间戳，不调 AI、不联网、同一次改动最多提醒一次）；0.5.0 的废除沿革保留，该 hook 不写任何文件内容。
 > 1.11.0 起新增**前端与视觉子系统**：`plan-uiux` ⇄ `agent-uiux` 一对新命令、`templates/design.md`、四份共用参考（`ui-gates` / `frontend-forms` / `dev-qa-loop` / `assertions`，后者由 agent-whole-qa 参考迁址）；pen 主链降级为方向卡可选介质。
+> 1.12.0 起新增**交付命令** `pr`（与 `deploy` 同为出口命令，配 `skills/pr/references/mr-template.md` 格式唯一出处）；主控的唯一显式例外改称「版本库操作」，交付只限该命令内；qa 新增「提交证据」一节。外部审查平台与 cc-code 的边界：pr 是唯一出口，打回与线上 bug 照常走 debug / feature 链。
 
 ## Codex 适配生成链（1.1.0）
 

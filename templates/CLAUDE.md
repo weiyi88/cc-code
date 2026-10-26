@@ -78,15 +78,10 @@ pm ──► uiux ──► architect ──► dev ──► qa
 | — | `references/` | 项目级经验资料库（INDEX 渐进式披露 + 主题文件 + `archive/` + `log/`；curator 结算后全自动整理，architect / dev 按需读，规则见 `active/Agent.md` §四第 7 条） |
 | — | `README.md` | 🧭 使用手册（每次 init 自动刷新到最新版，新手指南） |
 | — | `docs/` | 活跃文档（规格 / 指南 / QA 全量报告） |
-| — | `images/` | 截图（扁平存放） |
-| — | `scripts/` | 散落脚本归档 |
+| — | `images/` · `scripts/` | 截图（扁平存放）· 散落脚本归档 |
 | — | `.cc_code_version` | 场域版本戳（决定 init 是否升级迁移） |
 
-> ⭐ `plan-feature` 是 MVP 交付后的**增量迭代支线**：主控只传话，先派 pm 把需求问通并经主人批准后落盘 L1，再派 uiux 补新页的 `ux.md` / `design.md`（两档新版式规则见该命令正文），最后派 architect 把技术方案问通并经主人批准后落盘 L3，均**就地收敛改写**对应小节（绝不碰 L4 与代码）。
->
-> 🖌️ **uiux 支线（前端交互与长相，可选；只在规划侧）**：`/cc-code:plan-uiux` 两模式——模式一「定风格」（方向卡 → `design.md` 草稿 → 风格样板板 → 自检 → 主人「定了」→ 锁定）；模式二「改版」（qa 现状体检 → 目标 `design.md` → 改前改后对照样板板 → 「定了」）。分工判据：换一套皮肤仍成立 → `ux.md`（交互与布局）；换皮肤就会变 → `design.md`（风格与长相）。风格落地走 `/cc-code:agent-uiux`（编排 dev → qa），**不派 uiux**；旧项目根目录 `design.pen` 原地保留、不读不写不转换。
->
-> 🐛 **debug 链路（bug 修复支线，需求明确但实现错了时用）**：`/cc-code:plan-debug`（不进 plan 模式，主控只传话：派 qa 复现取证并即时记 B-n → 派 dev 只读诊断 → qa 补全，记录不等批准；仅契约错 / 需求错 / 找不到期望出处 / 复现不了才停下交人裁决）→ `/cc-code:agent-debug`（只接 状态 = 待修复 的 B-n → dev 修 → qa 复测 + affected 精准回归，修复通过的硬条件 = 回归测试存在且通过）。与 `plan-feature` 的分界：那个处理**需求模糊**，debug 处理**需求明确但实现错了**；根因落在契约 / 需求上 → 主人裁决后由 architect / pm 改文档，再修。
+> 🧭 **命令怎么选**：需求模糊 → `plan-feature`；需求明确但实现错了 → `plan-debug` → `agent-debug`；定风格 / 改版 → `plan-uiux` → `agent-uiux`；交付审查平台 → `pr`；上线 → `deploy`。各命令的流程与门只在命令正文，完整用法见 `.cc_code/README.md`。
 
 ### 信息流铁律
 
@@ -102,11 +97,4 @@ pm ──► uiux ──► architect ──► dev ──► qa
 
 ## 📌 唯一真相源
 
-- 规则 → `.cc_code/active/prd.md`
-- 风格 → `.cc_code/active/design.md`（视觉数值唯一处）
-- 进度 → `.cc_code/active/status.md`
-- 契约 → `.cc_code/active/data.md` / `.cc_code/active/api.md`
-- 实测 → `.cc_code/active/gates.md`
-- 宪法 → `.cc_code/active/Agent.md`
-
-禁止凭记忆作答；禁止向用户报告归档细节。
+规则 → `prd.md` · 风格 → `design.md`（视觉数值唯一处）· 进度 → `status.md` · 契约 → `data.md` / `api.md` · 实测 → `gates.md` · 宪法 → `Agent.md`（均在 `.cc_code/active/`）。禁止凭记忆作答；禁止向用户报告归档细节。

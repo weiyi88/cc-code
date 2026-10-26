@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.11.0** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.12.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 宪法原则：**只对结果负责，不在乎过程**（结果是否符合需求是唯一尺子）。
@@ -20,7 +20,7 @@
 - [快速开始](#快速开始)
 - [Codex CLI 适配（1.1.0）](#codex-cli-适配110)
 - [可选增强：codegraph](#可选增强codegraph)
-- [Skill 一览（16 个）](#skill-一览16-个)
+- [Skill 一览（17 个）](#skill-一览17-个)
 - [Agent（6 个）](#agent6-个)
 - [文件分层（L0~L4）](#文件分层l0l4)
 - [目录架构](#目录架构)
@@ -152,6 +152,7 @@ uiux 只在规划侧出场（`plan-mvp` / `plan-feature` / `plan-uiux`），写 
 | `agent-whole-qa` | ✅ 默认 | 功能模块 fan-out | 多个 qa；修复轮多个 dev | 清点完成即开；Claude Code 端走 Workflow，工具不可用则回退 Agent 多开 | 模块数 / 修复组 ≤3 |
 | `just-do-it` | ❌ | — | — | 改动太小，开泳道不划算 | 1 |
 | `deploy` | ❌ | — | — | 单命令串行 | 1 |
+| `pr` | ❌ | — | — | 单命令串行 | 1 |
 
 **绝不并行的三件事**：dev 与 qa（两道栅栏隔开）、两个阶段、同一份账本的两个写者。
 
@@ -200,6 +201,8 @@ uiux 只在规划侧出场（`plan-mvp` / `plan-feature` / `plan-uiux`），写 
              过程产物不落盘（change-log 留痕） ·  逐轮验收详情 → docs/qa/
              过期内容 → backup/retired/<源文件名>.md（原文整段搬走, 一字不丢）
 ```
+
+**1.12.0：** 新增 `/cc-code:pr`——把已验收的改动交给外部审查平台：规范 commit → 推送功能分支 → 带描述建合并请求（改了什么 / 怎么测的 / 出事怎么撤 / 关联规格 / 影响面，高风险加决策日志），然后停手。qa 新增「提交证据」：重跑本次断言的命令，原始输出与截图写成证据文件，主控原样拼进描述、不改一字。主控的唯一显式例外改为「版本库操作」，交付只限 pr 命令内、不碰主干。被打回或线上 bug 照常走 debug / feature 链。入口说明 `CLAUDE.md` 压到 100 行以内。skill 16 → 17，agent 6 不变。
 
 **1.11.0：** 前端 UI/UX 全链路上线——十种前端形态由 pm 从产品雏形推断（不发问卷），默认 React + Next.js + shadcn 家族；一个项目只用一个组件库家族、全项目一份 `active/design.md`（L2 视觉半边，uiux 写），数值灌进各端主题。新增 `plan-uiux`（模式一 定风格 / 模式二 改版，唯一视觉门「定了」）与 `agent-uiux`（把「已定未实现」落进代码），uiux 改为 opus 且只在规划侧出场；qa 新增**视觉第四层**（VH/VM/VS 三级判词、截图基线、主题漂移、合集板），`agent-mvp` 首阶段固定为**视觉地基**。pen 主链降级为方向卡可选介质（旧 `design.pen` 原地保留、不读不写不转换）。skill 15 → 16，agent 6 不变，模板骨架 9 → 10。
 
@@ -358,7 +361,7 @@ pm ──► uiux ──► architect ──► dev ──► qa
 /plugin install cc-code
 ```
 
-安装后自动获得 `/cc-code:*` 命令族、16 个 skill、6 个配套 agent 与 1 个 Stop hook。
+安装后自动获得 `/cc-code:*` 命令族、17 个 skill、6 个配套 agent 与 1 个 Stop hook。
 
 ## 完整生命周期
 
@@ -384,6 +387,9 @@ pm ──► uiux ──► architect ──► dev ──► qa
        ↓
 /cc-code:agent-whole-qa      全量验收（断言 + 五态 + 元素 + 接口 + 视觉第四层，FAIL≤3轮回环；
                        修复按文件分组并发；合集板不卡流程）
+       ↓
+/cc-code:pr         交付审查平台（规范 commit → 推送功能分支 → 带描述建合并请求，提交后停手；
+                       走外部平台流水线的项目用它，平台负责审查与合并）
        ↓
 /cc-code:deploy     上线（读 project.md 部署契约，任意平台组合；qa 线上冒烟含
                        390 / 1440 截图与性能采样，出事 /cc-code:deploy rollback 一键回退）
@@ -480,7 +486,7 @@ $cc-code:plan-mvp 触发
 
 - Claude 侧 `allowed-tools` 工具白名单在 Codex 无等价物，由角色沙箱（`sandbox_mode`）承接主要权限边界。
 - skill 正文提及的 `EnterPlanMode` 等 Claude 工具名，Codex 读到时会忽略 —— 写盘安全由上表护栏兜底，流程安全靠人按序操作。
-- 16 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。新增命令 `agent-uiux` 的显式闸门随生成链产出，`verify-codex.sh` 会核对每个命令的闸门覆盖。
+- 17 个 skill 描述可能被 Codex 的上下文预算自动压短（隐式触发灵敏度略降，`$` 显式调用不受影响）。新增命令 `pr` 的显式闸门随生成链产出，`verify-codex.sh` 会核对每个命令的闸门覆盖。
 
 ## 可选增强：codegraph
 
@@ -523,7 +529,7 @@ $cc-code:plan-mvp 触发
 2. **测试必须 import 被测源码** —— 静态 `import` ✅ 动态 `await import()` ✅ 纯 HTTP 打接口 ⛔（无 import 边可追）。
 3. **非标准命名必须登记 glob** —— 默认只认 `*.spec.*` / `*.test.*` / `__tests__/`，其余需 `--filter`。
 
-## Skill 一览（16 个）
+## Skill 一览（17 个）
 
 **框架核心（管流程）**
 
@@ -543,6 +549,7 @@ $cc-code:plan-mvp 触发
 | `short` | `/cc-code:short` | 简单问题只回一句话（≤50 字），绝不啰嗦 |
 | `just-do-it` | `/cc-code:just-do-it` | 小改动一句话就干：dev 写完 qa 验，记一笔就完事；命中前端文件只做静态扫描、只记录 |
 | `deploy` | `/cc-code:deploy` | 按部署契约把各组件发上线，qa 线上验过才算数（含 390 / 1440 截图与性能采样），出事一键回滚 |
+| `pr` | `/cc-code:pr` | 点一下就交付：已验收的改动按规范 commit、推送功能分支、带五项描述建合并请求；证据只取 qa 实测原文 |
 
 **工具外挂（干活的，与状态机无关）**
 
@@ -603,7 +610,7 @@ $cc-code:plan-mvp 触发
 ```
 cc-code/
 ├── .claude-plugin/   marketplace.json + plugin.json
-├── skills/           16 个 skill 目录
+├── skills/           17 个 skill 目录
 ├── agents/           6 个 agent（pm / architect / dev / qa / uiux / curator）
 ├── scripts/          init.sh（三轨脚手架 + 散落物迁移 + 升级归档/清点/归位，零 rm）/ sync-codex.sh / verify-codex.sh
 ├── templates/        md 骨架（L0~L4 九件（含 design.md）+ bugs.md debug 施工便签 + 经验库 INDEX / 主题文件骨架）
