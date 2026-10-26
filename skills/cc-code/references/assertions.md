@@ -1,6 +1,6 @@
 # 标准断言库
 
-> 被 `agent-whole-qa` 的 ❷ 阶段引用。每类元素/接口的**最小必测集**。
+> **本文件是全部 qa 命令共用的断言库**（`agent-mvp` / `agent-feature` / `agent-uiux` / `agent-debug` 的 QA 段，以及 `agent-whole-qa` 全量清算、`just-do-it` 的验收都引用这里）。每类元素/接口的**最小必测集**。
 > 这些是**通用底线**；`prd.md` §1.5 的业务断言优先级更高，两者都要过。
 
 ## 一、页面级：五态矩阵
@@ -123,3 +123,5 @@
 | G3 | 页面无 `undefined` / `null` / `NaN` / `[object Object]` 字面输出 |
 | G4 | 无中文乱码、无未翻译的 i18n key（如 `common.button.save` 直接显示） |
 | G5 | 无布局破裂（元素溢出容器、遮挡关键操作） |
+
+> 视觉规则与编号只在 `ui-gates.md`，不在此复制。

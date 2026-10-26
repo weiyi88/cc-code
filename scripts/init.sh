@@ -26,9 +26,9 @@ PLUGIN_VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1
                   "$PLUGIN_ROOT/.claude-plugin/plugin.json" | head -1)"
 PLUGIN_VERSION="${PLUGIN_VERSION:-unknown}"
 
-# 规范 8 文件（L0~L4），升级清点的分母；bugs.md 为 debug 链施工便签（0.13.0 起，
-# 新建与升级都补建，但不计入「规范位缺失」分母 —— 常态为空，缺了无碍主流程）
-CANON="Agent.md status.md prd.md ux.md project.md data.md api.md gates.md"
+# 规范 9 文件（L0~L4），升级清点的分母；design.md 是 L2 视觉半边（1.11.0 起，唯一写者 uiux）。
+# bugs.md 为 debug 链施工便签（0.13.0 起，新建与升级都补建，但不计入「规范位缺失」分母 —— 常态为空，缺了无碍主流程）
+CANON="Agent.md status.md prd.md ux.md design.md project.md data.md api.md gates.md"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 log()  { echo -e "${GREEN}[cc-code]${NC} $1"; }
@@ -67,12 +67,52 @@ ensure_bugs() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════
+# 设计目录与截图基线目录（1.11.0 新增）—— 前端视觉链的落盘锚
+#   .cc_code/design/                 方向卡、风格样板板与其截图（uiux 写，入 git）
+#   .cc_code/test/visual/baseline/   截图基线（qa 独占写，入 git）
+# 只建目录、绝不动内容；两处都必须入库，忽略口径见 update_gitignore()。
+# ══════════════════════════════════════════════════════════════════════════
+ensure_design_dirs() {
+  local made=0 d
+  for d in "$TARGET/design" "$TARGET/test/visual/baseline"; do
+    [ -d "$d" ] || { mkdir -p "$d"; made=1; }
+  done
+  [ "$made" -eq 1 ] && \
+    log "已建设计目录 .cc_code/design/ 与截图基线目录 .cc_code/test/visual/baseline/（两者都入 git）"
+  return 0
+}
+
+# ══════════════════════════════════════════════════════════════════════════
+# 机械前端探测（1.11.0 新增，升级轨与清点用）—— 只读，不改任何文件
+#   0 = 有前端；1 = 无前端
+#   信号一：package.json 含前端框架 / 编译链依赖
+#   信号二：源码里有页面组件文件（.tsx / .jsx / .vue / .svelte / .wxml）
+# 无前端 → design.md 只建骨架并标「不适用（无前端）」，⛔ 不派 uiux 做视觉迁移。
+# ══════════════════════════════════════════════════════════════════════════
+has_frontend() {
+  local pj="$PROJECT_ROOT/package.json" hit
+  if [ -f "$pj" ] && grep -Eq '"(react|react-dom|vue|nuxt|next|svelte|@angular/core|solid-js|preact|taro|@tarojs/[a-z-]+|uni-app|vite)"' "$pj"; then
+    return 0
+  fi
+  hit="$(find "$PROJECT_ROOT" -maxdepth 3 \
+       \( -name node_modules -o -name .git -o -name .cc_code -o -name dist -o -name build -o -name .next \) -prune -o \
+       -type f \( -name '*.tsx' -o -name '*.jsx' -o -name '*.vue' -o -name '*.svelte' -o -name '*.wxml' \) \
+       -print -quit 2>/dev/null || true)"
+  [ -n "$hit" ]
+}
+
+# ══════════════════════════════════════════════════════════════════════════
 # 使用手册刷新（每次 init 无条件同步最新版，防旧手册误导新手）
 # ══════════════════════════════════════════════════════════════════════════
 refresh_handbook() {
-  [ -f "$TEMPLATES/cc-code-README.md" ] && \
-    cp "$TEMPLATES/cc-code-README.md" "$TARGET/README.md" && \
+  # 手册版本号以插件版本覆盖模板里的版本头，避免手册与场域版本脱节
+  if [ -f "$TEMPLATES/cc-code-README.md" ]; then
+    sed "s/（cc-code [0-9][0-9.]*）/（cc-code ${PLUGIN_VERSION}）/" \
+      "$TEMPLATES/cc-code-README.md" > "$TARGET/README.md"
     log "已刷新 .cc_code/README.md 使用手册（当前版本 ${PLUGIN_VERSION}）"
+  fi
+  # 设计目录与截图基线目录就位（1.11.0）
+  ensure_design_dirs
   # 经验库骨架就位（项目级 references/ + 个人级 ~/.cc-code/lessons/，1.10.0 起由 curator 写）
   ensure_experience_libs
   # backup/retired/ 就位（1.7.0 新增退役原文区）—— active 过期内容的唯一去处，
@@ -216,23 +256,6 @@ JSONEOF
   rm -f "$tmp"
 }
 
-# ══════════════════════════════════════════════════════════════════════════
-# design.pen 前端原型锚点（1.0.0 新增）—— pen 可视化原型链的落盘锚。
-# 只在 AI 问询主人「要 pen 原型吗」并得到肯定答复后创建（本函数不主动跑）。
-# 位置：项目根目录（与 CLAUDE.md 同级）—— .cc_code/ 是点开头隐藏目录，
-#       pen 客户端的文件选择器打不开；且 design.pen 是交付物不是内部状态，应进 git。
-# 形态：0 字节空文件。pen 应用打开它后首次保存（osascript Cmd+S）才写入真身。
-# ⛔ 绝不覆盖已存在的 design.pen（里面可能有主人 5 天没落盘的心血）。
-# ══════════════════════════════════════════════════════════════════════════
-ensure_design_pen() {
-  if [ -e "$PROJECT_ROOT/design.pen" ]; then
-    log "根目录已存在 design.pen，跳过（不覆盖）"
-    return 0
-  fi
-  touch "$PROJECT_ROOT/design.pen"
-  log "已创建根目录 design.pen（0 字节锚点，pen 应用首存后生效）"
-}
-
 IS_GIT_REPO=0
 if git -C "$PROJECT_ROOT" rev-parse --git-dir >/dev/null 2>&1; then IS_GIT_REPO=1; fi
 
@@ -370,18 +393,33 @@ update_gitignore() {
     } >> "$GI"
     log "已追加本机专属文件到 .gitignore"
   fi
-  if grep -qF '.cc_code/backup/' "$GI"; then
-    return 0
+  if ! grep -qF '.cc_code/backup/' "$GI"; then
+    {
+      echo ""
+      echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
+      echo ".cc_code/backup/"
+      echo ""
+      echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
+      echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
+    } >> "$GI"
+    log "已追加 .cc_code/backup/ 到 .gitignore"
   fi
-  {
-    echo ""
-    echo "# cc-code 冷归档（过程报告 / 历史快照）不入库"
-    echo ".cc_code/backup/"
-    echo ""
-    echo "# ⛔ 注意：.cc_code/test/ 是测试代码（源码，必须入库），绝不可 ignore"
-    echo "#    被 ignore → codegraph 不索引 → affected 精准回归永久失效"
-  } >> "$GI"
-  log "已追加 .cc_code/backup/ 到 .gitignore"
+  # 1.11.0：只忽略临时产物子目录；设计目录与视觉基线必须入库。
+  # ⛔ 不许用 *.png / screenshots/ 这类全局通配 ignore 截图 —— 基线会一起消失。
+  if ! grep -qF '.cc_code/docs/qa/artifacts/' "$GI"; then
+    {
+      echo ""
+      echo "# cc-code 临时产物（只忽略临时子目录，⛔ 不许用 *.png / screenshots/ 全局通配）"
+      echo ".cc_code/docs/qa/artifacts/"
+      echo "coverage/"
+      echo "test-results/"
+      echo ""
+      echo "# ⛔ 必须入库：.cc_code/design/（方向卡、风格样板板与截图）"
+      echo "# ⛔ 必须入库：.cc_code/test/visual/ 与 baseline/（视觉测试与截图基线）"
+      echo "#    基线被 ignore → 视觉回归与主题漂移校验永久失效"
+    } >> "$GI"
+    log "已追加临时产物忽略规则（设计目录与截图基线仍入库）"
+  fi
 }
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -471,7 +509,7 @@ archive_legacy() {
 # Agent.md / 根目录 CLAUDE.md / AGENTS.md 是插件规范文件，唯一写者 = 本脚本：
 #   旧版先 cp 进 D1 快照目录的 spec/，再 cp 插件模板新版覆盖；内容已一致则不动。
 # 项目不自定义 Agent.md 权限（项目差异一律写 project.md，由 architect 落盘）。
-# ⛔ 只覆盖这三个规范文件；任何角色文件（prd/ux/project/data/api/gates/bugs/status）绝不碰。
+# ⛔ 只覆盖这三个规范文件；任何角色文件（prd/ux/design/project/data/api/gates/bugs/status）绝不碰。
 # ⛔ 零 rm：只 cp 快照 + cp 覆盖。
 # ══════════════════════════════════════════════════════════════════════════
 overwrite_spec() {   # $1=现有文件 $2=插件模板 $3=快照内文件名
@@ -511,10 +549,18 @@ refresh_spec_files() {
 # ══════════════════════════════════════════════════════════════════════════
 fill_missing_skeleton() {
   local base
-  for base in status.md prd.md ux.md project.md data.md api.md gates.md; do
+  for base in status.md prd.md ux.md design.md project.md data.md api.md gates.md; do
     if [ ! -f "$TARGET/active/$base" ] && [ -f "$TEMPLATES/$base" ]; then
-      cp "$TEMPLATES/$base" "$TARGET/active/$base"
-      log "  缺失骨架已补建（空模板，内容由该文件写者填）：active/$base"
+      if [ "$base" = design.md ] && ! has_frontend; then
+        # 机械探测无前端：只建骨架并把状态行标成「不适用（无前端）」，⛔ 不派 uiux
+        awk 'BEGIN{done=0}
+             /^\| \*\*状态\*\* \|/ && !done { print "| **状态** | 不适用（无前端） |"; done=1; next }
+             { print }' "$TEMPLATES/design.md" > "$TARGET/active/design.md"
+        log "  缺失骨架已补建（机械探测无前端，状态标「不适用（无前端）」）：active/design.md"
+      else
+        cp "$TEMPLATES/$base" "$TARGET/active/$base"
+        log "  缺失骨架已补建（空模板，内容由该文件写者填）：active/$base"
+      fi
     fi
   done
 }
@@ -523,10 +569,10 @@ fill_missing_skeleton() {
 # 升级 D2 —— 清点（四类差异，落 upgrade_audit.md 交各文件写者 agent 迁移）
 # ══════════════════════════════════════════════════════════════════════════
 audit_layout() {
-  local YM AUDIT rows_missing rows_stray rows_extra rows_ok f base
+  local YM AUDIT rows_missing rows_stray rows_extra rows_ok rows_front f base
   YM="$(date +%Y-%m)"
   AUDIT="$TARGET/backup/$YM/upgrade_audit.md"
-  rows_missing=""; rows_stray=""; rows_extra=""; rows_ok=""
+  rows_missing=""; rows_stray=""; rows_extra=""; rows_ok=""; rows_front=""
   local _old; _old="$(read_stamp)"
 
   # ① 规范位在否
@@ -560,6 +606,21 @@ audit_layout() {
   # ④ references 目录就位检查（0.8.0 新增经验资料库）→ 统一走 refresh_handbook
   refresh_handbook
 
+  # ⑤ 前端与视觉机械探测（1.11.0）—— 只报，不迁；迁移是 uiux 的理解力活
+  #   ① 旧设计系统段：老 ux.md 把色值 / 字体 / 圆角 / 阴影塞在 ux.md 里，需迁 design.md
+  if [ -f "$TARGET/active/ux.md" ] && has_frontend && \
+     grep -qE '^#{2,4}[^#].*(设计系统|视觉规格|样式规范|色彩|字体|圆角|阴影)' "$TARGET/active/ux.md"; then
+    rows_front+="| \`active/ux.md\` | **旧设计系统段**（色值 / 字体 / 圆角 / 阴影） | 由 uiux 原文整段迁入 \`active/design.md\` 对应小节，再从 ux.md 移除 |"$'\n'
+  fi
+  #   ② 旧 pen 项目：design.pen 存在 → 主链已退役，原地保留、不读不写不转换
+  if [ -e "$PROJECT_ROOT/design.pen" ]; then
+    rows_front+="| \`design.pen\`（根目录） | **遗留 design.pen**（pen 主链 1.11.0 起退役） | 原地保留：⛔ 不读不写不转换；视觉事实源改为 \`active/design.md\`（uiux 补） |"$'\n'
+  fi
+  #   ③ 无前端：只建骨架并标「不适用（无前端）」，不派 uiux
+  if ! has_frontend; then
+    rows_front+="| \`active/design.md\` | **机械探测：无前端** | 只建骨架并标「不适用（无前端）」，⛔ 不派 uiux 做视觉迁移 |"$'\n'
+  fi
+
   {
     echo "# 升级清点报告 ($(date +%Y-%m-%d))"
     echo ""
@@ -583,6 +644,10 @@ audit_layout() {
     echo "## ④ 规范位已就位（仍需 AI 校验缺失段落）"; echo ""
     echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
     [ -n "$rows_ok" ] && printf '%s' "$rows_ok" || echo "| — | 无 | — |"
+    echo ""
+    echo "## ⑤ 前端与视觉探测（机械，只报不迁）"; echo ""
+    echo "| 文件 | 判定 | 处置 |"; echo "| --- | --- | --- |"
+    [ -n "$rows_front" ] && printf '%s' "$rows_front" || echo "| — | 无 | — |"
   } > "$AUDIT"
 
   log "D2 清点完成 → backup/$YM/upgrade_audit.md"
@@ -602,7 +667,7 @@ relocate_superseded() {
   for rel in "$@"; do
     src="$TARGET/$rel"
     [ -e "$src" ] || { warn "  跳过（不存在）：$rel"; continue; }
-    # 规范 8 文件本体绝不归位
+    # 规范 9 文件本体绝不归位
     if printf ' %s ' $CANON | grep -qF " $(basename "$rel") " && [ "${rel#active/}" != "$rel" ]; then
       warn "  ⛔ 拒绝：$rel 是规范位文件，绝不归位"; continue
     fi
@@ -623,7 +688,6 @@ relocate_superseded() {
 # 子命令入口（供 AI 在升级 D6 / D7 阶段调用）
 #   bash init.sh --relocate <相对路径...>   冗余归位（mv 进 superseded/，零删除）
 #   bash init.sh --stamp                    盖场域版本戳
-#   bash init.sh --design-pen               建根目录 design.pen 锚点（1.0.0 pen 链）
 #   bash init.sh --codex                    分发 codex 护栏: AGENTS.md 软链 + hooks(plan-lock 拦截) + agents(角色沙箱)
 # ══════════════════════════════════════════════════════════════════════════
 case "$SUBCMD" in
@@ -657,6 +721,7 @@ case "$SUBCMD" in
     log "  AGENTS.md → CLAUDE.md 软链（宪法双端同源）"
     log "  .codex/hooks.json + hooks/gate.sh（plan-lock 写盘拦截）"
     log "  .codex/agents/*.toml（pm/architect/dev/qa/uiux/curator 角色沙箱）"
+    log "  命令闸门 skills/*/agents/openai.yaml（16 个命令，含新命令 agent-uiux）随插件分发，本命令只落角色沙箱与 hooks"
     warn "codex 首次运行会对 gate.sh 要求信任审查 —— /hooks 里 trust 一次即生效。"
     warn "plan 模式用法: touch .cc_code/.runtime/plan-lock 开启; 出关向主人确认后 rm。"
     exit 0 ;;
@@ -668,9 +733,6 @@ case "$SUBCMD" in
   --stamp)
     [ -d "$TARGET" ] || { warn "无 .cc_code/，无处盖戳"; exit 1; }
     stamp_version
-    exit 0 ;;
-  --design-pen)
-    ensure_design_pen
     exit 0 ;;
 esac
 
@@ -713,8 +775,11 @@ if [ -f "$TARGET/active/Agent.md" ]; then
   warn "══════════ 脚手架侧完成，以下是 AI 的活 ══════════"
   warn "主控必须按 /cc-code:init 第 2C 步「升级迁移协议」继续（主控只派不写）："
   warn "  已完成    Agent.md / CLAUDE.md / AGENTS.md 已机械覆盖为插件新版（旧版在 D1 快照 spec/），脚本不改任何角色文件内容"
-  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，按文件派写者 agent（prd/ux→pm、project/data/api→architect、gates/bugs→qa），status 主控自己写"
-  warn "  D4 补层   同上，各写者按 templates/ 骨架补齐自己的文件"
+  warn "  D3 迁移   读 backup/$YM/upgrade_audit.md，按文件派写者 agent（prd→pm；ux/design→uiux；project/data/api→architect；gates/bugs→qa），顺序 pm→uiux→architect→qa；status 主控自己写"
+  warn "  D4 补层   同上，各写者按 templates/ 骨架补齐自己的文件；design.md 归 uiux（⛔ 脚本不机械覆盖角色文件）"
+  if ! has_frontend; then
+    warn "  机械探测   本项目无前端 → design.md 只建骨架并标「不适用（无前端）」，⛔ 不派 uiux 做视觉迁移"
+  fi
   warn "  D5 校验门 各写者自检交回，主控只跑机械检查（grep / 计数），未全命中即停手报清单，禁止归位"
   warn "  D6 归位   校验通过 → bash init.sh --relocate <路径...> 把旧物 mv 进 superseded/"
   warn "  D7 盖戳   bash init.sh --stamp"
@@ -724,13 +789,15 @@ fi
 
 log "在 $PROJECT_ROOT 创建 .cc_code/ 目录树..."
 mkdir -p "$TARGET/active" "$TARGET/backup" "$TARGET/backup/retired" "$TARGET/docs/qa" \
-         "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test"
+         "$TARGET/images" "$TARGET/scripts" "$TARGET/references" "$TARGET/test" \
+         "$TARGET/design" "$TARGET/test/visual/baseline"
 
-# 热区骨架（8 个 active 文件，按 L0~L4 分层）
+# 热区骨架（9 个 active 文件，按 L0~L4 分层）
 cp "$TEMPLATES/Agent.md"      "$TARGET/active/Agent.md"      # L0 控制
 cp "$TEMPLATES/status.md"     "$TARGET/active/status.md"     # L0 控制
 cp "$TEMPLATES/prd.md"        "$TARGET/active/prd.md"        # L1 意图
-cp "$TEMPLATES/ux.md"         "$TARGET/active/ux.md"         # L2 表现
+cp "$TEMPLATES/ux.md"         "$TARGET/active/ux.md"         # L2 表现（交互与布局）
+cp "$TEMPLATES/design.md"     "$TARGET/active/design.md"     # L2 表现（风格与长相，uiux 写）
 cp "$TEMPLATES/project.md"    "$TARGET/active/project.md"    # L3 实现
 cp "$TEMPLATES/data.md"       "$TARGET/active/data.md"       # L3 实现
 cp "$TEMPLATES/api.md"        "$TARGET/active/api.md"        # L3 实现
@@ -747,7 +814,7 @@ mkdir -p "$TARGET/backup/$(date +%Y-%m)"
 #   - 旧项目：先备份 legacy → backup/YYYY-MM/CLAUDE.md.legacy，再覆盖
 #   - 新项目：直接生成
 #   注：旧 CLAUDE.md 的内容分拆（理解力活）：主控在 /cc-code:init 内只做原文分拣，
-#       再按 pm → architect → qa 顺序派各文件写者落盘（主控不写角色文件）。
+#       再按 pm → uiux → architect → qa 顺序派各文件写者落盘（主控不写角色文件）。
 LEGACY_CLAUDE="$PROJECT_ROOT/CLAUDE.md"
 YM="$(date +%Y-%m)"
 if [ -f "$LEGACY_CLAUDE" ]; then
@@ -767,9 +834,11 @@ ensure_codegraph   # ⭐0.10.0：codegraph 可选增强静默装载（任何分�
 stamp_version   # ⭐新建即盖戳，否则下次 init 会误判为待升级
 
 log "脚手架完成："
-log "  active/   L0 Agent status │ L1 prd │ L2 ux │ L3 project data api │ L4 gates"
-log "  docs/qa/     全量验收报告（agent-whole-qa 产出）"
+log "  active/   L0 Agent status │ L1 prd │ L2 ux design │ L3 project data api │ L4 gates"
+log "  docs/qa/     全量验收报告 + 合集板（agent-whole-qa / qa 产出）"
 log "  test/     ⭐测试代码（源码，必须入库；affected 精准回归的索引基础）"
+log "  test/visual/baseline/  截图基线（qa 独占写，必须入库）"
+log "  design/     方向卡与风格样板板（uiux 写，不是项目代码，必须入库）"
 log "  images/ scripts/  截图归档 + 散落脚本"
 log "  references/  项目经验库（INDEX + archive + log，curator 写）；个人库 ~/.cc-code/lessons/ 同结构"
 log "  backup/   冷数据归档（旧项目含 CLAUDE.md.legacy + migration_manifest.md）"

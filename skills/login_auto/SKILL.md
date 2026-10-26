@@ -326,7 +326,12 @@ export function validateOtp(otp: string): boolean {
 
 ## Phase 2: 前端 UI
 
-> 本 skill 不绑定 UI 库。下方代码用 React + 原生表单示例，项目可按自身 UI 库（shadcn/ui、MUI、Ant Design 等）适配。
+> **视觉约束（本段只做静态扫描也适用，⛔ 不得绕过项目视觉门）：**
+> - Auth 页面的颜色、字号、间距、圆角、阴影只取项目主题与已选家族（数值来自 `.cc_code/active/design.md`，家族与主题入口来自 `.cc_code/active/project.md` §一.1）；⛔ 在主题入口之外写色值、⛔ 混第二套家族或第二套图标。
+> - 无锁定的设计规格（`design.md` 不存在或状态非「已锁定」）→ **停下，交回主控**（先生成或锁定风格，走 `plan-uiux`），⛔ 自行发明风格、⛔ 用示例样式充当项目风格。开工先以 `.cc_code/active/status.md` 的「风格：」为准：`已锁` → 放行（`design.md` §0 仍是「改版待实现」属 `agent-uiux` 收口过渡态，以坐标行为准，对应关系唯一出处 = `design.md` §0.2）；`已定未实现` → 停下交回主控走 `agent-uiux`。
+> - 本段视觉验收归 qa 视觉层，规则与判词唯一出处 = `../cc-code/references/ui-gates.md`；本 skill ⛔ 自判风格、⛔ 改基线或阈值。
+
+> 本 skill 不绑定 UI 库。下方代码用 React + 原生表单示例，项目只按自身已选的单一组件库家族适配（家族与版本见 `project.md` §一.1）。
 
 ### 2.1 AuthModal 视图状态机
 

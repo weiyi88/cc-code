@@ -30,13 +30,13 @@ disable-model-invocation: true
 bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" "$(pwd)"
 ```
 
-脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/{plans,qa}/ images/ scripts/ references/` + **8 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `project data api` / `gates`）+ `bugs.md`（0.13.0 起，debug 链施工便签，常态为空）+ `references/` 经验库骨架（`INDEX.md` + `archive/` + `log/`，见下「经验库与权限」）+ **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版）+ **版本戳**。Track C 搬散落物 + 补建缺失的 `bugs.md` + 刷新手册 + 补建经验库骨架与权限 + **主控跑 D4 轻量骨架体检（只读报告，不改文件）**。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的经验库骨架与 `bugs.md`，D2.5 之后合并权限）。
+脚本按三轨自动分流。Track B/A 生成 `active/ backup/ docs/qa/ images/ scripts/ references/ design/ test/visual/baseline/` + **9 个 active 模板骨架**（按 L0~L4 分层：`Agent status` / `prd` / `ux` / `design` / `project data api` / `gates`）+ `bugs.md`（0.13.0 起，debug 链施工便签，常态为空）+ `references/` 经验库骨架（`INDEX.md` + `archive/` + `log/`，见下「经验库与权限」）+ **根目录 `CLAUDE.md` 入口引导** + **`.cc_code/README.md` 使用手册**（每次 init 无条件刷新到最新版，版本号取插件版本）+ **版本戳**。Track C 搬散落物 + 补建缺失的 `bugs.md` + 刷新手册 + 补建经验库骨架与权限 + 补建设计目录与截图基线目录 + **主控跑 D4 轻量骨架体检（只读报告，不改文件）**。Track D 见第 2C 步（脚本 D2 阶段自动补建缺失的经验库骨架与 `bugs.md`，D2.5 之后合并权限）。
 
 子命令（供 AI 在升级阶段调用）：
 
 | 命令 | 用途 |
 | --- | --- |
-| `bash init.sh --relocate <相对路径...>` | 冗余归位：`mv` 进 `backup/YYYY-MM/superseded/`。**零删除**，且拒绝归位规范 8 文件 |
+| `bash init.sh --relocate <相对路径...>` | 冗余归位：`mv` 进 `backup/YYYY-MM/superseded/`。**零删除**，且拒绝归位规范 9 文件 |
 | `bash init.sh --stamp` | 盖版本戳。**仅在 D5 校验门全过后才允许调用** |
 
 ### 经验库与权限（⭐1.10.0 新增，三轨通用，脚本机械动作，幂等）
@@ -108,24 +108,21 @@ CLAUDE.md 处理（init.sh 自动完成，机械活）：
 
 ### `.cc_code/test/` 是测试代码目录（⛔ 绝不 ignore）
 
-`init.sh` 新建 `.cc_code/test/`，且 `update_gitignore()` 只 ignore `backup/`，并写入注释警告。**测试代码是源码，被 ignore 就不进 codegraph 索引 → `affected` 永久失效**。该 ignore 的是测试产物（`coverage/` / `*.png`），不是测试代码。测试 glob 由 Architect 登记在 `project.md` §六。
+`init.sh` 新建 `.cc_code/test/`，且 `update_gitignore()` 只 ignore `backup/` 与**临时产物子目录**（`.cc_code/docs/qa/artifacts/`、`coverage/`、`test-results/`），并写入注释警告。**测试代码是源码，被 ignore 就不进 codegraph 索引 → `affected` 永久失效**。同样必须入库的还有：`.cc_code/design/`（方向卡与样板板）、`.cc_code/test/visual/`（视觉测试）与 `baseline/`（截图基线）；⛔ 不许用 `*.png` / `screenshots/` 全局通配忽略截图。测试 glob 由 Architect 登记在 `project.md` §六。
 
-## 第 2B' 步：design.pen 原型意向问询（⭐1.0.0 新增，前端项目专属）
+## 第 2B' 步：前端风格与视觉目录（⭐1.11.0 改）
 
-脚本跑完后，AI 判定项目是否含前端（`package.json` 有 `react` / `vue` / `next` / `nuxt` / `taro` / `uni-app` 等依赖，或 `src/` 存在页面组件）。是前端项目且根目录**尚无** `design.pen` 时，用 `AskUserQuestion` 问一次：
+**本命令不问、不建任何设计稿文件。** 前端风格一律走 `/cc-code:plan-uiux`（模式一 定风格 / 模式二 改版），唯一视觉事实源是 `active/design.md`；旧项目根目录的 `design.pen` **原地保留：不读、不写、不转换**，也不再是视觉事实源。
 
-| 选项 | 后续 |
-| :--- | :--- |
-| 要 pen 原型 | 跑 `bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --design-pen` 建根目录 0 字节锚点（脚本机械动作）；派 pm 在 `ux.md` §一登记 pen 模式；后续画图走 `/cc-code:plan-uiux` |
-| 不要 | 什么都不做，`ux.md` 维持文字模式；本次会话不再问 |
+`init.sh` 只做两件机械事，三轨通用：
 
-问询铁律：
-- ⛔ 禁静默跳过（前端项目主人可能永远不知道有这条路）
-- ⛔ 禁对**非前端项目**弹问（后端/CLI 项目问了就是打扰）
-- ⛔ 已有 `design.pen` 的项目**不问**（已在链上）
-- 决策落 `ux.md` §一一行（pen 模式登记）：**主控不写，派 pm 登记**（`ux.md` 唯一写者），不落 status.md 卡点
+| 目录 | 写者 | 入库 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `.cc_code/design/` | uiux | ✅ 必须入 git | 方向卡、风格样板板与样板板截图（不是项目代码） |
+| `.cc_code/test/visual/baseline/` | qa 独占 | ✅ 必须入 git | 截图基线；同目录放允许值集合夹具 |
 
-> `.pen` 是加密文件：只准 pencil MCP 读写，⛔ 禁 Read/Grep。锚点在 pen 应用首次保存（`osascript` Cmd+S，见 plan-uiux）前是 0 字节——这不是 bug，是预期形态。
+- 升级轨做一次**机械前端探测**（`package.json` 前端依赖，或源码里的页面组件文件）：无前端 → `design.md` 只建骨架并把状态标成「不适用（无前端）」，**不派 uiux**；有前端 → 建空骨架，交给 uiux 按审计迁移。
+- 忽略口径：只忽略临时产物（`docs/qa/artifacts/`、`coverage/`、`test-results/`）；⛔ 不许全局忽略截图，设计目录与基线必须入库。
 
 ## 第 2B'' 步：codex 护栏分发（⭐1.1.0 新增，可选）
 
@@ -145,19 +142,21 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
 
 | 文件 | 唯一写者 | 派发顺序 |
 | --- | --- | --- |
-| `prd.md` / `ux.md` | **pm** | ① 先派 |
-| `project.md` / `data.md` / `api.md` | **architect** | ② 再派 |
-| `gates.md` / `bugs.md` | **qa** | ③ 最后派（无内容可迁则不派） |
+| `prd.md` | **pm** | ① 先派 |
+| `ux.md` / `design.md` | **uiux** | ② 再派（同一 agent 写两份 L2 文件） |
+| `project.md` / `data.md` / `api.md` | **architect** | ③ 再派 |
+| `gates.md` / `bugs.md` | **qa** | ④ 最后派（无内容可迁则不派） |
 | `status.md`、`backup/milestone-log.md` 行 | 主控 | 自己写 |
 | `Agent.md` / 根 `CLAUDE.md` / `AGENTS.md` | init 脚本 | 机械覆盖，不派人 |
 
 ```
   主控（分拣 / 清点 / 派发 / 机械核对）
      │  任务说明 = 「读哪些文件 + 迁移要求 + 本轮要交回什么」（格式出处 Agent.md §五，不夹带主控的理解）
-     ├─① pm        只收到：属于 prd / ux 的内容 ──► 写 prd.md / ux.md ──► 交回报告
-     ├─② architect 只收到：属于 project / data / api 的内容 ──► 写 L3 三件 ──► 交回报告
-     └─③ qa        只收到：属于 gates / bugs 的内容 ──► 写 gates.md / bugs.md ──► 交回报告
-  ⛔ 严格串行，上一个交回才派下一个；每个 agent 只写自己的文件，别人的文件一个字不碰
+     ├─① pm        只收到：属于 prd 的内容 ──► 写 prd.md ──► 交回报告
+     ├─② uiux      只收到：属于 ux / design 的内容 ──► 写 ux.md / design.md ──► 交回报告
+     ├─③ architect 只收到：属于 project / data / api 的内容 ──► 写 L3 三件 ──► 交回报告
+     └─④ qa        只收到：属于 gates / bugs 的内容 ──► 写 gates.md / bugs.md ──► 交回报告
+  ⛔ 严格串行 pm → uiux → architect → qa；上一个交回才派下一个；每个 agent 只写自己的文件，别人的文件一个字不碰
   ⛔ subagent 不能问主人：拿不准的点写进报告交回主控，由主控交人
 ```
 
@@ -169,13 +168,15 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
   A1 主控读 legacy 全文 ──► 按下表分拣：每段原文 → 一个目标文件（拿不准归 project.md 兜底）
         │                   并列一张「段落 → 去向」清单，每段必有着落
         ▼
-  A2 派 pm         只收到分拣给它的 prd / ux 原文段落 + 模板路径 ──► 落 prd.md / ux.md
+  A2 派 pm         只收到分拣给它的 prd 原文段落 + 模板路径 ──► 落 prd.md
         ▼             （pm 不读旧 CLAUDE.md 全文，只看任务说明里这几段）
-  A3 派 architect  只收到分拣给它的 project / data / api 原文段落 + 模板路径 ──► 落 L3 三件
+  A3 派 uiux       只收到分拣给它的 ux / design 原文段落 + 模板路径 ──► 落 ux.md / design.md
         ▼
-  A4 派 qa         只收到分拣给它的 gates / bugs 原文段落（有才派） ──► 落 gates.md / bugs.md
+  A4 派 architect  只收到分拣给它的 project / data / api 原文段落 + 模板路径 ──► 落 L3 三件
         ▼
-  A5 主控自己写 status.md（进度类）与 milestone-log 行（历史类）
+  A5 派 qa         只收到分拣给它的 gates / bugs 原文段落（有才派）──► 落 gates.md / bugs.md
+        ▼
+  A6 主控自己写 status.md（进度类）与 milestone-log 行（历史类）
 ```
 
 | 旧 CLAUDE.md 中的内容 | 目标文件 | 写者 | 归并方式 |
@@ -189,7 +190,9 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
 | 当前进度、待办、卡点、正在做的模块 | `active/status.md` | 主控 | 填入「当前坐标 / 下一步目标」 |
 | 历史变更、版本记录、里程碑 | `backup/milestone-log.md` | 主控 | 按 `Agent.md` 归档规范逐条追加流水行；全文已在 `CLAUDE.md.legacy` 快照留档；⛔ 不落 `active/status.md` |
 | 已知 bug、待修清单 | `active/gates.md`（需要时同步 `bugs.md`） | qa | 填入 Critical / Minor Failures |
-| 用户交互流程、页面状态机、UI 规格、组件清单、响应式规则 | `active/ux.md` | pm | 填入「全局设计系统 / 逐页布局 + 五态矩阵」 |
+| 页面结构、ASCII 布局原型、组件清单、交互五态、响应式与断点、跨页流转 | `active/ux.md` | uiux | 按页章填入（§一 形态表与页面清单；每页 2.1~2.6；末章跨页流转） |
+| 视觉规格、色值、字体与排版、间距与栅格、圆角 / 阴影、动效、图标与图像、组件长相 | `active/design.md` | uiux | 按 `templates/design.md` 章节填入；⛔ 不留在 `ux.md` |
+| 旧 pen 项目（根目录 `design.pen`） | 不迁移 | — | 原地保留，⛔ 不读不写不转换；视觉事实源改 `active/design.md`，主控在报告里登记一行 |
 | 无法归类的杂项 / 项目背景 | `active/project.md` 的「特殊约束」 | architect | 兜底，绝不丢弃 |
 
 铁律：分拣时每一段信息都要有着落，拿不准的归 `project.md` 兜底；落盘完成后主控用机械方式核对「段落 → 去向」清单无遗漏（清单里无「待定」行）；旧 `CLAUDE.md` 已被入口模板覆盖，无须保留原状。
@@ -198,7 +201,7 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --codex
 ## 第 2C 步：Track D 升级迁移协议（理解力活，由各文件的写者 agent 完成）
 
 仅 Track D 执行。**⛔ 全程零删除铁律：`init.sh` 里没有一句 `rm`。旧物只会被 `cp` 快照与 `mv` 归位，内容永远可回溯。**
-**⛔ 主控全程不 Edit / Write 任何角色文件**：D3 ~ D5 按「写者分工与派发」逐文件派写者，每个 agent 只收到「自己文件的旧快照路径 + 对应模板路径 + 迁移要求」，只写自己的文件；先 pm、后 architect、再 qa；status 主控自己写。
+**⛔ 主控全程不 Edit / Write 任何角色文件**：D3 ~ D5 按「写者分工与派发」逐文件派写者，每个 agent 只收到「自己文件的旧快照路径 + 对应模板路径 + 迁移要求」，只写自己的文件；先 pm、后 uiux、再 architect、最后 qa；status 主控自己写。
 
 ```
 D1 归档快照   脚本已做：cp active/ + .cc_code 根层 md
@@ -228,15 +231,17 @@ D7 盖戳       脚本机械动作：init.sh --stamp（仅校验全过才允许�
 | --- | --- | --- |
 | ① 规范位缺失 | `active/<canon>.md` 不存在 | 脚本已按 `templates/` 补建空骨架（只补缺的）；该文件的写者再找同层等价物（见下表）迁入填充；确实没有则保持骨架；`status.md` 由主控填 |
 | ② 位置偏离 | 规范文件躺在 `.cc_code/` 根层 | 内容整体由写者迁入 `active/<同名>`；原件留待 D6 归位 |
-| ③ 规范外多余 | 文件名不在规范 8 之列 | 主控按下表**整文件分拣**（只分派快照路径，不改写不摘抄），写者按下表归并；**兜底 `project.md` 的「特殊约束」，绝不丢弃** |
-| ④ 规范位已就位 | 位置对 | ⚠️ **位置对不代表格式对** —— 转 D4 做骨架格式体检（0.9.0 起 7 个角色文件全检；`Agent.md` 由脚本覆盖，不在此列） |
+| ③ 规范外多余 | 文件名不在规范 9 之列 | 主控按下表**整文件分拣**（只分派快照路径，不改写不摘抄），写者按下表归并；**兜底 `project.md` 的「特殊约束」，绝不丢弃** |
+| ④ 规范位已就位 | 位置对 | ⚠️ **位置对不代表格式对** —— 转 D4 做骨架格式体检（0.9.0 起 8 个角色文件全检；`Agent.md` 由脚本覆盖，不在此列） |
 
 **规范外文件的归并判据（按内容性质，不看文件名）：**
 
 | 旧文件典型内容 | 归并目标 | 层 | 写者 |
 | --- | --- | --- | --- |
-| 交互流程 / 页面状态机 / 五态矩阵 | `active/ux.md` 五态矩阵段 | L2 | pm |
-| 视觉规格 / 逐页布局 / 组件清单 / i18n key | `active/ux.md` 视觉规格段 | L2 | pm |
+| 页面结构 / ASCII 布局原型 / 组件清单 / 交互五态矩阵 / 断点 / 跨页流转 | `active/ux.md` 对应页章 | L2 | uiux |
+| 视觉规格 / 色值 / 字体与排版 / 间距栅格 / 圆角阴影 / 动效 / 图标图像 / 组件长相 | `active/design.md` 对应小节 | L2 | uiux |
+| 旧设计系统段（老 `ux.md` 里的色值、字体、圆角、阴影、样式实现） | `active/design.md` 对应小节（迁完从 `ux.md` 移除） | L2 | uiux |
+| 旧 pen 项目（根目录 `design.pen`） | 不迁移：原地保留、⛔ 不读不写不转换；视觉事实源改为 `active/design.md` | — | 主控在报告里登记一行 |
 | 业务规则 / 模块职责 / 验收标准 | `active/prd.md` | L1 | pm |
 | 阶段实现方案 / 任务拆分 | `active/project.md` 对应章节 | L3 | architect |
 | 历史变更 / 版本记录 / 里程碑 | `backup/milestone-log.md` 逐条追加（格式见 `Agent.md` 归档规范），全文留在 D1 快照 | — | 主控 |
@@ -249,14 +254,14 @@ D7 盖戳       脚本机械动作：init.sh --stamp（仅校验全过才允许�
 > ⚠️ **拆分偏离**（旧版把 L2 拆成多个文件，如 `flow.md` + `front.md`）→ 按上表两行分别并入同一个 `ux.md` 的不同段落，**不是二选一，是都要**（同一份快照路径可同时给多个写者，各取自己层的内容）。
 > ⚠️ 断言编号迁移时**永久稳定**：旧编号原样保留，绝不重排、绝不复用。遇到已作废条目（含旧版的删除线条目）→ pm 原文整行搬 `backup/retired/prd.md`，⛔ 不留在 active（规则见 `Agent.md` §四第 5 条）。若旧版另起了字母段（如 `B1..Bn`），**写者在报告里交回主控报告主人由其定夺**沿用还是归正，写者不擅自改。
 
-### D4 补层：7 个角色文件骨架格式体检（⭐0.9.0 扩容）
+### D4 补层：8 个角色文件骨架格式体检（⭐0.9.0 扩容，1.11.0 加 design.md）
 
-> ⚠️ **0.8.0 及以前只体检 `Agent.md`，另外 7 个文件「只要在 active/ 里就算 OK」** —— 内部是旧格式还是新格式无人过问。
-> 后果：`gates.md` 停在旧的逐轮流水格式、`ux.md` 缺 `U` 编号，盖戳后判 Track C 更不体检，**旧格式永久留存、永无自愈机会**。
-> 0.9.0 起：**逐个比对规范文件 ⟷ `templates/` 对应模板的骨架**。1.9.3 起 `Agent.md` 由脚本机械覆盖为模板新版，不再由 AI 体检 / 补段；其余 7 个文件各由自己的写者体检。
+> ⚠️ **0.8.0 及以前只体检 `Agent.md`，另外几个文件「只要在 active/ 里就算 OK」** —— 内部是旧格式还是新格式无人过问。
+> 后果：`gates.md` 停在旧的逐轮流水格式、`ux.md` 缺 `U` 编号、`design.md` 缺状态行与数值章节，盖戳后判 Track C 更不体检，**旧格式永久留存、永无自愈机会**。
+> 0.9.0 起：**逐个比对规范文件 ⟷ `templates/` 对应模板的骨架**。1.9.3 起 `Agent.md` 由脚本机械覆盖为模板新版，不再由 AI 体检 / 补段；其余 8 个文件各由自己的写者体检。
 
 ```
-for 每个规范文件 X ∈ {status prd ux project data api gates}（由 X 的写者自己做）:
+for 每个规范文件 X ∈ {status prd ux design project data api gates}（由 X 的写者自己做）:
   ├─ 取 templates/X.md 的「骨架」= 全部 ## / ### 标题 + 关键表头 + 纪律段
   ├─ 检 active/X.md 是否具备该骨架
   │    ├─ 具备 → 过
@@ -275,13 +280,14 @@ for 每个规范文件 X ∈ {status prd ux project data api gates}（由 X 的�
 
 | 文件 | 写者 | 必检骨架 | 缺了会怎样 |
 | --- | --- | --- | --- |
-| `prd.md` | pm | §1.5 验收断言**主表** · 写入纪律段 | 断言散落各处，QA 拿不全尺子 |
-| `ux.md` | pm | §2.3 `U` 编号五态矩阵 · §2.4 元素清单（含序号 / 适用态列）· 写入纪律段 | **UI/五态无判定编号 → gates 无法逐条溯源，覆盖率是黑洞** |
-| `gates.md` | qa | §二 验收追溯矩阵（`A` 段 + `U` 段）· §六 四分母覆盖率 · 写入纪律段 | **退化成逐轮流水日志，「某断言现在什么状态」要跨 N 轮 grep** |
+| `prd.md` | pm | §〇 需求摘要（端与形态 / 默认栈与家族）· §1.5 验收断言**主表** · 写入纪律段 | 断言散落各处，QA 拿不全尺子；端与形态无结论 |
+| `ux.md` | uiux | §1.1 前端形态表（按端一行）· §1.2 页面清单 · 每页 2.1~2.6 · 末章跨页流转 · 写入纪律段；⛔ 不出现任何色值 / 字体 / 圆角 / 阴影 | **UI/五态无判定编号 → gates 无法逐条溯源，覆盖率是黑洞**；视觉实现混进行为层 |
+| `design.md` | uiux | §0 状态四值（与 `status.md`「风格：」对应）· §一~§十一 章节 · 写入纪律段 | 视觉数值无源 → 执行器判不了视觉门，主题无从生成 |
+| `gates.md` | qa | §二 验收追溯矩阵（`A` + `U` 段）· **§2.4 V 段（页章号 + 组码）** · §六 五分母覆盖率 · 写入纪律段 | **退化成逐轮流水日志；视觉无判词落点** |
 | `api.md` | architect | 写入纪律段 | 同一 path 散成 N 段补丁，Dev 得脑内拼接 |
 | `data.md` | architect | 写入纪律段 | 同一张表散成主体 + N 个扩展段 |
-| `project.md` | architect | 写入纪律段 | 架构决策堆积历史 |
-| `status.md` | 主控 | 当前坐标 · 卡点 · 下一步；旧版残留的「当前激活角色」行清掉，「当前执行阶段」行改名「当前流程 / 步骤」（它是主控记录的坐标，不是角色） | 坐标丢失，AI 发散 |
+| `project.md` | architect | 写入纪律段 · **§一.1 前端组件库家族** · §六 视觉基建行 · §九 视觉地基阶段 | 家族 / 主题入口 / 视觉门命令无处登记，执行器只能猜 |
+| `status.md` | 主控 | 当前坐标 · 卡点 · 下一步 · **「风格：」行**；旧版残留的「当前激活角色」行清掉，「当前执行阶段」行改名「当前流程 / 步骤」（它是主控记录的坐标，不是角色） | 坐标丢失，AI 发散；风格门无判据 |
 
 #### D4.1 存量归位（旧格式 → 新骨架，一次性）
 
@@ -293,7 +299,9 @@ for 每个规范文件 X ∈ {status prd ux project data api gates}（由 X 的�
 | `prd.md` 断言散在多个增量小节 | pm | 全部**并回 §1.5 主表**（编号原样，禁重排）；原小节的过程内容迁 `backup/YYYY-MM/`（冷归档） |
 | `gates.md` 有「第 N 轮回归 / 第 N 轮验收」章节 | qa | 各轮详情迁 `docs/qa/<日期>-round-N.md`，原文整段搬 `backup/retired/gates.md`；结果**汇总进 §二 追溯矩阵**（每断言一行，取最新一轮结论），章节从 active 移除 |
 | active 文件文末有「附录 / 变更台账」章节 | 该文件的写者 | 台账行逐条迁 `backup/change-log.md`（格式见 `Agent.md` 归档规范），删除该附录章节；详情列指向旧 `docs/plans/` 的改指 `backup/change-log.md` 同 F 号行 |
-| `ux.md` 五态矩阵无 `U` 编号 | pm | 按 `U<页章号>.<元素序>.<态>` 补编号（**首次发号即永久固定**）；报告里交回本次发号范围，由主控报主人 |
+| `ux.md` 五态矩阵无 `U` 编号 | uiux | 按 `U<页章号>.<元素序>.<态>` 补编号（**首次发号即永久固定**）；报告里交回本次发号范围，由主控报主人 |
+| `ux.md` 里混有色值 / 字体 / 圆角 / 阴影 / 样式实现（旧「全局设计系统」段） | uiux | 原文整段迁入 `active/design.md` 对应小节；迁完从 `ux.md` 移除；`design.md` §0 状态按现状写（无前端写「不适用（无前端）」） |
+| `gates.md` 视觉结果散在各轮流水里 | qa | 按 `ui-gates.md` §8.2 汇总进新增的 §2.4 V 段（页章号 + 组码，屏宽与亮暗写证据列）；逐轮详情迁 `docs/qa/`，原文整段搬 `backup/retired/gates.md` |
 | `api.md` / `data.md` 混入验收断言 | architect → pm → architect | architect 先把混入的断言**原文**清单交回；主控原样转交 pm（pm 不读 L3，只看这份清单）确认 `prd.md` 确有对应断言，**没有则 pm 先补进主表**；pm 交回后，主控续接 architect 删除 `api.md` / `data.md` 里的副本（`prd.md` §1.5 是唯一源） |
 
 > ⛔ 归位量大时（如 `gates.md` 数百行流水），**写者先交回清单，主控报主人，逐文件请示后再动手**，禁止一次性批量重写。
@@ -333,6 +341,8 @@ for 每个规范文件 X ∈ {status prd ux project data api gates}（由 X 的�
        → 这一门专治「文件在位置上、格式却停在旧版」（0.8.0 及以前 gates.md 的典型病灶）
 ```
 
+`design.md` 额外硬条件：§0 状态行取四值之一、且与 `status.md`「风格：」按 `templates/design.md` §0.2 一一对应；有前端但状态仍是「不适用（无前端）」→ 记入骨架缺失清单，⛔ 不盖戳。
+
 辅助校验（主控机械跑，只读）：新规范位文件字节数 ≥ 对应旧文件之和的合理比例；旧文件的每个 `## ` 标题都能在新位置检索到；`grep -c '## 增量 F-' active/*.md` 应为 0（增量章节已就地收敛）；`cmp active/Agent.md` 与模板一致。
 
 ### D6 归位（零删除的「清理」，脚本机械动作）
@@ -345,12 +355,15 @@ bash "$CLAUDE_PLUGIN_ROOT/scripts/init.sh" --relocate \
 | 类别 | 举例 | 归位么 |
 | --- | --- | --- |
 | 位置偏离的原件 | `prd.md`（已迁入 `active/`） | ✅ 归位 |
-| 拆分偏离的分片 | `flow.md` `front.md`（已并入 `ux.md`） | ✅ 归位 |
+| 拆分偏离的分片 | `flow.md` `front.md`（已并入 `ux.md` / `design.md`） | ✅ 归位 |
 | 规范外已归并 | `plan.md` `changelog.md` `index.md` | ✅ 归位 |
 | 规范外已废除 | `errors.md` | ✅ 归位（内容在 D1 快照 + superseded） |
-| 规范 8 文件本体 | `active/prd.md` 等 | ❌ 脚本会**拒绝**，绝不归位 |
+| 规范 9 文件本体 | `active/prd.md` `active/ux.md` **`active/design.md`** 等 | ❌ 脚本会**拒绝**，绝不归位（`design.md` 是 L2 视觉半边，归位即丢视觉源） |
+| `design.pen`（根目录） | 旧 pen 项目 | ❌ 原地保留，不读不写不转换、不入 superseded |
 | `backup/` | 全部 | ❌ 绝不动，冷数据是最后防线 |
 | `references/` | 全部 | ❌ 经验资料库，绝不动（脚本 D2 只补建缺失的骨架，条目由 curator 写） |
+| `.cc_code/design/` | 方向卡、样板板与截图 | ❌ uiux 产物，不是冗余；任何情况下都不归位 |
+| `.cc_code/test/visual/` 与 `baseline/` | 视觉测试与截图基线 | ❌ qa 独占产物，必须入库，绝不归位 |
 | `docs/` `images/` `scripts/` `tests/` | 全部 | ❌ 只在报告里清点，交主人处置 |
 | 项目源码 / 测试目录 | `src/` 等 | ❌ Dev 域，绝不碰 |
 
