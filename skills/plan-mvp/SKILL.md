@@ -1,14 +1,14 @@
 ---
 name: plan-mvp
 description: 做新项目前逐条问清需求，顺手替你定好前端形态与技术栈，画出页面原型，一次确认后写成方案文档
-allowed-tools: Read, Write, Edit, Bash, Agent, SendMessage, AskUserQuestion, EnterPlanMode, ExitPlanMode
+allowed-tools: Read, Write, Edit, Bash, Agent, SendMessage, AskUserQuestion, EnterPlanMode, ExitPlanMode, Skill
 disable-model-invocation: true
 ---
 
 # /cc-code:plan-mvp — MVP 规划编排器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
-> ⚙️ 引擎分支（双端同一条规则）：无 `EnterPlanMode` 工具的引擎（如 Codex）→ 第一动作改跑 Bash `mkdir -p .cc_code/.runtime && touch .cc_code/.runtime/plan-lock` 开护栏（此后写盘被 gate.sh 拦）。**一次批准窗口只解锁一次**：每个「主人批准」之后 `rm .cc_code/.runtime/plan-lock`，把这一批该落的全部落完（批准一：先 pm 落 prd、再 uiux 落 ux；批准二：冲突修订先落 prd / ux，再落 L3），落完立刻 `touch` 回锁；进入技术阶段前保持锁定。
+> ⚙️ 引擎分支（双端同一条规则）：无 `EnterPlanMode` 工具的引擎（如 Codex）→ 第一动作改跑 Bash `mkdir -p .cc_code/.runtime && touch .cc_code/.runtime/plan-lock` 开护栏（此后写盘被 gate.sh 拦）。**一次批准窗口只解锁一次**：每个「主人批准」之后 `rm .cc_code/.runtime/plan-lock`，把这一批该落的全部落完（批准一：先 pm 落 prd、再 uiux 落 ux；批准二：冲突修订先落 prd / ux，再落 L3），落完立刻 `touch` 回锁；进入技术阶段前保持锁定。**规划结束（批准二落完）⛔ 不再回锁**：锁要放开给接下来的执行命令写盘。
 > **本命令的主控只是传话员**：问需求的是 `pm` agent，问界面、布局与交互原型的是 `uiux` agent，问技术的是 `architect` agent。主控不读代码、不读技术文档、不思考需求、不替主人回答。
 > **产出全部规划产物**：prd（pm）+ ux（uiux）+ project / data / api（architect）。`design.md` 的视觉内容本命令不写（留给 `/cc-code:plan-uiux` 定风格）；仅无前端项目由 uiux 把 §0 状态行改写为「不适用（无前端）」。
 > **主人批准两次**：需求与原型一次、技术方案一次。批准即定稿，落盘后无二次验收；想改直接改对应文件或重跑本命令。
@@ -101,8 +101,8 @@ Step9 落盘（同一解锁窗口内按序，全部落完再回锁）
       （阶段拆分 + 并行泳道写进 project.md §九；首个阶段固定「视觉地基」）
      ↓
 Step10 主控更新 status.md 坐标（含「风格：」行）→ 按有无前端分流提示
-       有前端 → 提示走 /cc-code:plan-uiux（定风格，定完再 agent-mvp）
-       无前端 → 提示走 /cc-code:agent-mvp
+       有前端 → 提示走 /cc-code:plan-uiux（定风格；定完由它自动接 agent-mvp）
+       无前端 → 直接调用 /cc-code:agent-mvp 自动开工（⛔ 不再停下等主人敲命令；入口检查不过它会自己拒跑）
 ```
 
 > ⭐ **plan 模式下 agent 写不了文件**：落盘一律放在 ExitPlanMode 之后（Step4、Step9），规划模式内 agent 只问答不写盘。
@@ -197,7 +197,7 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 任务说明格式 | 单一出处 = `active/Agent.md` §五 |
 | 规划模式内只问答 | 一切写盘等 ExitPlanMode 之后 |
 | 落盘顺序 | prd → ux → L3；同一解锁窗口内落完，Codex 侧落完立即回锁 |
-| 收尾分流 | 有前端（`ux.md` §一 有任一非「无前端」的端）→ 提示 `plan-uiux`；无前端 → 提示 `agent-mvp` |
+| 收尾分流 | 有前端（`ux.md` §一 有任一非「无前端」的端）→ 提示 `plan-uiux`；无前端 → 直接调用 `agent-mvp` 自动开工 |
 | 不越界 | 主控只写 `status.md`；不动 Agent.md、gates.md、bugs.md、src/、测试目录 |
 | 对主人说话 | 规则单一出处 = `active/Agent.md` §四第 6 条，本命令不复述 |
 | 不找 bug | bug 是 qa 职责 |
