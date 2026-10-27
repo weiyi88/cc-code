@@ -2,7 +2,6 @@
 name: agent-uiux
 description: 把已定的新风格落到代码里：重新生成主题、调长相与布局，qa 跑全量交互回归与视觉比对，最多 3 轮
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
-disable-model-invocation: true
 ---
 
 # agent-uiux — 「风格已定未实现」落地执行器

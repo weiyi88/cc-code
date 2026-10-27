@@ -2,7 +2,6 @@
 name: agent-mvp
 description: 按定好的方案写码，写完自动测试，不过就改到过（最多 3 轮）；阶段串行，阶段内同角色并发
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
-disable-model-invocation: true
 ---
 
 # agent-mvp — 双 agent × cc-code 驱动 MVP 执行编排器
