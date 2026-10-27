@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.12.1** ｜ English ｜ [简体中文](./README.md)
+> Version: **1.13.0** ｜ English ｜ [简体中文](./README.md)
 
 > A minimalist development workflow system — puts the LLM into a "cognitive sandbox" so it becomes a precise, stable, traceable automated software machine.
 > Constitutional principle: **own the result, not the process** (whether the result meets the requirements is the only yardstick).
@@ -210,6 +210,8 @@ Old projects without lanes run single-threaded automatically. Details: `skills/c
 **1.12.0:** adds `/cc-code:pr` — hands accepted changes to an external review platform: a conventional commit → push a feature branch → open a merge request with the description (what changed / how it was tested / how to roll back / linked spec / blast radius, plus a decision log for high risk), then stops. qa gains "submission evidence": it reruns the commands for this increment's assertions and writes the raw output and screenshots into an evidence file, which the orchestrator pastes into the description verbatim. The orchestrator's single explicit exception becomes "version-control operations"; delivery happens only inside the pr command and never touches the main branch. Rejections and production bugs still go through the debug / feature chains. The entry file `CLAUDE.md` is trimmed to 100 lines. Skills 16 → 17, agents stay 6.
 
 **1.12.1:** faster style locking. Contrast is now computed while the values are written (the design spec gains a "text × background pairing table"; a failing pair is fixed by changing the color value, with no render-and-redo loop). The uiux pre-lock self-check gets a fixed order (overflow first, then the remaining groups, accessibility last as a recheck); repair rounds recheck only what failed, and screenshots are taken once at the final check. Repair rounds are capped at 3; past that, uiux hands back the blocker and a recommended fix for the owner, and never locks with known violations.
+
+**1.13.0:** work starts automatically once a plan is approved. After the owner approves the plan (or says "定了" when locking a style), the plan command invokes the matching execution command itself (plan-mvp without a front end / plan-uiux mode one → agent-mvp, plan-feature → agent-feature, plan-debug at "ready to fix" → agent-debug, plan-uiux mode two → agent-uiux) instead of stopping for the owner to type it. Those four execution commands drop the "no automatic invocation" gate; their entry checks still refuse to run without an approved plan. Release (deploy), delivery (pr), plan-free (just-do-it), init, full acceptance and every plan command stay manual-only. On Codex, the plan guard is no longer re-armed when planning ends, and `verify-codex.sh` checks a registered list of which commands are open and which must stay gated.
 
 **1.11.0:** the full frontend UI/UX chain ships — pm infers ten possible frontend forms from the owner's product sketch (no questionnaire), with React + Next.js + the shadcn family as defaults; one project uses exactly one component-library family and one `active/design.md` (the visual half of L2, written by uiux), whose values feed each end's theme. Adds `plan-uiux` (mode one: settle style / mode two: restyle; the only visual gate is the owner saying "定了") and `agent-uiux` (turns a settled-but-unimplemented style into code); uiux moves to opus and appears on the planning side only. qa gains a **visual fourth layer** (VH/VM/VS three-level verdicts, screenshot baselines, theme drift, collection board), and `agent-mvp`'s first phase is fixed as the **visual foundation**. The pen main chain is demoted to an optional medium for direction cards (an old `design.pen` stays in place, never read, written or converted). Skills 15 → 16, agents stay 6, template skeletons 9 → 10.
 
@@ -437,7 +439,7 @@ Session open (2 steps)  Read Agent.md (permission table) → status.md (set coor
 /cc-code:init                Run again after plugin upgrade: field migration + handbook refresh
 ```
 
-**The main line is 8 skills in four pairs**: plan-mvp ⇄ agent-mvp, plan-feature ⇄ agent-feature, plan-uiux ⇄ agent-uiux, plan-debug ⇄ agent-debug — plan (conversation to final docs) → execute (pure machine) → full acceptance. `plan-uiux` mode one hands off to `agent-mvp`'s visual foundation; mode two restyle hands off to `agent-uiux`.
+**The main line is 8 skills in four pairs**: plan-mvp ⇄ agent-mvp, plan-feature ⇄ agent-feature, plan-uiux ⇄ agent-uiux, plan-debug ⇄ agent-debug — plan (conversation to final docs) → execute (pure machine) → full acceptance. `plan-uiux` mode one hands off to `agent-mvp`'s visual foundation; mode two restyle hands off to `agent-uiux`. Since 1.13.0 these four pairs **chain automatically** after approval: the plan command invokes the execution command, no extra typing.
 The `cc-code` skill manages the runtime protocol (role routing + layering) in the background; `init` is the entry. Only one Stop hook (safety net for experience sediment); all other state is written by AI in-conversation.
 
 ## Quick Start

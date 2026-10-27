@@ -102,24 +102,41 @@ fi
 #      allow_implicit_invocation: false）
 #    - 协议体 cc-code 是自动加载的运行时协议，按设计不生成闸门（codex 默认
 #      implicit=true 即对齐 Claude 侧行为），登记在 GATE_EXEMPT，唯一豁免。
+#    - 1.13.0 起 GATE_OPEN 四个执行命令放开自动调用（plan 批准后由 plan 命令直接
+#      调起；没批准的规划它们的入口检查会自己拒跑）：frontmatter 必须没有闸门，
+#      openai.yaml 必须 allow_implicit_invocation: true。名单只在这里登记一次。
 #    缺一即 FAIL：漏写闸门会被 Codex 隐式调用，正文里写「只能手动触发」零作用。
 # ══════════════════════════════════════════════════════════════════════════
 GATE_EXEMPT="cc-code"
+GATE_OPEN="agent-mvp agent-feature agent-debug agent-uiux"
 gate_fail=0
 gate_n=0
+open_n=0
 for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   [[ -f "$skill_md" ]] || continue
   name="$(basename "$(dirname "$skill_md")")"
   case " $GATE_EXEMPT " in *" $name "*) continue ;; esac
-  gate_n=$((gate_n + 1))
 
   front="$(awk 'NR==1 && /^---$/{f=1; next} f && /^---$/{exit} f {print}' "$skill_md")"
+  yaml="$PLUGIN_ROOT/skills/$name/agents/openai.yaml"
+  case " $GATE_OPEN " in *" $name "*)
+    open_n=$((open_n + 1))
+    if printf '%s\n' "$front" | grep -qE '^disable-model-invocation:[[:space:]]*true[[:space:]]*$'; then
+      echo -e "${RED}  ✗ 命令 $name 登记为放开自动调用，frontmatter 却仍有 disable-model-invocation: true${NC}"
+      gate_fail=1
+    elif [[ ! -f "$yaml" ]] || ! grep -qE '^[[:space:]]*allow_implicit_invocation:[[:space:]]*true[[:space:]]*$' "$yaml"; then
+      echo -e "${RED}  ✗ 命令 $name 的 Codex 配置未放开隐式调用 —— 重跑 scripts/sync-codex.sh${NC}"
+      gate_fail=1
+    fi
+    continue ;;
+  esac
+  gate_n=$((gate_n + 1))
+
   if ! printf '%s\n' "$front" | grep -qE '^disable-model-invocation:[[:space:]]*true[[:space:]]*$'; then
     echo -e "${RED}  ✗ 命令 $name 缺显式调用闸门（frontmatter 缺 disable-model-invocation: true）${NC}"
     gate_fail=1
     continue
   fi
-  yaml="$PLUGIN_ROOT/skills/$name/agents/openai.yaml"
   if [[ ! -f "$yaml" ]]; then
     echo -e "${RED}  ✗ 命令 $name 缺 Codex 闸门配置（skills/$name/agents/openai.yaml）—— 重跑 scripts/sync-codex.sh${NC}"
     gate_fail=1
@@ -129,7 +146,7 @@ for skill_md in "$PLUGIN_ROOT"/skills/*/SKILL.md; do
   fi
 done
 if [[ "$gate_fail" -eq 0 ]]; then
-  echo -e "${GREEN}  ✓ 闸门覆盖完整（$gate_n 个命令均有显式闸门 + Codex 配置；协议体 cc-code 豁免）${NC}"
+  echo -e "${GREEN}  ✓ 闸门覆盖完整（$gate_n 个命令有显式闸门 + Codex 配置；$open_n 个执行命令按登记放开；协议体 cc-code 豁免）${NC}"
 else
   FAIL=1
 fi

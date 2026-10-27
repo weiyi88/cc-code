@@ -24,6 +24,7 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 > 1.10.0 起重新引入**唯一的 Stop hook**（`hooks/`，经验整理保底：只比 `gates.md` 与 curator 开工时间戳，不调 AI、不联网、同一次改动最多提醒一次）；0.5.0 的废除沿革保留，该 hook 不写任何文件内容。
 > 1.11.0 起新增**前端与视觉子系统**：`plan-uiux` ⇄ `agent-uiux` 一对新命令、`templates/design.md`、四份共用参考（`ui-gates` / `frontend-forms` / `dev-qa-loop` / `assertions`，后者由 agent-whole-qa 参考迁址）；pen 主链降级为方向卡可选介质。
 > 1.12.0 起新增**交付命令** `pr`（与 `deploy` 同为出口命令，配 `skills/pr/references/mr-template.md` 格式唯一出处）；主控的唯一显式例外改称「版本库操作」，交付只限该命令内；qa 新增「提交证据」一节。外部审查平台与 cc-code 的边界：pr 是唯一出口，打回与线上 bug 照常走 debug / feature 链。
+> 1.13.0 起 **plan 批准后自动开工**：`agent-mvp` / `agent-feature` / `agent-debug` / `agent-uiux` 四个执行命令去掉触发闸门，由对应 plan 命令在批准（或「定了」）后直接调起；没批准的规划由执行命令自己的入口检查拒跑。plan / 出口（`deploy` / `pr`）/ `just-do-it` / `init` / `agent-whole-qa` 等其余命令闸门不变。Codex 侧 plan 结束不再回锁，放开给执行命令写盘。
 
 ## Codex 适配生成链（1.1.0）
 
@@ -39,9 +40,9 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
    templates/CLAUDE.md           ──► templates/AGENTS.md(软链)
 ```
 
-映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)，`inherit` 不写 model 行（继承父会话；本版不重设计 Codex 模型映射）。uiux 自 1.11.0 起为 **opus** 档（L2 双文件 + 方向卡与样板板），Codex 侧即 gpt-5.4 + effort high。角色沙箱 pm/architect/dev/qa/uiux/curator 六个一律 workspace-write（都要落盘）。源 `agents/*.md` 删除后，sync 清掉对应旧 toml，`init.sh --codex` 也会把用户项目里残留的旧 toml 搬走（零 rm）。
+映射规则：`disable-model-invocation: true` → `allow_implicit_invocation: false`，无闸门的命令 → `allow_implicit_invocation: true`（显式写出）；model 档位 haiku/sonnet/opus → gpt-5.3-codex-spark / gpt-5.4-mini / gpt-5.4(+effort high)，`inherit` 不写 model 行（继承父会话；本版不重设计 Codex 模型映射）。uiux 自 1.11.0 起为 **opus** 档（L2 双文件 + 方向卡与样板板），Codex 侧即 gpt-5.4 + effort high。角色沙箱 pm/architect/dev/qa/uiux/curator 六个一律 workspace-write（都要落盘）。源 `agents/*.md` 删除后，sync 清掉对应旧 toml，`init.sh --codex` 也会把用户项目里残留的旧 toml 搬走（零 rm）。
 
-**闸门覆盖（1.11.0）**：除协议体 `cc-code` 外，每个命令都必须在 frontmatter 显式声明 `disable-model-invocation: true`，并由 sync 生成 `skills/<name>/agents/openai.yaml`；新增命令 `agent-uiux` 同样生成。`verify-codex.sh` 会逐个命令核对「显式闸门 + Codex 闸门配置」，缺一即 FAIL —— 漏写闸门会让生成链静默跳过，Codex 端可被隐式调用。
+**闸门覆盖（1.11.0，1.13.0 修订）**：除协议体 `cc-code` 外，每个命令都必须在 frontmatter 显式声明 `disable-model-invocation: true`，并由 sync 生成 `skills/<name>/agents/openai.yaml`；唯一例外是 `verify-codex.sh` 里 `GATE_OPEN` 登记的四个执行命令（`agent-mvp` / `agent-feature` / `agent-debug` / `agent-uiux`）——它们必须**没有**闸门、Codex 配置必须放开隐式调用。`verify-codex.sh` 逐个命令核对，不符即 FAIL —— 漏写闸门会让 Codex 端可被隐式调用，误放开名单外的命令同样拦下。
 
 **codex 插件不分发 custom agents 与 hooks** → 由 `init.sh --codex` 落盘到用户项目 `.codex/`（AGENTS.md 软链 + gate.sh plan 护栏 + agents toml）。plan 笼子全自动：plan-mvp / plan-feature 首行「引擎分支」条款（plan-debug 不进 plan 模式，不开护栏）让 AI 自查有无 `EnterPlanMode`——Claude 走原路，Codex 自己 `touch plan-lock` 开护栏（1.1.1 起，用户零额外操作）；另可敲内建 `/plan` 双层加固；`--yolo` 亦不可击穿（实测 0.149.0）。
 

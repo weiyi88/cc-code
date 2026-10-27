@@ -1,4 +1,4 @@
-# 🧭 .cc_code 使用手册（cc-code 1.12.1）
+# 🧭 .cc_code 使用手册（cc-code 1.13.0）
 
 > 本文件由 `/cc-code:init` 生成并随插件版本刷新，是**给「不熟悉 cc-code 的人」的上手说明书**。
 > 项目业务状态永远在 `active/`；本手册只讲「这套系统怎么用」。
@@ -165,15 +165,18 @@ pm ──► uiux ──► architect ──► dev ──► qa
 
 ## 四、使用方案：两条路线
 
+> **1.13.0 起 plan 批准后自动开工**：你批准规划（定风格时说「定了」）后，对应的执行命令会自己接着跑，不用再敲。下面路线里标「自动」的步骤就是这样接上的；想停下随时按 Esc。上线（`deploy`）与交付（`pr`）仍只能你自己敲。
+
 ### 路线 A：全新项目（0 → MVP）
 
 ```
 /cc-code:init            ← ① 搭场域（1 分钟；新建即建好设计目录与截图基线目录）
 /cc-code:plan-mvp        ← ② pm 问清需求并替你定好端/形态/默认栈与家族 → uiux 画页面原型
                               →【批准一：需求与原型】→ architect 问技术方案 →【批准二：技术方案】→ 落盘
+                              （无前端 → 自动接 ④）
 /cc-code:plan-uiux       ← ③（有前端）定风格：方向卡（营销/品牌类且你没给方向时才给）
-                              → design.md 草稿 → 风格样板板 → 你说「定了」→ 锁定
-/cc-code:agent-mvp       ← ④ 纯执行：首阶段视觉地基（主题 + 全局框架 + 组件陈列页，不上线），
+                              → design.md 草稿 → 风格样板板 → 你说「定了」→ 锁定 → 自动接 ④
+（自动）agent-mvp         ← ④ 纯执行：首阶段视觉地基（主题 + 全局框架 + 组件陈列页，不上线），
                               之后业务页面只引用主题数值；Dev→QA 到收口
 /cc-code:agent-whole-qa  ← ⑤ 全量验收（功能 + 五态 + 元素 + 接口 + 视觉，含合集板）
 ```
@@ -183,7 +186,7 @@ pm ──► uiux ──► architect ──► dev ──► qa
 ```
 /cc-code:plan-feature  ← ① 增量规划：pm→uiux→architect；新页版式两档
                           （只用已锁数值免门但要登记；引入新数值/组件/母题 → 先回 plan-uiux）
-/cc-code:agent-feature  ← ② 增量纯执行：定位 → Dev→QA（精准回归）
+（自动）agent-feature   ← ② 批准后自动接：增量纯执行：定位 → Dev→QA（精准回归）
 ```
 
 ### 路线 C：修 bug（需求明确，只是实现错了）
@@ -192,7 +195,7 @@ pm ──► uiux ──► architect ──► dev ──► qa
 /cc-code:plan-debug        ← ① 诊断（qa 复现取证并当场写 B-n 到 active/bugs.md
                                → dev 只读查根因 → qa 补全；不等你批准，
                                只在契约错/需求错/视觉规格错/找不到期望/复现不了时问你一句）
-/cc-code:agent-debug      ← ② 修复纯执行：定位 B-n → Dev→QA
+（自动）agent-debug         ← ② 进入「待修复」后自动接：修复纯执行：定位 B-n → Dev→QA
                                （B-n 用例 + affected 精准回归 + 回归测试留守；视觉 bug 同链）
 ```
 
@@ -201,7 +204,7 @@ pm ──► uiux ──► architect ──► dev ──► qa
 ```
 /cc-code:plan-uiux     ← ① 模式二 改版：qa 现状体检 → uiux 写目标 design.md
                            → 改前改后对照样板板 → 你说「定了」→ status 标「已定未实现」
-/cc-code:agent-uiux    ← ② 落地：dev 重生成主题 + 调长相与布局；qa 全量五态回归 + 全页视觉 + 基线对比
+（自动）agent-uiux      ← ② 「定了」后自动接：dev 重生成主题 + 调长相与布局；qa 全量五态回归 + 全页视觉 + 基线对比
                           （碰流转 / 五态 / 接口就停下交你；功能与长相都改 → 先做本命令，再走 agent-feature）
 ```
 
@@ -236,7 +239,7 @@ AI：（pm 推断：网页营销页 + 工作台；默认 React + Next.js + shadc
 你：/cc-code:plan-uiux
 AI：（方向卡 3 张 → 你挑一张 → design.md 草稿 → 风格样板板）
 你：定了
-AI：锁定 design.md → 可以跑 /cc-code:agent-mvp（首阶段搭视觉地基）
+AI：锁定 design.md → 自动接 agent-mvp（首阶段搭视觉地基）
 ```
 
 ### 示例 2：功能迭代
@@ -246,8 +249,7 @@ AI：锁定 design.md → 可以跑 /cc-code:agent-mvp（首阶段搭视觉地�
 AI：pm 先把需求问通 → 你批准；uiux 判页面侧、architect 侦察现状 → 有冲突逐条请你裁决 → 你批准技术方案
 AI：就地收敛落盘（prd.md 改写模块小节 + 断言进 §1.5 主表 / api.md 改写该 path 小节）
     过程不落盘　过期内容搬 backup/retired/　change-log 追加 1 行　status.md 点名 F-n
-你：/cc-code:agent-feature
-AI：增量定位 → Dev 实现 → QA 验收断言 A12.21~A12.24（affected 精准回归）
+AI：（自动接 agent-feature）增量定位 → Dev 实现 → QA 验收断言 A12.21~A12.24（affected 精准回归）
 ```
 
 ### 示例 3：去 AI 味 / 改长相（需求不变）
@@ -259,7 +261,7 @@ AI：（模式二）qa 先跑现状体检：截图 + 机检出问题清单（对
     补 500/600 字重 / 圆角并成 1 套 → 写目标 design.md
     出改前改后对照样板板 → 你逐点说改，最多 3 轮
 你：定了
-AI：status.md 点「已定未实现」→ 你跑 /cc-code:agent-uiux
+AI：status.md 点「已定未实现」→ 自动接 agent-uiux
     dev 重新生成主题、调组件长相与布局；qa 全量五态回归 + 全页视觉 + 基线对比 → 通过后冻结新基线
 ```
 
@@ -270,8 +272,7 @@ AI：status.md 点「已定未实现」→ 你跑 /cc-code:agent-uiux
 AI：QA 复现取证、定位期望出处 → 当场写入 active/bugs.md 的 B-1 条目（状态：待诊断）
     → 工程师只读追链路定位根因 → QA 补上根因/爆炸半径/方案，状态改为待修复；主控把「现象 / 根因 / 爆炸半径 / 修法」四段用业务语言告诉你（只告知，不等批准）
     （纯代码层的 bug 不用你批准；只有根因在需求/契约上、找不到期望、复现不了时才问你）
-你：/cc-code:agent-debug
-AI：定位 B-1 → Dev 修 → QA 复验（B-1 用例 + affected 回归 + 留一个回归测试）
+AI：（自动接 agent-debug）定位 B-1 → Dev 修 → QA 复验（B-1 用例 + affected 回归 + 留一个回归测试）
     → gates 记 ✅ → QA 把 B-1 原文搬进 backup/retired/bugs.md → milestone-log 一行
 ```
 

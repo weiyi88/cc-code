@@ -1,14 +1,14 @@
 ---
 name: plan-uiux
 description: 先把前端风格定下来：给你看方向选择和风格样板板，你说「定了」才锁；已上线界面要改版也走这里
-allowed-tools: Read, Write, Edit, Agent, SendMessage
+allowed-tools: Read, Write, Edit, Agent, SendMessage, Skill
 disable-model-invocation: true
 ---
 
 # /cc-code:plan-uiux — 风格定稿与改版编排器（两种模式，一个视觉门）
 
 > **定位：出「设计规格 + 风格样板板」，不是画原型、不是写项目代码。** 本命令由主控编排、`uiux` agent 执行；主控只传话，不写 `design.md`、不写 `.cc_code/design/`、不做任何设计判断。
-> **唯一视觉门：主人说「定了」。** 没有「定了」就不锁定、不进入实现；「定了」之后按模式固定分流（模式一 → `agent-mvp` 的视觉地基；模式二 → `agent-uiux`）。
+> **唯一视觉门：主人说「定了」。** 没有「定了」就不锁定、不进入实现；「定了」之后按模式自动接执行命令（模式一 → `agent-mvp` 的视觉地基；模式二 → `agent-uiux`）。
 > **规则唯一出处**：视觉规则、规则号与锁定前自检组 = `skills/cc-code/references/ui-gates.md`；形态、默认栈、家族、三旋钮、灵感配额、原话翻译 = `skills/cc-code/references/frontend-forms.md`；`design.md` 章节结构 = `templates/design.md`（生成项目里的 `.cc_code/active/design.md`）。本命令只写编排纪律，⛔ 不复述规则内容。
 
 ## 一、定位
@@ -90,7 +90,7 @@ Step 5 主人看样板板 → 逐点说改 → 原样续接同一个 uiux（轮�
      ↓
 Step 6 主人说「定了」→ 锁定（见 5.6）
      ↓
-Step 7 分流：主控更新 status「风格：」= 已锁 → 提示 /cc-code:agent-mvp
+Step 7 分流：主控更新 status「风格：」= 已锁 → 直接调用 /cc-code:agent-mvp 自动开工
    （首阶段视觉地基：dev 搭主题 + 全局框架 + 组件陈列页；qa 复核并首次冻结截图基线）
 ```
 
@@ -171,7 +171,7 @@ Step 7 分流：主控更新 status「风格：」= 已锁 → 提示 /cc-code:a
 
 - uiux：`design.md` §0 状态改「已锁定」+ 写锁定日期；自检结果落锁定记录。
 - 主控：`status.md`「风格：」写「已锁」（只写这一行，⛔ 不改其它 active 文件）。
-- 主控提示：`/cc-code:agent-mvp`（第一阶段固定「视觉地基」，由 `project.md` §九 登记）。
+- 主控直接调用 `/cc-code:agent-mvp` 自动开工（第一阶段固定「视觉地基」，由 `project.md` §九 登记）；⛔ 不再停下等主人敲命令，入口检查不过它会自己拒跑。
 
 ## 六、模式二 改版
 
@@ -194,7 +194,7 @@ Step 4 主人看对照 → 逐点说改 → 续接同一个 uiux（轮次同 5.5
 Step 5 主人说「定了」→ uiux 把 §0 状态改「改版待实现」+ 写本次改版范围
    主控把 status「风格：」改「已定未实现」（点名受影响页面）
      ↓
-Step 6 分流：提示 /cc-code:agent-uiux（重生成主题 + 调长相与布局 + 全量回归 + 冻新基线）
+Step 6 分流：直接调用 /cc-code:agent-uiux 自动开工（重生成主题 + 调长相与布局 + 全量回归 + 冻新基线）
 ```
 
 > 同上：Step 编号只是内部步骤序号，⛔ 不是检查时机名——三个时机统一叫「现状体检 / 锁定前 / 开发后」。

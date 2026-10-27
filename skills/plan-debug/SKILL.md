@@ -1,7 +1,7 @@
 ---
 name: plan-debug
 description: 出 bug 后派 qa 复现取证并即时登记 B-n、派 dev 只读查根因，bugs.md 自动整理不等批准，不写码；只在契约错 / 需求或视觉规格错 / 找不到期望出处 / 复现不了时停下问你
-allowed-tools: Read, Write, Edit, Bash, Agent, SendMessage, ToolSearch
+allowed-tools: Read, Write, Edit, Bash, Agent, SendMessage, ToolSearch, Skill
 disable-model-invocation: true
 ---
 
@@ -88,7 +88,8 @@ Step3 主控把 dev 报告原样转给同一个 qa
   │   └─ 纯实现层         → 状态 = 待修复（无需主人批准）
   │
 Step4 主控写 status.md「下一步」一行指针（业务语言）
-  │   待修复 → 「B-n 待修复，走 /cc-code:agent-debug」，并提示主人敲 /cc-code:agent-debug
+  │   待修复 → 「B-n 待修复，走 /cc-code:agent-debug」；四段告知主人后直接调用 /cc-code:agent-debug 自动开修
+  │   （⛔ 不再停下等主人敲命令；Step5 裁决后回到「待修复」的同样自动开修）
   │   qa 补完 B-n 后，主控把四段原样告知主人（爆炸半径里的回归测试面取自 qa 补进 B-n 的结果）
   │   （现象 / 根因 / 爆炸半径 / 修法；告知，不等批准）
   │

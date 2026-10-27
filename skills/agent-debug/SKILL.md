@@ -2,7 +2,6 @@
 name: agent-debug
 description: 按修复方案改代码，跑相关测试全绿才算修好
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList, mcp__codegraph__codegraph_explore
-disable-model-invocation: true
 ---
 
 # agent-debug — 双 agent × cc-code 驱动 bug 修复执行编排器

@@ -1,14 +1,14 @@
 ---
 name: plan-feature
 description: 加新功能前先扫现有代码和已锁的视觉规格查冲突，列出改哪建哪，写成方案文档
-allowed-tools: Read, Write, Edit, Bash, Agent, SendMessage, AskUserQuestion, EnterPlanMode, ExitPlanMode
+allowed-tools: Read, Write, Edit, Bash, Agent, SendMessage, AskUserQuestion, EnterPlanMode, ExitPlanMode, Skill
 disable-model-invocation: true
 ---
 
 # /cc-code:plan-feature — 增量需求规划编排器（第一动作即 plan 模式）
 
 > ⭐⭐⭐ **触发后第一动作 = call `EnterPlanMode` 工具。**
-> ⚙️ 引擎分支（双端同一条规则）：无 `EnterPlanMode` 工具的引擎（如 Codex）→ 第一动作改跑 Bash `mkdir -p .cc_code/.runtime && touch .cc_code/.runtime/plan-lock` 开护栏（此后写盘被 gate.sh 拦）。**一次批准窗口只解锁一次**：每个「主人批准」之后 `rm .cc_code/.runtime/plan-lock`，把这一批该落的全部落完（批准一：先 pm 落 prd、再 uiux 落 ux / design 构图；批准二：冲突修订先落 prd / ux，再落 L3），落完立刻 `touch` 回锁；进入技术阶段前保持锁定。
+> ⚙️ 引擎分支（双端同一条规则）：无 `EnterPlanMode` 工具的引擎（如 Codex）→ 第一动作改跑 Bash `mkdir -p .cc_code/.runtime && touch .cc_code/.runtime/plan-lock` 开护栏（此后写盘被 gate.sh 拦）。**一次批准窗口只解锁一次**：每个「主人批准」之后 `rm .cc_code/.runtime/plan-lock`，把这一批该落的全部落完（批准一：先 pm 落 prd、再 uiux 落 ux / design 构图；批准二：冲突修订先落 prd / ux，再落 L3），落完立刻 `touch` 回锁；进入技术阶段前保持锁定。**规划结束（批准二落完）⛔ 不再回锁**：锁要放开给接下来的执行命令写盘。
 > **适用场景：MVP 已交付，在既有实现上做功能迭代。** 0→1 定全量请用 `/cc-code:plan-mvp`。
 > **本命令的主控只是传话员**：问需求、判冲突的是 `pm` agent；问页面、布局与已锁视觉规格的是 `uiux` agent；读代码、算爆炸半径、问技术的是 `architect` agent。主控不读代码、不读技术文档、不跑 codegraph、不思考需求、不替主人回答。
 > **主人批准两次**：需求与原型一次、技术方案一次。批准即定稿，落盘后无二次验收。
@@ -124,7 +124,7 @@ Step9 落盘（同一解锁窗口内按序）：
   │     再续接 architect 落盘：project / data / api（含 §九 泳道）
   │
 Step10 主控更新 status.md（下一步 = 「F-n 已规划未开发」，agent-feature 只认这一态）
-  │      → 提示走 /cc-code:agent-feature
+  │      → 直接调用 /cc-code:agent-feature 自动开工（⛔ 不再停下等主人敲命令；入口检查不过它会自己拒跑）
 ```
 
 ---

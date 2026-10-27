@@ -1,6 +1,6 @@
 # cc-code
 
-> Version: **1.12.1** ｜ [English](./README.en.md) ｜ 简体中文
+> Version: **1.13.0** ｜ [English](./README.en.md) ｜ 简体中文
 
 > 极简开发工作流系统 —— 把 LLM 装进「认知沙盒」，让它成为精确、稳定、可溯源的自动化软件工业母机。
 > 宪法原则：**只对结果负责，不在乎过程**（结果是否符合需求是唯一尺子）。
@@ -205,6 +205,8 @@ uiux 只在规划侧出场（`plan-mvp` / `plan-feature` / `plan-uiux`），写 
 **1.12.0：** 新增 `/cc-code:pr`——把已验收的改动交给外部审查平台：规范 commit → 推送功能分支 → 带描述建合并请求（改了什么 / 怎么测的 / 出事怎么撤 / 关联规格 / 影响面，高风险加决策日志），然后停手。qa 新增「提交证据」：重跑本次断言的命令，原始输出与截图写成证据文件，主控原样拼进描述、不改一字。主控的唯一显式例外改为「版本库操作」，交付只限 pr 命令内、不碰主干。被打回或线上 bug 照常走 debug / feature 链。入口说明 `CLAUDE.md` 压到 100 行以内。skill 16 → 17，agent 6 不变。
 
 **1.12.1：** 定风格提速。对比度提前到写数值时就算（设计规格新增「文字与底色配对表」，不达标直接改色值，不用等页面渲染出来再返工）；uiux 锁前自检规定检查顺序（先修溢出、再量其余、最后可访问性复核），修复轮只复查没过的项，截图只在终检拍一次；修复轮最多 3 轮，超了交回卡点和推荐解法问主人，绝不带瑕疵锁定。
+
+**1.13.0：** plan 批准后自动开工。主人批准规划（定风格时说「定了」）后，plan 命令直接调起对应执行命令（plan-mvp 无前端 / plan-uiux 模式一 → agent-mvp，plan-feature → agent-feature，plan-debug 待修复 → agent-debug，plan-uiux 模式二 → agent-uiux），不再停下等主人敲。为此这 4 个执行命令去掉「禁止自动触发」开关；没批准的规划它们的入口检查会自己拒跑。上线（deploy）、交付（pr）、免规划（just-do-it）、初始化、全量验收和全部 plan 命令仍只能手动敲。Codex 侧 plan 结束不再回锁，`verify-codex.sh` 按登记名单核对哪些命令放开、哪些必须有开关。
 
 **1.11.0：** 前端 UI/UX 全链路上线——十种前端形态由 pm 从产品雏形推断（不发问卷），默认 React + Next.js + shadcn 家族；一个项目只用一个组件库家族、全项目一份 `active/design.md`（L2 视觉半边，uiux 写），数值灌进各端主题。新增 `plan-uiux`（模式一 定风格 / 模式二 改版，唯一视觉门「定了」）与 `agent-uiux`（把「已定未实现」落进代码），uiux 改为 opus 且只在规划侧出场；qa 新增**视觉第四层**（VH/VM/VS 三级判词、截图基线、主题漂移、合集板），`agent-mvp` 首阶段固定为**视觉地基**。pen 主链降级为方向卡可选介质（旧 `design.pen` 原地保留、不读不写不转换）。skill 15 → 16，agent 6 不变，模板骨架 9 → 10。
 
@@ -429,7 +431,7 @@ pm ──► uiux ──► architect ──► dev ──► qa
 /cc-code:init                插件升级后再跑一次：场域迁移 + 手册刷新到最新
 ```
 
-**主线是 8 个 skill 四对配对串起来**：plan-mvp ⇄ agent-mvp、plan-feature ⇄ agent-feature、plan-uiux ⇄ agent-uiux、plan-debug ⇄ agent-debug —— 规划（商讨落盘定稿）→ 执行（纯机器推进）→ 全量验收。`plan-uiux` 模式一定完风格接 `agent-mvp` 的视觉地基，模式二改版接 `agent-uiux`。
+**主线是 8 个 skill 四对配对串起来**：plan-mvp ⇄ agent-mvp、plan-feature ⇄ agent-feature、plan-uiux ⇄ agent-uiux、plan-debug ⇄ agent-debug —— 规划（商讨落盘定稿）→ 执行（纯机器推进）→ 全量验收。`plan-uiux` 模式一定完风格接 `agent-mvp` 的视觉地基，模式二改版接 `agent-uiux`。1.13.0 起这四对在规划批准后**自动接上**：执行命令由 plan 直接调起，不用再敲。
 `cc-code` skill 在背后管运行时协议（角色路由 + 分层），`init` 是入场。仅一个 Stop hook 做经验整理保底，其余状态由 AI 顺手写。
 
 ## 快速开始
