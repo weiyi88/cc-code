@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # agent-feature — 双 agent × cc-code 驱动功能增量执行编排器
 
-> **纯执行器**：只执行增量需求，**不规划**。需求与契约由 `/cc-code:plan-feature` 商讨定稿落盘，本命令读定稿文档直接开发，**中途零确认**，只在 3 轮仍 FAIL、或 dev 撞上需求 / 契约冲突时交人。
+> **纯执行器**：只执行增量需求，**不规划**。需求与契约由 `/cc-code:plan-feature` 商讨定稿落盘，本命令读定稿文档直接开发，**运行中零提问**：撞上需求 / 契约缺口的部分挂起、3 轮仍不过的项记账，其余照跑，结尾一次交人（唯一出处 = `../cc-code/references/dev-qa-loop.md` §九）。
 > **主控是编排者，不扮演任何角色**：派哪个 agent 就是哪个角色，角色权限唯一出处 = `active/Agent.md` §三；主控的写权限见 `active/Agent.md` §一，⛔ 不写 `gates.md` 与 L1~L3 文件。
 > **增量铁律**：只做「规划了但还没验过」的断言，绝不重推存量需求、绝不重做已 PASS 项。
 > **与 agent-mvp 的分工**：mvp 是「盖整栋楼」（含 agent-whole-qa 全量清算收口）；feature 是「在楼里加一个房间」（affected 精准回归，无全量清算）。
@@ -20,8 +20,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 2. 确认双 agent 可用：`dev` / `qa`（视觉层由 qa 执行；⛔ 不派 uiux）。
 3. **增量定位（⭐第一动作，见下节）**——定位失败即拒跑，后续检查全免。
 4. **视觉门（按本次增量判定）**：判据与 `agent-mvp` 前置检查第 7 条完全同一套，**先读 `status.md`「风格：」**（`design.md` §0 只在 status 缺失时兜底）——`已定未实现` → ⛔ 拒跑，指路 `/cc-code:agent-uiux`；本次增量涉及页面且 `未锁`（或 status 缺失而 `design.md` §0 = 草稿 / 缺失）→ ⛔ 拒跑，指路 `/cc-code:plan-uiux`；`已锁` → 放行（`design.md` §0 仍写「改版待实现」属 uiux 尚未补写的滞后，以 status 为准）；`无前端` / 纯后端 → 放行并标「不适用」；`未锁（冷启动豁免）` → 放行，范围仅存量未改页面（⛔ 不再二次豁免）；冷启动豁免的判定与发放流程同 `agent-mvp`。
-5. 确认测试基建：读 `project.md` §六「测试基建契约」——**测试 / 构建 / 自检命令的唯一来源**，⛔ 本命令不自带命令。契约不存在或未填实 → 停下报告交人（补契约 = 派 `architect`，由主人裁决后再续跑）；契约已填实但测试基建尚未落地 → 把「按契约搭测试基建」作为 Dev 段首个任务。
-   同理读 `project.md` §七「日志契约」：不存在或未填实（老项目常见）→ 停下报告交人（补契约 = 派 `architect`）；契约已填实但基建未落地 → 把「按契约搭日志基建」并入 Dev 段首个任务。
+5. 确认测试基建：读 `project.md` §六「测试基建契约」——**测试 / 构建 / 自检命令的唯一来源**，⛔ 本命令不自带命令。契约不存在或未填实 → ⛔ 拒跑，按 `dev-qa-loop.md` §九 出交人报告（下一步 `/cc-code:plan-feature`，补契约归 `architect`）；契约已填实但测试基建尚未落地 → 把「按契约搭测试基建」作为 Dev 段首个任务。
+   同理读 `project.md` §七「日志契约」：不存在或未填实（老项目常见）→ ⛔ 拒跑，同上出交人报告；契约已填实但基建未落地 → 把「按契约搭日志基建」并入 Dev 段首个任务。
    视觉契约五项与缺项处置同 `agent-mvp` 前置检查第 4 条（`ux.md` §1.1 / `project.md` §一.1 / `design.md` §0 / §六 视觉门命令与基线目录 / §六 视口与亮暗）。
 6. **索引体检（静默）**：`codegraph status --json` —— `pendingChanges` 非 0 → 静默 `codegraph sync`（增量回归面建立在索引之上，旧索引 = 漏回归）；`initialized:false` → 报一行（⛔ 不自动重建）。CLI 未装则静默跳过（精准回归降级为全量）。⛔ 健康时一个字都不提。
 7. 执行 `/cc-code:cc-code` 完成会话开启协议，锁定当前阶段与坐标。
@@ -68,7 +68,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
                        ▼                    ▼
                  FAIL→回Dev(≤3)         PASS→结算→结束
                        │                  （⛔ 无全量清算）
-               3轮仍FAIL→交人决策
+         3轮仍FAIL→记账，其余照常结算
 ```
 
 > 增量定位之后：§九 有本 F 号两条以上泳道 → 先过并行协议的启用体检（泳道断言取增量差集，已全部通过的泳道整条跳过），过了 ①Dev / ②QA 按泳道并发 + 栅栏 + 汇合回归，不过单线程跑。**运行时视觉检查只在汇合回归跑**。细则见并行协议，本节不复述。
@@ -79,8 +79,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 | 项 | 内容 |
 | --- | --- |
 | 范围 | prd 只读 F-n 命中模块小节 + §1.5 命中断言；ux 只读命中 U 项；design 只读本次新页 / 改动页的构图与已锁数值（不整份改，⛔ 不写）；data / api 只读命中契约小节（读写权限以 `Agent.md` §三 为准）；派单另列 `.cc_code/references/INDEX.md`（经验索引，命中主题才打开；规则见 `Agent.md` §四第 7 条） |
-| 做 | 只按增量范围实现：改写命中模块 + 新增/补齐测试；遵循 project.md 约定；⛔ 不重构无关代码；实现细节缺信息可自行决定并写进报告。有页面时只引用已锁主题数值、只用 `project.md` §一.1 登记的一个家族与一套图标；需要新数值 → 停下交人回 `plan-uiux` |
-| 冲突 | 需求或契约（prd / ux / design / api / data）有冲突 → 停下，不动，在报告「冲突上报」里用业务语言写（技术细节另列）；主控把 dev 的冲突上报原样交人（见「编排器行为准则」）。视觉规格矛盾同样停下，改规格归 `uiux`（`plan-uiux`），⛔ dev 不自改数值 |
+| 做 | 只按增量范围实现：改写命中模块 + 新增/补齐测试；遵循 project.md 约定；⛔ 不重构无关代码；实现细节缺信息可自行决定并写进报告。有页面时只引用已锁主题数值、只用 `project.md` §一.1 登记的一个家族与一套图标；需要新数值 → 挂起该页 / 该元素（§九，下一步 `plan-uiux`），其余照做 |
+| 挂起 | 需求或契约（prd / ux / design / api / data）有缺口或冲突 → 挂起该部分及依赖它的部分，不动，在报告「挂起」里用业务语言写（技术细节另列），其余照做；主控按 `dev-qa-loop.md` §九 记进挂起清单，⛔ 运行中不问主人。视觉规格矛盾同样挂起，改规格归 `uiux`（`plan-uiux`），⛔ dev 不自改数值 |
 | 跑 | Agent(dev) → 自检：按 `project.md` §六 测试基建契约登记的命令，依次跑代码规范检查、类型检查、单测、e2e、视觉门（有哪些跑哪些；视觉门只跑不改，⛔ 不写基线） |
 | 输出 | 增量代码 + 测试（落 `project.md` §六 声明的测试根）+ 完成报告（文件清单 + 自检 pass/fail + 「采纳经验」一行，格式见 `Agent.md` §四第 7 条） |
 | ⭐ 完成后 | **算精准回归面**：`codegraph affected <本段改动的源文件...>` → 测试文件清单传给 ②QA 段；契约里登记的非常规命名测试，按 `project.md` §六 登记的 glob 补跑，合并去重即「本段回归范围」 |
@@ -108,7 +108,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 1. dev 每轮修完重算 `codegraph affected <本轮修改文件>`；qa 复测范围 = FAIL 项 + affected 影响面（拿不到则退回「同模块已 PASS 项」）+ 本轮受影响的视觉页 × 视口 × 亮暗 × 五态。
 2. 视觉失败项同样按失败项计轮：VH 由 qa 判、dev 修，⛔ 主控不代判、不删项、不把 VS 当阻断。
-3. 每轮循环后执行 `/cc-code:cc-code` 校准（静默）；3 轮仍 FAIL → 交人（⛔ 直接报告卡点，不回规划、不点名去找谁）；全绿 → QA 段 PASS。
+3. 每轮循环后执行 `/cc-code:cc-code` 校准（静默）；3 轮仍 FAIL → 该项进挂起清单（§九），其余照常走完结算（⛔ 不回规划、不点名去找谁）；全绿 → QA 段 PASS。
 
 ## 增量结算（QA PASS 即结束，⛔ 无全量清算）
 
@@ -116,7 +116,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 - 主控顺手更新 `status.md`「当前坐标 + 卡点 + 下一步」（下一步清空 F-n 指向，或指向遗留待办）；`gates.md` 由 qa 写。
 - 本增量**新增页面**且视觉层 PASS → **qa 按 `../cc-code/references/ui-gates.md` §7.2 处置基线**：只有本身属于「组件陈列页 / 该形态样板必含页」的新增页才冻结基线，新增业务页只落截图证据、不做像素基线（失败轮 ⛔ 禁止冻结；范围外差异判回归）。视觉地基的基线不重冻，除非本次改动命中它并被判回归。
 - **后台派 `curator`**（QA PASS 或 3 轮仍 FAIL 交人，每次结算都派；规则见 `active/Agent.md` §四第 7 条，派发与结果并入方式见 §五「派 curator」）。
-- 报告：F-n 增量交付（断言 PASS 清单 + 回归范围 + 新增页合集板指针）。
+- 报告：按 `dev-qa-loop.md` §九 三段出（结果 = 断言 PASS 清单 + 回归范围 + 新增页合集板指针；待你补答 = 挂起清单；下一步命令 + 完整 prompt），下一步同步写进 `status.md`。
 - **不跑 agent-whole-qa、不做全量回归** —— 增量的验收面就是 affected 精准回归面；全量清算只属于 MVP 收口（`/cc-code:agent-mvp`）或主人显式调用 `/cc-code:agent-whole-qa`。
 
 > ⭐ **写 active 前必过「就地更新 + 搬运归档」**（规则单一出处 = `active/Agent.md` §四第 5 条），各写者只动自己负责的文件。
@@ -124,13 +124,13 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 ## 编排器行为准则
 
 - **你是编排器**：按阶段派对应 agent，不在主控里替角色思考，不扮演任何角色。
-- **纯执行定位**：发现增量文档缺漏 / 自相矛盾 / 断言查无内容 → 停下，主控把 dev 的冲突上报原样交人（dev 已用业务语言写），⛔ 绝不现场发明需求（那是 `/cc-code:plan-feature` 的职责）。主人裁决后按文件路由：契约问题派 `architect` 改 L3、需求问题 `prd` 派 `pm` 改、`ux` 派 `uiux` 改、视觉规格问题走 `plan-uiux` 改 `design.md`，再续跑；主控自己不改。
+- **纯执行定位**：发现增量文档缺漏 / 自相矛盾 / 断言查无内容 → 挂起该部分（§九），其余照跑，⛔ 绝不现场发明需求（那是 `/cc-code:plan-feature` 的职责）。主人结尾补答后经下一步命令按文件路由：契约问题 `architect` 改 L3、需求问题 `prd` 归 `pm`、`ux` 归 `uiux`、视觉规格走 `plan-uiux` 改 `design.md`；主控自己不改。
 - **视觉门不可绕**：本次增量涉及页面而风格未锁 → 拒跑并指路 `plan-uiux`；`已定未实现` → 拒跑并指路 `agent-uiux`；⛔ 不用「先做再说」放行；冷启动豁免只发一次。
 - **三种增量不串线**：风格落地 → `agent-uiux`；缺陷 → `agent-debug`；已规划未开发 → 本命令。⛔ 抢别的命令的活。
 - **视觉判词只认 qa**：主控不代判；人判 VS 只进合集板，不卡流程、不进分母。
-- **subagent 不能问用户**：dev / qa 要问人的事一律交回主控，由主控交人。
+- **运行中零提问**：dev / qa 不能问用户，主控运行中也不问；要人的事一律按 `dev-qa-loop.md` §九 挂起、结尾一次交人。
 - **dev 完成报告缺「采纳经验」一行** → 续接同一个 dev 补（规则见 `active/Agent.md` §五）。
 - **每次切阶段前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进；校准静默，不打扰人。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准。
-- 不向用户报告归档细节；只报阶段结果与交人决策点。
+- 不向用户报告归档细节；只在结尾交人报告里报结果、待你补答与下一步。

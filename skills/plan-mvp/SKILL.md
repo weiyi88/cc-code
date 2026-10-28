@@ -100,9 +100,17 @@ Step9 落盘（同一解锁窗口内按序，全部落完再回锁）
       ② 再续接同一个 architect 落 project + data + api
       （阶段拆分 + 并行泳道写进 project.md §九；首个阶段固定「视觉地基」）
      ↓
+Step9.5 ⭐ 开工前断言体检（有无前端都要过；主人还在场，问题在这里问完）
+      编排单一出处 = `active/Agent.md` §五「开工前断言体检」；判据单一出处 = `agents/qa.md`
+      「开工前断言体检（plan 收尾，只读）」，本命令不复述
+      派 qa（全新上下文，只读）：读 prd / ux / api / data ＋ 主人原话
+      ├─ 有缺口 → 逐条原样问主人（带推荐答案；主人说「都按推荐」一次收齐）
+      │           → 按归属续接原写者就地改（prd → pm、ux → uiux、L3 → architect）→ 再派 qa 复检
+      └─ 通过 ↓（⛔ 没通过不许分流）
 Step10 主控更新 status.md 坐标（含「风格：」行）→ 按有无前端分流提示
        有前端 → 提示走 /cc-code:plan-uiux（定风格；定完由它自动接 agent-mvp）
-       无前端 → 直接调用 /cc-code:agent-mvp 自动开工（⛔ 不再停下等主人敲命令；入口检查不过它会自己拒跑）
+       无前端 → 直接调用 /cc-code:agent-mvp 自动开工（⛔ 不再停下等主人敲命令；入口检查不过它会自己拒跑；
+               运行中零提问，规格缺口挂起、结尾一次交人，规则见 `../cc-code/references/dev-qa-loop.md` §九）
 ```
 
 > ⭐ **plan 模式下 agent 写不了文件**：落盘一律放在 ExitPlanMode 之后（Step4、Step9），规划模式内 agent 只问答不写盘。
@@ -153,6 +161,7 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 首派 architect | `active/status.md`、`active/prd.md`、`active/ux.md`、`references/INDEX.md`、`~/.cc-code/lessons/INDEX.md`、`~/.cc-code/team/<仓库名>/INDEX.md`（三处经验索引，不存在则跳过）、代码索引与代码（⛔ 不读 `design.md`） | 下一个问题（一次一个）；发现需求冲突就交回冲突 |
 | 续接 architect | 同上 | 下一个问题；或「技术方案已通顺 + 待落盘摘要」 |
 | architect 落盘 | 同上 | 落盘 project.md、data.md、api.md（含 §一.1 家族、§六 视觉检查基建、§九 阶段与泳道；采纳的跨项目经验写进 project.md §五 特殊约束），回报落盘清单与「采纳经验」一行 |
+| qa 断言体检（Step9.5） | `active/prd.md`、`active/ux.md`、`active/api.md`、`active/data.md`（只读）＋ 主人原话 | 「体检通过」；或缺口清单（每条一句业务语言问题 + 推荐答案 + 归哪个文件、哪个写者改）。判据见 `agents/qa.md`「开工前断言体检」；⛔ 不写 `gates.md` |
 
 > 经验的读法、转写、「采纳经验」行格式与优先级单一出处 = `active/Agent.md` §四第 7 条，本命令不复述。architect 落盘完成后，主控后台派一次 curator 记采纳（派发方式见 `Agent.md` §五「派 curator」）。
 
@@ -197,7 +206,7 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 任务说明格式 | 单一出处 = `active/Agent.md` §五 |
 | 规划模式内只问答 | 一切写盘等 ExitPlanMode 之后 |
 | 落盘顺序 | prd → ux → L3；同一解锁窗口内落完，Codex 侧落完立即回锁 |
-| 收尾分流 | 有前端（`ux.md` §一 有任一非「无前端」的端）→ 提示 `plan-uiux`；无前端 → 直接调用 `agent-mvp` 自动开工 |
+| 收尾分流 | 先过 Step9.5 断言体检（缺口当场问完，不过不分流）；有前端（`ux.md` §一 有任一非「无前端」的端）→ 提示 `plan-uiux`；无前端 → 直接调用 `agent-mvp` 自动开工 |
 | 不越界 | 主控只写 `status.md`；不动 Agent.md、gates.md、bugs.md、src/、测试目录 |
 | 对主人说话 | 规则单一出处 = `active/Agent.md` §四第 6 条，本命令不复述 |
 | 不找 bug | bug 是 qa 职责 |
@@ -215,7 +224,7 @@ uiux 问答 ┴─► 主人批准【需求与原型】             │
 pm 落 prd、uiux 落 ux                          ▼
 architect 问答 ─► 主人批准【技术方案】        /cc-code:agent-mvp（纯执行）
 architect 落 project + data + api ──►        ├─ dev（视觉地基 → 编码）
-                                             └─ qa（四层验收 → gates.md）
+qa 断言体检（缺口当场问完）                    └─ qa（四层验收 → gates.md）
                                               → agent-whole-qa（收口全量验收）
 ```
 

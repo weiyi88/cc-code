@@ -25,6 +25,7 @@ assets/codex/  codex 侧生成物与分发源（hooks 模板 + agents toml）→
 > 1.11.0 起新增**前端与视觉子系统**：`plan-uiux` ⇄ `agent-uiux` 一对新命令、`templates/design.md`、四份共用参考（`ui-gates` / `frontend-forms` / `dev-qa-loop` / `assertions`，后者由 agent-whole-qa 参考迁址）；pen 主链降级为方向卡可选介质。
 > 1.12.0 起新增**交付命令** `pr`（与 `deploy` 同为出口命令，配 `skills/pr/references/mr-template.md` 格式唯一出处）；主控的唯一显式例外改称「版本库操作」，交付只限该命令内；qa 新增「提交证据」一节。外部审查平台与 cc-code 的边界：pr 是唯一出口，打回与线上 bug 照常走 debug / feature 链。
 > 1.13.0 起 **plan 批准后自动开工**：`agent-mvp` / `agent-feature` / `agent-debug` / `agent-uiux` 四个执行命令去掉触发闸门，由对应 plan 命令在批准（或「定了」）后直接调起；没批准的规划由执行命令自己的入口检查拒跑。plan / 出口（`deploy` / `pr`）/ `just-do-it` / `init` / `agent-whole-qa` 等其余命令闸门不变。Codex 侧 plan 结束不再回锁，放开给执行命令写盘。
+> 1.14.0 起 **执行命令运行中零提问**：plan-mvp / plan-feature 收尾加「开工前断言体检」（编排 = `templates/Agent.md` §五，判据 = `agents/qa.md`），缺口趁主人在场问完才开工；agent-* 运行中的规格缺口一律挂起（不问、不发明，其余照跑），结尾一份交人报告附下一步命令与可直接粘贴的完整 prompt（单一出处 = `skills/cc-code/references/dev-qa-loop.md` §九；能自己定 / 必须挂起的分界只在 `agents/dev.md`）。
 
 ## Codex 适配生成链（1.1.0）
 
