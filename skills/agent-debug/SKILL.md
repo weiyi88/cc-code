@@ -6,7 +6,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # agent-debug — 双 agent × cc-code 驱动 bug 修复执行编排器
 
-> **纯执行器**：只修已诊断的 bug，**不诊断**。根因与方案由 `/cc-code:plan-debug` 经 qa 自动整理进 `active/bugs.md` 的 B-n 条目，**只接 状态 = 待修复 的条目**（状态定义见 `templates/bugs.md`），本命令读 B-n 直接开发，**中途零确认**，只在 3 轮仍不过、或 dev 撞上需求 / 契约冲突时交人。
+> **纯执行器**：只修已诊断的 bug，**不诊断**。根因与方案由 `/cc-code:plan-debug` 经 qa 自动整理进 `active/bugs.md` 的 B-n 条目，**只接 状态 = 待修复 的条目**（状态定义见 `templates/bugs.md`），本命令读 B-n 直接开发，**运行中零提问**：撞上需求 / 契约冲突的 B-n 挂起、3 轮仍不过的项记账，其余 B-n 照修，结尾一次交人（唯一出处 = `../cc-code/references/dev-qa-loop.md` §九）。
 > **主控是编排者，不扮演任何角色**：派哪个 agent 就是哪个角色；角色权限唯一出处 = `active/Agent.md` §三。主控的写权限见 `active/Agent.md` §一，⛔ 不写 `gates.md` / `bugs.md` / L1~L3 文件。
 > **与 agent-feature 的分工**：feature 是「加一个房间」（执行 F-n 需求增量）；本命令是「修房子里的漏水点」（执行 B-n bug 修复）。执行循环、回归策略同构；结算不同——本命令由 qa 把 B-n 搬 retired。
 > **初衷铁律**：完整地修复 bug —— 修复面 = B-n 用例 + affected 算出的爆炸半径，⛔ 无 agent-whole-qa、无全量回归。
@@ -16,7 +16,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 1. 确认项目根存在 `.cc_code/`（否则提示先 `/cc-code:init`）。
 2. 确认双 agent 可用：`dev` / `qa`。
 3. **增量定位（⭐第一动作，见下节）**——定位失败即拒跑，后续检查全免。
-4. 确认测试基建：读 `project.md` §六「测试基建契约」（测试 / 构建 / 自检命令的唯一来源）。契约不存在或未填实 → ⛔ 不猜命令，停下报告交人；契约已填实但测试基建尚未落地 → 把「按契约搭测试基建」作为 Dev 段首个任务。视觉缺陷另需 `project.md` §六 的界面驱动工具 / 视觉测试位置 / 基线目录 / 视口集合 / 亮暗模式，缺任一 → 停下交人（补契约 = `architect`）。
+4. 确认测试基建：读 `project.md` §六「测试基建契约」（测试 / 构建 / 自检命令的唯一来源）。契约不存在或未填实 → ⛔ 不猜命令，⛔ 拒跑，按 `dev-qa-loop.md` §九 出交人报告（下一步 `/cc-code:plan-feature`，补契约归 `architect`）；契约已填实但测试基建尚未落地 → 把「按契约搭测试基建」作为 Dev 段首个任务。视觉缺陷另需 `project.md` §六 的界面驱动工具 / 视觉测试位置 / 基线目录 / 视口集合 / 亮暗模式，缺任一 → ⛔ 拒跑，同上出交人报告。
 5. **索引体检（静默）**：`codegraph status --json` —— `pendingChanges` 非 0 → 静默 `codegraph sync`；`initialized:false` → 报一行（⛔ 不自动重建）。CLI 未装则静默跳过（精准回归降级为全量）。⛔ 健康时一个字都不提。
 6. 执行 `/cc-code:cc-code` 完成会话开启协议，锁定当前坐标。
 
@@ -35,7 +35,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
       条目在 bugs.md，按状态分流：
         ├─ 待修复 → B-n 即本次执行范围，进 Dev 段
         ├─ 待诊断 → ⛔ 拒跑：「诊断还没做完，请先走 /cc-code:plan-debug」
-        └─ 待裁决 → ⛔ 拒跑：把条目里「待裁决」那句话原样交主人，等裁决后再来
+        └─ 待裁决 → ⛔ 拒跑：按 §九 出交人报告（待你补答 = 条目里「待裁决」那句话，下一步 /cc-code:plan-debug）
 ```
 
 ## 生命周期总览
@@ -47,7 +47,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
                     ▼                    ▼
               FAIL→回Dev(≤3)         PASS→结算→结束
                     │                （⛔ 无全量清算）
-            3轮仍FAIL→qa 把 B-n 状态写回「待裁决」+ 卡点→交人决策
+            3轮仍FAIL→qa 把 B-n 状态写回「待裁决」+ 卡点→进挂起清单，其余照常结算
 ```
 
 ## 阶段执行规范
@@ -57,7 +57,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 | --- | --- |
 | 范围 | bugs.md 只读本次 B-n 条目；prd / ux 只读期望出处命中的断言 / 判定项；视觉缺陷另读 `design.md` 的命中页章与数值（只读命中段，不整份改）、`project.md` §一.1 主题入口；data / api 只读命中小节（读写权限以 `Agent.md` §三 为准）；派单另列 `.cc_code/references/INDEX.md`（经验索引，命中主题才打开；规则见 `Agent.md` §四第 7 条） |
 | 做 | 只按 B-n 方案修：根因处修复 + 按「爆炸半径」里的技术备注（文件清单）逐文件核对连带；遵循 project.md 约定；⛔ 不重构无关代码；实现细节缺信息可自行决定并写进报告。视觉缺陷只改实现：⛔ 不改 `design.md` 数值、⛔ 不手改主题生成物（要改生成结果 → 改生成器 / 按项目约定重新生成） |
-| 冲突 | 发现 B-n 方案要动契约（data / api）、需求（prd / ux）或视觉规格（`design.md` 数值本身错 / 与已冻结基线相抵）→ 停下，不动，在报告「冲突上报」里用业务语言写（技术细节另列）；主控把 dev 的冲突上报原样交人（见「编排器行为准则」） |
+| 挂起 | 发现 B-n 方案要动契约（data / api）、需求（prd / ux）或视觉规格（`design.md` 数值本身错 / 与已冻结基线相抵）→ 挂起该 B-n，不动，在报告「挂起」里用业务语言写（技术细节另列）；主控转 qa 把该 B-n 写成待裁决，按 `dev-qa-loop.md` §九 记进挂起清单，其余 B-n 照修，⛔ 运行中不问主人 |
 | 探针 | B-n「需加探针」非「无」时：先按其加临时日志，每条带标记 `CC-PROBE-B<n>`，走 `project.md` §七 门面（DEBUG 级）→ 复现取证 → 修复 → ⛔ 交 QA 前删光（`rg CC-PROBE-B<n>` 零命中） |
 | 跑 | Agent(dev) → 自检：按 `project.md` §六 测试基建契约登记的命令，依次跑代码规范检查、类型检查、单测、e2e、视觉门（有哪些跑哪些，⛔ 不自带命令；视觉门只跑不改，⛔ 不写基线） |
 | 输出 | 修复代码 + 完成报告（文件清单 + 自检 pass/fail + 视觉缺陷加「受影响端 / 视口 / 亮暗」+ 「采纳经验」一行，格式见 `Agent.md` §四第 7 条） |
@@ -82,7 +82,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 1. dev 每轮只修不改方案、不改需求；修完重算 `codegraph affected <本轮修改文件>`，qa 复测范围 = B-n 用例 + affected 爆炸半径（拿不到则退回全量）+ 本轮受影响的视觉页 × 视口 × 亮暗。
 2. 视觉失败项同样按失败项计轮：VH 由 qa 判、dev 修，⛔ 主控不代判、不删项、不把 VS 当阻断。
-3. 每轮循环后执行 `/cc-code:cc-code` 校准（静默）；3 轮仍 FAIL → qa 把 B-n 状态写回「待裁决」并写清卡点，主控交人（⛔ 不回诊断、不点名去找谁）；全绿 → QA 段 PASS。
+3. 每轮循环后执行 `/cc-code:cc-code` 校准（静默）；3 轮仍 FAIL → qa 把 B-n 状态写回「待裁决」并写清卡点，该项进挂起清单（§九），其余照常结算（⛔ 不回诊断、不点名去找谁）；全绿 → QA 段 PASS。
    > 修复期间 B-n 状态保持「待修复」不变：派 dev 修之前不改状态（此时 qa 尚未派出）；只有复测 PASS（条目搬 retired）或 3 轮仍 FAIL（写回待裁决）才动它。
 
 ## 修复结算（QA PASS 即结束，⛔ 无全量清算）
@@ -110,10 +110,11 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
     ▼
  ⑥ 后台派 curator（规则见 active/Agent.md §四第 7 条、§五「派 curator」；视觉段只做台账）
     ▼
- ⑦ 报告：修复交付（用例通过 + 回归范围 + 回归测试位置）
+ ⑦ 报告：按 dev-qa-loop.md §九 三段出（结果 = 用例通过 + 回归范围 + 回归测试位置；待你补答 = 挂起清单；
+      下一步命令 + 完整 prompt），下一步同步写进 status.md
 ```
 
-- **3 轮仍 FAIL 交人时同样后台派 `curator`**（每次结算都派，规则同上）。
+- **3 轮仍 FAIL 记账结算时同样后台派 `curator`**（每次结算都派，规则同上）。
 - 追溯 = retired 原文 + milestone-log 一行 + 留守的回归测试。
 - **不跑 agent-whole-qa、不做全量回归** —— bug 修复的验收面就是 B-n 用例 + affected 精准回归面；全量清算只属于 MVP 收口或主人显式调用 `/cc-code:agent-whole-qa`。
 
@@ -122,13 +123,13 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 ## 编排器行为准则
 
 - **你是编排器**：按阶段派对应 agent，不在主控里替角色思考，不扮演任何角色。
-- **纯执行定位**：发现 B-n 条目缺漏（方案说不清 / 爆炸半径为空 / 根因存疑，但状态标成了待修复）→ 停下报告交人，⛔ 绝不现场重新诊断（那是 `/cc-code:plan-debug` 的职责）。
-- **subagent 不能问用户**：dev / qa 要问人的事一律交回主控，由主控交人。
+- **纯执行定位**：发现 B-n 条目缺漏（方案说不清 / 爆炸半径为空 / 根因存疑，但状态标成了待修复）→ 挂起该 B-n（§九，下一步 `/cc-code:plan-debug`），⛔ 绝不现场重新诊断（那是 `/cc-code:plan-debug` 的职责）。
+- **运行中零提问**：dev / qa 不能问用户，主控运行中也不问；要人的事一律按 `dev-qa-loop.md` §九 挂起、结尾一次交人。
 - **dev 完成报告缺「采纳经验」一行** → 续接同一个 dev 补（规则见 `active/Agent.md` §五）。
-- **契约 / 需求 / 规格出错**：dev 或 qa 发现根因其实是契约错 / 需求错 / 视觉规格错 → 停下，主控把 dev 的冲突上报原样交人（dev 已用业务语言写）；主人拍板后契约错派 `architect` 改 L3、需求错按文件分流（`prd` → `pm`；`ux` → `uiux`，经 `plan-feature` / `plan-uiux`）、视觉规格错走 `plan-uiux` 改 `design.md`，改完再续跑本命令。主控自己不改。
+- **契约 / 需求 / 规格出错**：dev 或 qa 发现根因其实是契约错 / 需求错 / 视觉规格错 → 挂起该 B-n（§九）；主人结尾补答后经下一步命令分流：契约错 `architect` 改 L3、需求错按文件分流（`prd` → `pm`；`ux` → `uiux`，经 `plan-feature` / `plan-uiux`）、视觉规格错走 `plan-uiux` 改 `design.md`，改完再续跑本命令。主控自己不改。
 - **视觉判词只认 qa**：主控不代判；人判 VS 只进合集板，不卡流程、不进分母。
-- **⛔ 不改基线迁就修复**：修不好就按循环升级交人；失败轮不冻基线、不改阈值。视觉缺陷的期望值只来自 B-n 登记出处，⛔ 不拿「修完后的样子」当新标准。
+- **⛔ 不改基线迁就修复**：修不好就按循环记进挂起清单；失败轮不冻基线、不改阈值。视觉缺陷的期望值只来自 B-n 登记出处，⛔ 不拿「修完后的样子」当新标准。
 - **每次切阶段前必须 `/cc-code:cc-code` 校准**，禁止凭记忆推进；校准静默，不打扰人。
 - **agent 通用、cc-code 项目特定**：项目约定一律让 agent 读 `.cc_code/active/project.md`，不替它假设。
 - 进度以 `status.md` 为准、验收以 `gates.md` 为准、待修 bug 以 `bugs.md` 为准。
-- 不向用户报告归档细节；只报阶段结果与交人决策点。
+- 不向用户报告归档细节；只在结尾交人报告里报结果、待你补答与下一步。
