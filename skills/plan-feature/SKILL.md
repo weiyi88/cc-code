@@ -123,8 +123,15 @@ Step9 落盘（同一解锁窗口内按序）：
   │     若有冲突回流产生的修订摘要 → 先续接 pm 落 prd、再续接 uiux 落 ux
   │     再续接 architect 落盘：project / data / api（含 §九 泳道）
   │
+Step9.5 ⭐ 开工前断言体检（主人还在场，问题在这里问完；编排单一出处 = `active/Agent.md` §五「开工前断言体检」，
+  │      判据单一出处 = `agents/qa.md`「开工前断言体检（plan 收尾，只读）」，本命令不复述）
+  │     派 qa（全新上下文，只读）：读本次 F-n 落盘的 prd / ux / design / api / data ＋ 主人原话
+  │     ├─ 有缺口 → 逐条原样问主人（带推荐答案；主人说「都按推荐」一次收齐）
+  │     │           → 按归属续接原写者就地改（prd → pm、ux / design → uiux、L3 → architect）→ 再派 qa 复检
+  │     └─ 通过 ↓（⛔ 没通过不许开工）
 Step10 主控更新 status.md（下一步 = 「F-n 已规划未开发」，agent-feature 只认这一态）
-  │      → 直接调用 /cc-code:agent-feature 自动开工（⛔ 不再停下等主人敲命令；入口检查不过它会自己拒跑）
+  │      → 直接调用 /cc-code:agent-feature 自动开工（⛔ 不再停下等主人敲命令；入口检查不过它会自己拒跑；
+  │        运行中零提问，规格缺口挂起、结尾一次交人，规则见 `../cc-code/references/dev-qa-loop.md` §九）
 ```
 
 ---
@@ -321,6 +328,7 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 首派 architect | `active/status.md`、`active/prd.md`、`active/ux.md`、`references/INDEX.md`、`~/.cc-code/lessons/INDEX.md`、`~/.cc-code/team/<仓库名>/INDEX.md`（三处经验索引，不存在则跳过）、代码索引与代码（⛔ 不读 `design.md`） | 每个需求点的代码现状、爆炸半径、目录对账、测试影响；契约漂移与契约冲突一次一条交回；需求写不通就交回业务语言冲突；通顺后交回待落盘摘要（差异表技术列 + 技术方案要点） |
 | 续接 architect | 同上 | 下一个问题 / 冲突；或「技术方案已通顺 + 待落盘摘要」 |
 | architect 落盘 | 同上 | 落盘 project.md、data.md、api.md（就地改写，含 §九 泳道；采纳的跨项目经验写进 project.md §五 特殊约束；追加 change-log），回报落盘清单与「采纳经验」一行 |
+| qa 断言体检（Step9.5） | `active/prd.md`、`active/ux.md`、`active/design.md`、`active/api.md`、`active/data.md`（只读本次 F-n 命中部分）＋ 主人原话（新需求原文） | 「体检通过」；或缺口清单（每条一句业务语言问题 + 推荐答案 + 归哪个文件、哪个写者改）。判据见 `agents/qa.md`「开工前断言体检」；⛔ 不写 `gates.md` |
 
 > 经验的读法、转写、「采纳经验」行格式与优先级单一出处 = `active/Agent.md` §四第 7 条，本命令不复述。architect 落盘完成后，主控后台派一次 curator 记采纳（派发方式见 `Agent.md` §五「派 curator」）。
 
@@ -371,6 +379,7 @@ pm 交回「修订摘要」（业务语言；规划模式下写不了盘，此�
 | 契约漂移禁沉默 | 逐条二选一 |
 | ⛔ 禁批量决策清单 | 一次一个模糊点 / 一条冲突 |
 | 冲突未裁决完禁出关 | 硬门控 |
+| 断言体检不过禁开工 | Step9.5 qa 只读体检；缺口在主人在场时问完，执行命令运行中零提问（编排见 `active/Agent.md` §五「开工前断言体检」） |
 | ⛔ 禁塞单一文件 | 按层路由，一层一文件一个 agent |
 | ⛔ 禁追加增量章节 | 就地收敛改写对应小节；过程不落盘；`change-log` 每批 1 行留痕 |
 | 规划模式内只问答 | 一切写盘等 ExitPlanMode 之后 |
@@ -394,8 +403,10 @@ uiux 问答 + 视觉门 + 两档判档                   → agent-whole-qa（�
 pm 落 prd、uiux 落 ux / design 构图
 architect 侦察 + 问答
   ─► 主人批准【技术方案】
-architect 落 L3 ─────────────────────►  /cc-code:agent-feature（增量执行：
-status.md 点名 F-n + 断言                  增量定位 → dev → qa，精准回归）
+architect 落 L3
+qa 断言体检（缺口当场问完）
+status.md 点名 F-n + 断言 ────────────►  /cc-code:agent-feature（增量执行：
+                                          增量定位 → dev → qa，精准回归；运行中零提问）
 ```
 
 > 已锁风格但还没实现（`status.md`「风格：」= 已定未实现）时，先走 `/cc-code:agent-uiux`；本次要新页且回门档 → 先走 `/cc-code:plan-uiux`（模式二）。
@@ -406,4 +417,4 @@ status.md 点名 F-n + 断言                  增量定位 → dev → qa，精
 
 ⭐ **第一个动作：call `EnterPlanMode` 工具。不许先做任何其他事。**
 
-进入规划模式后，按 Step0.5 → Step10 执行。
+进入规划模式后，按 Step0.5 → Step10 执行（Step9.5 断言体检不可跳过）。
