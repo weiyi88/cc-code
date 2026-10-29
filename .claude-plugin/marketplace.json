@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "cc-code-marketplace",
   "owner": {
-    "name": "cc-code"
+    "name": "rongye.liu"
   },
   "metadata": {
     "description": "cc-code marketplace：给 AI 立规矩的开发工作流，规划→开发→测试→验收步步把关。双端支持 Claude Code / Codex。"
@@ -13,7 +13,7 @@
       "source": "./",
       "description": "cc-code marketplace：给 AI 立规矩的开发工作流，规划→开发→测试→验收步步把关。双端支持 Claude Code / Codex。",
       "author": {
-        "name": "cc-code"
+        "name": "rongye.liu"
       },
       "category": "workflow",
       "keywords": [
